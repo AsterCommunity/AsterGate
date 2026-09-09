@@ -1,0 +1,16 @@
+# cargo-audit 配置
+# 忽略经当前调用路径复核、未形成可利用攻击面的上游 advisory
+
+[advisories]
+ignore = [
+    # paste 1.0.x unmaintained — dtolnay 不再维护
+    # 纯编译期宏，零运行时代码，无安全风险
+    "RUSTSEC-2024-0436",
+
+    # h2 0.3.27 unbounded empty DATA frames (RUSTSEC-2026-0258)
+    # actix-http 3.13.3（当前 crates.io 最新版）仍锁定 h2 ^0.3；AsterDrive
+    # 没有可直接替换的 h2 版本，因为 h2 0.4 不满足该依赖的 semver 约束。
+    # 保留审计阻塞并不能修复上游协议栈；待 actix-http 发布切换到 h2 >= 0.4.16
+    # 的版本后立即删除本项并刷新 Cargo.lock。当前不扩大为替换 Actix HTTP 栈。
+    "RUSTSEC-2026-0258",
+]

@@ -1,0 +1,41 @@
+# Static service configuration.
+#
+# Copy this file to data/config.toml for local deployment-specific values. Relative filesystem
+# paths and sqlite:// relative database paths are resolved from the config file directory.
+
+[server]
+host = "127.0.0.1"
+port = 3000
+temp_dir = ".tmp"
+
+[database]
+# Complete URL example below. To inject raw credentials instead, use:
+# url = { base_url = "postgres://127.0.0.1:5432/app", username = "RAW_USERNAME", password = "RAW_PASSWORD" }
+url = "sqlite://aster_gate.db?mode=rwc"
+pool_size = 10
+retry_count = 3
+
+[cache]
+# Supported backends in this template: "memory", "redis".
+backend = "memory"
+# Redis examples: "redis://127.0.0.1:6379/0" or
+# { base_url = "redis://127.0.0.1:6379/0", username = "", password = "RAW_PASSWORD" }.
+endpoint = ""
+default_ttl = 3600
+
+[config_sync]
+# Supported backends in this template: "disabled", "redis".
+backend = "disabled"
+# Redis pubsub examples: "redis://127.0.0.1:6379/0" or
+# { base_url = "redis://127.0.0.1:6379/0", username = "", password = "RAW_PASSWORD" }.
+endpoint = ""
+topic = "aster_gate.config_reload"
+
+[logging]
+# level examples: "info", "debug", "warn", "error", "tower_http=debug,aster_gate=debug".
+level = "info"
+# format examples: "text", "json".
+format = "text"
+file = ""
+enable_rotation = false
+max_backups = 5

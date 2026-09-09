@@ -1,0 +1,73 @@
+import path from "node:path";
+import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+import { VitePWA } from "vite-plugin-pwa";
+import { backendPathDenylist } from "./src/routes/routePaths.js";
+
+const templateServerPort = "3000";
+const backendTarget = templateServerPort.includes("{")
+	? "http://127.0.0.1:3000"
+	: `http://127.0.0.1:${templateServerPort}`;
+
+// https://vite.dev/config/
+export default defineConfig({
+	plugins: [
+		react(),
+		tailwindcss(),
+		VitePWA({
+			registerType: "autoUpdate",
+			injectRegister: "script",
+			includeAssets: ["favicon.svg"],
+			manifest: {
+				name: "%ASTER_SERVICE_TITLE%",
+				short_name: "%ASTER_SERVICE_TITLE%",
+				description: "%ASTER_SERVICE_DESCRIPTION%",
+				theme_color: "#0f172a",
+				background_color: "#f8fafc",
+				display: "standalone",
+				icons: [
+					{
+						src: "/favicon.svg",
+						sizes: "any",
+						type: "image/svg+xml",
+						purpose: "any",
+					},
+					{
+						src: "/favicon.svg",
+						sizes: "any",
+						type: "image/svg+xml",
+						purpose: "maskable",
+					},
+				],
+			},
+			workbox: {
+				globPatterns: ["index.html", "assets/**/*.{js,css,mjs,woff2}"],
+				navigateFallback: "index.html",
+				navigateFallbackDenylist: [...backendPathDenylist],
+			},
+			devOptions: {
+				enabled: true,
+				navigateFallbackAllowlist: [/^\/$/],
+			},
+		}),
+	],
+	base: "/",
+	resolve: {
+		alias: {
+			"@": path.resolve(__dirname, "./src"),
+		},
+		dedupe: ["react", "react-dom"],
+	},
+	server: {
+		proxy: {
+			"/api": backendTarget,
+			"/health": backendTarget,
+		},
+	},
+	build: {
+		target: "esnext",
+		outDir: "dist",
+		emptyOutDir: true,
+	},
+});
