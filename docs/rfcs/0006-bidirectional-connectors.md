@@ -40,10 +40,13 @@ LDAP | SAML2 | OIDC | OAuth                    OIDC/OAuth | future SAML2
                         +-> authorization / grant / key / revocation core
 ```
 
-The diagram is a trust-boundary view, not a separate set of services or databases. AsterGate has
-one canonical OIDC issuer/signing domain. An upstream OIDC issuer is an input identity namespace;
-it never becomes AsterGate's downstream issuer. Application `client_id` selects its Org before
-authorization. Account authentication does not imply Org Membership or Group admission.
+The diagram is a trust-boundary view, not a separate set of services or databases. Each logical
+AsterGate instance has one canonical OIDC issuer/signing domain (RFC 0007). An upstream OIDC issuer
+is an input identity namespace; it never becomes AsterGate's downstream issuer. Application
+`client_id` selects its Org before authorization. Account authentication does not imply Org
+Membership or Group admission.
+An independent AsterGate instance may be an explicitly trusted upstream provider; its Accounts,
+sessions, and Org memberships do not become shared local state through that Connector.
 
 ## Shared connector contract
 

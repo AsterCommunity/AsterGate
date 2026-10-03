@@ -39,10 +39,13 @@ legacy OAuth 2.0 text describes them.
 
 ## Issuer and required endpoints
 
-Every protocol endpoint is relative to AsterGate's one canonical issuer. The realm is this
-service's issuer/signing domain, not an upstream IdP or an organization. The deployment may use
+Every protocol endpoint is relative to the logical instance's one canonical issuer. The instance
+owns the issuer/signing domain, not an upstream IdP or an organization. The deployment may use
 its origin as issuer; a custom domain must be configured as one exact, stable `issuer`. Request
 headers do not manufacture an issuer dynamically, and organizations do not get separate issuers.
+Independent identity domains use independent instances with separate key/state ownership;
+replicas of one instance share the same issuer. RFC 0007 defines that boundary and replaces the
+singleton Realm entity terminology.
 
 The conformance-capable provider exposes the following issuer-relative surfaces (the final paths
 are fixed before issuing durable production identities):
@@ -149,7 +152,7 @@ Defaults:
 - asymmetric signing only;
 - short access-token lifetime, initially 5 to 15 minutes depending on audience risk;
 - exact `iss` and `aud` validation by resource servers;
-- algorithm allowlist with no acceptance of token-selected algorithms outside realm policy;
+- algorithm allowlist with no acceptance of token-selected algorithms outside instance policy;
 - no bearer token in query parameters;
 - no secret or mutable full profile embedded in tokens.
 

@@ -10,7 +10,7 @@
 AsterGate is a multi-tenant identity provider, not a sequence of temporary MVP architectures.
 This RFC states the intended product capabilities and evidence required to call each one complete.
 Implementation can be broken into dependency-ordered vertical slices without changing the durable
-realm, Account, Membership, group, application, protocol, or security boundaries.
+instance identity-domain, Account, Membership, group, application, protocol, or security boundaries.
 
 A slice includes schema, repository, domain rules, transactions, wire behavior, frontend where
 applicable, audit, observability, and tests. A screen, table, or token helper alone is not a
@@ -47,7 +47,7 @@ completed feature. Unimplemented capabilities are not advertised in discovery or
   their own domain permissions.
 - Verified domains and enterprise connector routing with ambiguity rejection. Domain or email
   matching alone never links Accounts, creates Membership, or confers group access.
-- Scoped realm-operator and organization-admin permissions; no universal `is_admin` shortcut.
+- Scoped instance-operator and organization-admin permissions; no universal `is_admin` shortcut.
 
 ### Applications and protocol
 
@@ -90,6 +90,9 @@ completed feature. Unimplemented capabilities are not advertised in discovery or
   disaster recovery, tenant suspension/deletion, and upgrade/rollback runbooks.
 - Custom domains and issuer migration require an explicit compatibility procedure because issuer
   and subject identities are durable public contracts.
+- Independent identity domains use independently configured instances with separate keys and
+  identity state. Replica, isolation, federation, and recovery acceptance follows RFC 0007;
+  there is no Realm product entity or speculative `realm_id` schema.
 
 ## Contract decisions before persistent identity
 

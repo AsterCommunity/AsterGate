@@ -26,6 +26,8 @@ details may be settled in code and tests as long as they preserve the accepted c
 | [0004](0004-upstream-federation-and-asterdrive.md) | Proposed | Upstream identity federation and AsterDrive migration |
 | [0005](0005-delivery-roadmap.md) | Proposed | Final product contract, delivery order, and acceptance gates |
 | [0006](0006-bidirectional-connectors.md) | Proposed | Bidirectional upstream/downstream connector architecture |
+| [0007](0007-instance-identity-boundaries.md) | Proposed | One identity domain per instance, independent deployments, and federation boundaries |
+| [0008](0008-independent-idp-and-application-access-policy.md) | Proposed | Independent IdP product boundary and Application access policy |
 
 ## Reading order
 
@@ -35,6 +37,11 @@ AsterGate depend on AsterDrive product semantics. RFC 0005 specifies the final c
 the evidence for dependency-ordered vertical delivery, without temporary phase architectures.
 RFC 0006 defines the two connector directions, shared catalog, protocol-family ports, and one
 identity/authorization/issuance core.
+RFC 0007 amends the instance/identity-domain terminology and deployment boundaries in RFCs
+0001, 0002, 0003, 0005, and 0006. It replaces the proposed singleton Realm entity with instance
+configuration and uses independent deployments for independent identity domains.
+RFC 0008 defines AsterGate as an independent general-purpose IdP and freezes the distinction
+between Group-based Application admission and Role/Permission-based resource authorization.
 
 ## Evidence and references
 

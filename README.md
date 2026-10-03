@@ -63,6 +63,14 @@ path with `ASTER_CONFIG=/path/to/config.toml`.
 If no configuration file exists, the service writes `data/config.toml` with the defaults selected
 during `cargo generate`, then loads that file. Copy or edit `config.example.toml` when the service
 needs deployment-specific values.
+
+The canonical OIDC issuer is initialized once into Forge's `system_config` table from
+`ASTER_BOOTSTRAP_ISSUER`; it is an application setting and is never derived from request headers.
+Set it to the exact externally reachable issuer before first startup. Later changes require an
+explicit issuer migration. The signing key is encrypted in `system_config` with the deployment
+secret `ASTER__SECURITY__SIGNING_KEY_ENCRYPTION_KEY`, which must be a base64-encoded 32-byte key
+provided through the secret manager or environment. Losing that key prevents startup and requires
+restoring the matching secret; do not put it in the config file or commit it.
 The default data layout matches AsterDrive and AsterYggdrasil:
 
 - `data/config.toml`

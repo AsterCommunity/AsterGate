@@ -38,8 +38,8 @@ that cannot be represented safely as shared identity policy.
   auditable security boundary.
 - Support self-hosting with SQLite for local evaluation and PostgreSQL/MySQL for supported
   production topologies, following the repository's existing database matrix.
-- Use one canonical AsterGate realm as the OIDC issuer and signing domain. It is not an upstream
-  identity provider or a customer tenant.
+- Use one canonical OIDC issuer and signing domain per logical AsterGate instance. Independent
+  identity domains use independent instances, not a Realm product entity (RFC 0007).
 - Keep credentials, external identities, and browser sessions on a global Account. Accounts may
   join multiple organizations through memberships; tenant-owned groups bind memberships and
   control application admission and organization permissions.
@@ -140,7 +140,7 @@ AsterGate retains:
 - all identity and authorization entities and migrations;
 - OAuth/OIDC server policy, shared client/grant/code/token/session/revocation core, token contents,
   consent, and protocol-specific error mapping;
-- realm and organization semantics;
+- instance identity-domain and organization semantics;
 - credential, MFA, session, federation, and account-linking product rules;
 - product audit actions/details, API DTOs, UI behavior, and integration tests.
 
@@ -217,8 +217,12 @@ SQLite is suitable for single-instance development and small self-hosting. Multi
 production requires a database and cache topology whose concurrency properties are covered by the
 repository's backend matrix.
 
-The product is multi-tenant under AsterGate's one canonical issuer/signing domain. Global Accounts
-own authentication state and may join multiple organizations. Organizations own applications,
+One logical instance may have multiple replicas. Independent identity domains use separate
+instances with isolated identity state and keys; sharing infrastructure does not establish an
+independent failure domain. RFC 0007 defines these deployment and federation boundaries.
+
+The product is multi-tenant under each instance's one canonical issuer/signing domain. Global
+Accounts own authentication state and may join multiple organizations. Organizations own applications,
 groups, resources, and access policy; a Membership is an Account's tenant identity. `client_id`
 selects the application and its organization, while group policy decides whether the membership
 may enter. Switching organization in the Account experience requires a fresh authorization for

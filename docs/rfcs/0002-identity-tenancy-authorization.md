@@ -7,38 +7,34 @@
 
 ## Summary
 
-AsterGate has one `realm`: its own canonical OIDC issuer and signing domain. A global `account`
+AsterGate has one canonical OIDC issuer and signing domain per logical instance. A global `account`
 owns credentials, external identities, profile, and browser sessions. An `organization` is a
 tenant; a `membership` is an Account's identity and status inside that organization. One Account
 may hold memberships in many organizations. An organization owns applications and user groups;
 group membership binds tenant Memberships, not global Accounts, to application admission and
 organization permissions.
 
-These boundaries are not interchangeable. The realm identifies AsterGate-issued tokens, never an
-upstream IdP. Account answers who authenticated; Membership answers in which tenant they are
+These boundaries are not interchangeable. The instance issuer identifies AsterGate-issued tokens,
+never an upstream IdP. Account answers who authenticated; Membership answers in which tenant they are
 active; Group answers which applications and organization permissions that Membership receives.
 An email address, upstream claim, or OAuth scope cannot substitute for any of them.
 
 ## Core concepts
 
-### Realm
+### Instance identity domain
 
-AsterGate's sole realm owns the canonical issuer URL, signing keys, subject policy, and protocol
-defaults. It is a singleton service boundary, not a selectable tenant and not the issuer of an
-upstream identity provider. All organizations share this AsterGate issuer.
+A logical AsterGate instance owns the canonical issuer URL, signing keys, subject policy, and
+protocol defaults. All organizations in that instance share its issuer. Account credentials,
+external identities, and browser sessions are global within the instance, not across deployments.
 
-This singleton has:
+Instance configuration owns issuer/subject policy, authentication/session/token defaults, and
+global branding/locale defaults. Organization overrides are explicitly bounded. There is no
+Realm product entity, Realm ID, selector, or CRUD; bootstrap, recovery, and retirement are
+operational procedures. RFC 0007 replaces the earlier singleton Realm ID/lifecycle proposal.
 
-- immutable internal ID;
-- issuer URL and subject-identifier policy;
-- authentication, session, and token policy defaults, overridable only within explicitly bounded
-  organization policy;
-- branding and locale configuration;
-- status such as active, suspended, or retiring.
-
-There is no per-organization issuer routing. A second issuer requires an explicit deployment or
-issuer-migration contract. Untrusted request headers and email domains cannot manufacture either
-the issuer or the active organization.
+There is no per-organization issuer routing. A separate identity domain uses an independent
+instance; changing an existing issuer requires an explicit migration contract. Untrusted request
+headers and email domains cannot manufacture either the issuer or the active organization.
 
 ### Organization
 
@@ -92,7 +88,7 @@ resource servers still enforce the resulting audience and scope claims.
 ## Identity model
 
 ```text
-AsterGate realm (one issuer and signing domain)
+AsterGate logical instance (one issuer and signing domain)
   +-- Account -> identifiers, credentials, external identities, browser sessions
   +-- Organization A (tenant)
   |    +-- Membership -> Account
@@ -264,7 +260,7 @@ connector associations. Supported onboarding paths are:
 - administrator invitation;
 - Management API provisioning;
 - upstream enterprise SSO JIT provisioning;
-- verified-domain JIT provisioning under explicit realm and organization policy.
+- verified-domain JIT provisioning under explicit instance and organization policy.
 
 Domain matching never proves organization authorization by itself. The identifier must be
 verified, the domain mapping must be unambiguous, and the JIT rule must explicitly authorize a
@@ -275,10 +271,11 @@ admission before physical cleanup, and every change is audited.
 ## Proposed durable entities
 
 The durable model reserves the following ownership boundaries. Exact columns and indexes are
-defined with the relevant implementation slice.
+defined with the relevant implementation slice. Instance configuration is a separate operational
+contract (RFC 0007); any persistence for mutable global settings is defined with its implementation,
+without a Realm entity.
 
 ```text
-realm_configuration (one canonical issuer)
 accounts
 account_identifiers
 password_credentials
@@ -356,7 +353,7 @@ High-risk operations require recent authentication or an equivalent machine cred
   and not required for sign-in.
 - Account export, suspension, anonymization, and deletion have distinct global workflows;
   leaving or suspending a Membership affects only its organization.
-- Retention periods are realm/organization policy but must not delete active signing verification
+- Retention periods are instance/organization policy but must not delete active signing verification
   material or audit evidence before their safety windows expire.
 
 ## AsterDrive boundary
@@ -368,7 +365,8 @@ as an AsterDrive workspace permission.
 
 ## Alternatives rejected
 
-- **Organization as realm:** conflates business tenant ownership with issuer/signing isolation.
+- **Organization as identity domain:** conflates business tenant ownership with issuer/signing
+  isolation; independent domains use independent instances (RFC 0007).
 - **Organization-owned duplicate Accounts:** splits credentials, sessions, and external identity
   for the same person and makes cross-organization participation depend on unsafe email matching.
 - **Email-based tenant enrollment:** a matching identifier is not proof of Membership or group
