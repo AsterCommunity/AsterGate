@@ -5,6 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
+		"dev:accounts": "node e2e/support/server.mjs",
 		"build": "tsgo -b && vite build",
 		"generate-api": "openapi-typescript ./generated/openapi.json -o ./src/types/api.generated.ts",
 		"check": "tsgo -b && biome check .",
@@ -52,11 +53,13 @@
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^6.0.2",
 		"jsdom": "^29.1.1",
+		"mailparser": "3.7.4",
 		"msw": "^2.14.6",
 		"openapi-typescript": "^7.13.0",
 		"oxlint": "^1.69.0",
 		"playwright": "^1.61.1",
 		"shadcn": "^4.12.0",
+		"smtp-server": "3.16.1",
 		"vite": "^8.1.0",
 		"vitest": "^4.1.9"
 	}

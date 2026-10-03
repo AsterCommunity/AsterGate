@@ -18,16 +18,20 @@ pub const DEFAULT_CONFIG_PATH: &str = "data/config.toml";
 pub fn load() -> Result<super::AppConfig> {
     let path = config_path();
     ensure_default_config_exists(&path, &super::AppConfig::default())?;
+    ensure_deployment_key(&path)?;
 
-    let mut loaded = ::config::Config::builder()
+    let mut builder = ::config::Config::builder()
         .add_source(::config::File::from(path.as_path()).required(false))
         .add_source(
             ::config::Environment::with_prefix("ASTER")
                 .separator("__")
                 .try_parsing(true),
-        )
-        .build()?
-        .try_deserialize::<super::AppConfig>()?;
+        );
+    // Hex keys containing only digits must remain strings, never environment-inferred floats.
+    if let Ok(value) = std::env::var("ASTER__SECURITY__MASTER_KEY") {
+        builder = builder.set_override("security.master_key", value)?;
+    }
+    let mut loaded = builder.build()?.try_deserialize::<super::AppConfig>()?;
     normalize_paths(&mut loaded, &path)?;
     tracing::info!(path = %path.display(), "loaded configuration file");
     Ok(loaded)
@@ -106,6 +110,42 @@ fn normalize_paths(config: &mut super::AppConfig, config_path: &Path) -> Result<
     Ok(())
 }
 
+fn ensure_deployment_key(path: &Path) -> Result<()> {
+    if std::env::var_os("ASTER__SECURITY__MASTER_KEY").is_some() {
+        return Ok(());
+    }
+    let content = std::fs::read_to_string(path)?;
+    let mut doc = content
+        .parse::<toml_edit::DocumentMut>()
+        .map_err(|_| AppError::Config("invalid config file".into()))?;
+    let table = doc
+        .as_table_mut()
+        .entry("security")
+        .or_insert(toml_edit::Item::Table(toml_edit::Table::new()))
+        .as_table_mut()
+        .ok_or_else(|| AppError::Config("security must be a table".into()))?;
+    if let Some(value) = table.get("master_key") {
+        let value = value
+            .as_str()
+            .ok_or_else(|| AppError::Config("master_key must be a string".into()))?;
+        super::security::decode_master_key(value)?;
+        return Ok(());
+    }
+    {
+        table.insert(
+            "master_key",
+            toml_edit::value(super::SecurityConfig::default().master_key),
+        );
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600))?;
+        }
+        std::fs::write(path, doc.to_string())?;
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -121,6 +161,63 @@ mod tests {
 
         assert!(generated.contains(r#"temp_dir = ".tmp""#));
         assert!(generated.contains(r#"url = "sqlite://aster_gate.db?mode=rwc""#));
+    }
+
+    #[test]
+    fn deployment_key_backfill_is_stable_and_preserves_comments() {
+        let directory = aster_forge_test::temp::TestTempDir::new("loader-master-key");
+        let path = directory.join("config.toml");
+        std::fs::write(&path, "# deployment comment\n[server]\nport = 3210\n").unwrap();
+        ensure_deployment_key(&path).unwrap();
+        let first = std::fs::read_to_string(&path).unwrap();
+        ensure_deployment_key(&path).unwrap();
+        let second = std::fs::read_to_string(&path).unwrap();
+        assert_eq!(first, second);
+        assert!(second.starts_with("# deployment comment"));
+        let loaded: crate::config::AppConfig = toml::from_str(&second).unwrap();
+        assert_eq!(loaded.server.port, 3210);
+        assert!(crate::config::security::prepare(&loaded.security).is_ok());
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            assert_eq!(
+                std::fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+                0o600
+            );
+        }
+    }
+
+    #[test]
+    fn invalid_existing_master_key_is_never_replaced() {
+        let directory = aster_forge_test::temp::TestTempDir::new("loader-invalid-key");
+        let path = directory.join("config.toml");
+        let content = "[security]\nmaster_key = 'broken'\n";
+        std::fs::write(&path, content).unwrap();
+        assert!(ensure_deployment_key(&path).is_err());
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), content);
+    }
+
+    #[test]
+    fn base64_config_key_is_rejected_and_not_rewritten() {
+        let directory = aster_forge_test::temp::TestTempDir::new("loader-unsupported-key");
+        let path = directory.join("config.toml");
+        let content = "[security]\nmaster_key = 'BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc='\n";
+        std::fs::write(&path, content).unwrap();
+        assert!(ensure_deployment_key(&path).is_err());
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), content);
+    }
+
+    #[test]
+    fn valid_uppercase_hex_key_is_preserved_without_rewrite() {
+        let directory = aster_forge_test::temp::TestTempDir::new("loader-existing-hex");
+        let path = directory.join("config.toml");
+        let content = format!(
+            "# keep\n[security]\nmaster_key = '{}'\n",
+            hex::encode_upper([0xab_u8; 32])
+        );
+        std::fs::write(&path, &content).unwrap();
+        ensure_deployment_key(&path).unwrap();
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), content);
     }
 
     #[test]

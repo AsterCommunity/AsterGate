@@ -16,6 +16,8 @@ code, token/key, session, refresh-family, and revocation core. OIDC-specific cla
 discovery, and logout do not introduce an independent issuance path (RFC 0006).
 
 This RFC states minimum security behavior. Competitor compatibility cannot weaken these rules.
+RFC 0009 amends first-party browser authentication to AD-style access/refresh JWT sessions. The
+downstream OAuth/OIDC grant and token contracts below remain distinct from that session profile.
 
 ## Normative baseline
 
@@ -144,8 +146,10 @@ bound to one organization/audience cannot be relabeled or reused for another. Ac
 organization switching starts a new authorization for the target client/audience and issues new
 tokens after its Membership and policy checks.
 
-Opaque tokens may be used for AsterGate-owned Account/UserInfo access or deployments requiring
-central introspection. Token format is discoverable by contract, not guessed by clients.
+First-party Account/human management APIs use access JWTs bound to a live Account/session under
+RFC 0009. Opaque tokens may still be used for UserInfo or downstream deployments requiring central
+introspection. Consumers use explicit token contracts, not token-format guessing; first-party JWTs
+cannot substitute for a registered resource audience token or ID token.
 
 Defaults:
 
@@ -167,7 +171,11 @@ scopes and claim policy. Upstream raw claims are not forwarded automatically.
 
 ## Refresh-token families
 
-Refresh tokens are opaque random values stored only as hashes. Each issued token belongs to a
+This section governs downstream OAuth grant refresh credentials, not first-party session renewal.
+RFC 0009 chooses refresh JWTs for first-party browser sessions, with server-side JTI/version checks
+and its own compromise policy. These first-party JWTs are never accepted at the OAuth token endpoint.
+
+Downstream refresh tokens are opaque random values stored only as hashes. Each issued token belongs to a
 family and points to its predecessor or generation. Rotation is atomic:
 
 1. lock or conditionally consume the presented active token;
@@ -186,6 +194,10 @@ Concurrent legitimate refresh attempts yield one winner.
 A browser session represents authenticated global Account state; a grant represents authorization
 for one client, organization, and Membership; a refresh family represents renewable credentials
 for that grant. They are related but not interchangeable.
+First-party browser sessions use access/refresh JWTs with mandatory `sid` and Account security-version
+validation (RFC 0009). Revoking a browser session immediately rejects its unexpired first-party access
+JWTs; external resource-server JWT revocation still has the explicitly declared expiry/introspection
+window. A refresh family for one tenant grant is not the global Account session.
 
 - Application-local logout may revoke only its tenant grant/family. AsterGate global logout
   terminates the Account browser session across organizations, without deleting Memberships.

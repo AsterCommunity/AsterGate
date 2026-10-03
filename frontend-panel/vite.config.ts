@@ -3,16 +3,23 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
-import { backendPathDenylist } from "./src/routes/routePaths.js";
 
-const templateServerPort = "3000";
-const backendTarget = templateServerPort.includes("{")
-	? "http://127.0.0.1:3000"
-	: `http://127.0.0.1:${templateServerPort}`;
+const backendTarget = process.env.ASTER_DEV_BACKEND ?? "http://127.0.0.1:3000";
 
 // https://vite.dev/config/
 export default defineConfig({
 	plugins: [
+		{
+			name: "astergate-development-branding",
+			apply: "serve",
+			transformIndexHtml: (html) =>
+				html
+					.replaceAll("{{astergate_title}}", "AsterGate")
+					.replaceAll(
+						"{{astergate_description}}",
+						"Account and identity management",
+					),
+		},
 		react(),
 		tailwindcss(),
 		VitePWA({
@@ -20,9 +27,9 @@ export default defineConfig({
 			injectRegister: "script",
 			includeAssets: ["favicon.svg"],
 			manifest: {
-				name: "%ASTER_SERVICE_TITLE%",
-				short_name: "%ASTER_SERVICE_TITLE%",
-				description: "%ASTER_SERVICE_DESCRIPTION%",
+				name: "AsterGate",
+				short_name: "AsterGate",
+				description: "AsterGate account and identity management",
 				theme_color: "#0f172a",
 				background_color: "#f8fafc",
 				display: "standalone",
@@ -42,12 +49,11 @@ export default defineConfig({
 				],
 			},
 			workbox: {
-				globPatterns: ["index.html", "assets/**/*.{js,css,mjs,woff2}"],
-				navigateFallback: "index.html",
-				navigateFallbackDenylist: [...backendPathDenylist],
+				globPatterns: ["assets/**/*.{js,css,mjs,woff2}"],
+				navigateFallback: undefined,
 			},
 			devOptions: {
-				enabled: true,
+				enabled: false,
 				navigateFallbackAllowlist: [/^\/$/],
 			},
 		}),
@@ -61,7 +67,8 @@ export default defineConfig({
 	},
 	server: {
 		proxy: {
-			"/api": backendTarget,
+			"/api": { target: backendTarget, changeOrigin: false },
+			"/manifest.webmanifest": { target: backendTarget, changeOrigin: false },
 			"/health": backendTarget,
 		},
 	},

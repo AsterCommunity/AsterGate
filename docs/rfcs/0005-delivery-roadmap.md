@@ -24,6 +24,10 @@ completed feature. Unimplemented capabilities are not advertised in discovery or
   import/export, deletion, and recovery workflows independent of tenant Membership lifecycle.
 - Password, TOTP, recovery codes, email MFA, WebAuthn passkeys, and passwordless methods with
   explicit policy and recent-authentication requirements.
+- First-party access/refresh JWT sessions following AD and AF #42, with session epochs, conditional
+  refresh rotation/replay handling and immediate `sid` revocation. RFC 0009 defines separate gates
+  for schema, live authorization, Cookie/CSRF, frontend refresh and multi-replica failure behavior;
+  current opaque Account sessions do not establish JWT completion.
 - Hosted sign-in, sign-up, consent, error, and account pages, with branding, locale, terms/privacy
   links, and equivalent custom-UI functionality through the Experience API.
 - Self-service global profile, identifiers, credentials, factors, linked identities, browser

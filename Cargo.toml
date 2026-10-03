@@ -1,12 +1,14 @@
 [package]
 name = "aster_gate"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 description = "Aster service wired to AsterForge runtime components."
+authors = ["AsterCommunity Contributors <contributors@astercosm.com>"]
 edition = "2024"
 rust-version = "1.95.0"
-license = "MIT"
-repository = ""
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/AsterCommunity/AsterGate"
 build = "build.rs"
+publish = false
 
 [workspace]
 members = [".", "crates/aster_gate_migration"]
@@ -91,8 +93,9 @@ panic = "abort"
 strip = true
 
 [dependencies]
+async-trait = "0.1"
 axum = "0.8"
-tower-http = { version = "0.6", features = ["compression-gzip"] }
+tower-http = { version = "0.7", features = ["compression-gzip"] }
 tower = { version = "0.5", features = ["util"] }
 aster_forge_middleware = { git = "https://github.com/AsterCommunity/AsterForge", package = "aster_forge_middleware", default-features = false, features = ["axum"] }
 aster_forge_observability = { git = "https://github.com/AsterCommunity/AsterForge", package = "aster_forge_observability", default-features = false, features = ["axum"] }
@@ -110,8 +113,17 @@ aster_forge_panic = { git = "https://github.com/AsterCommunity/AsterForge", pack
 aster_forge_runtime = { git = "https://github.com/AsterCommunity/AsterForge", package = "aster_forge_runtime" }
 aster_forge_tasks = { git = "https://github.com/AsterCommunity/AsterForge", package = "aster_forge_tasks", features = ["runtime-component"] }
 aster_forge_utils = { git = "https://github.com/AsterCommunity/AsterForge", package = "aster_forge_utils" }
+aster_forge_crypto = { git = "https://github.com/AsterCommunity/AsterForge", package = "aster_forge_crypto" }
+aster_forge_validation = { git = "https://github.com/AsterCommunity/AsterForge", package = "aster_forge_validation" }
+hex = "0.4"
+chrono = "0.4"
+cookie = "0.18"
+subtle = "2.6"
+url = "2"
+uuid = { version = "1", features = ["v4"] }
+rand = "0.10.3"
 aster_gate_migration = { path = "crates/aster_gate_migration" }
-sea-orm = { version = "2.0.2", features = ["sqlx-sqlite", "runtime-tokio-rustls", "macros"] }
+sea-orm = { version = "2.0.4", features = ["sqlx-sqlite", "runtime-tokio-rustls", "macros"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 config = { version = "0.15", default-features = false, features = ["toml"] }
@@ -121,13 +133,14 @@ tikv-jemallocator = { version = "0.7", optional = true }
 tokio = { version = "1", features = ["fs", "macros", "rt-multi-thread", "time"] }
 tokio-util = "0.7"
 toml = "1.1"
+toml_edit = "0.25"
 tracing = "0.1"
-utoipa = { version = "5.5.0", features = ["axum_extras"], optional = true }
-utoipa-swagger-ui = { version = "9.0.2", features = ["axum"], optional = true }
+utoipa = { version = "6.0.0", features = ["axum_extras"], optional = true }
+utoipa-swagger-ui = { version = "10.0.1", features = ["axum"], optional = true }
 
 [dev-dependencies]
 aster_forge_test = { git = "https://github.com/AsterCommunity/AsterForge", package = "aster_forge_test" }
-sea-orm-migration = { version = "2.0.2", features = ["sqlx-mysql", "sqlx-postgres", "sqlx-sqlite", "runtime-tokio-rustls"] }
+sea-orm-migration = { version = "2.0.4", features = ["sqlx-mysql", "sqlx-postgres", "sqlx-sqlite", "runtime-tokio-rustls"] }
 testcontainers = { version = "0.28", features = ["reusable-containers"] }
 
 [build-dependencies]

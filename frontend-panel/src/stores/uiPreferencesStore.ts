@@ -6,7 +6,7 @@ import {
 	type SupportedLanguage,
 } from "@/i18n";
 
-const languageStorageKey = "aster-service.language";
+const languageStorageKey = "astergate.language";
 
 function readInitialLanguage() {
 	if (typeof window === "undefined") {

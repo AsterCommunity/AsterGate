@@ -1,20 +1,43 @@
 import { createBrowserRouter } from "react-router-dom";
-import { AppShell } from "@/components/layout/AppShell";
+import { AccountLayout } from "@/account/AccountLayout";
+import {
+	ProfilePage,
+	SecurityPage,
+	SessionsPage,
+} from "@/account/AccountPages";
+import {
+	ChallengePage,
+	RequestMailPage,
+	SignInPage,
+	SignUpPage,
+} from "@/account/AuthPages";
+import { InstanceSettingsPage } from "@/account/InstanceSettingsPage";
+import { ManagementPage } from "@/account/ManagementPage";
+import { SetupPage } from "@/account/SetupPage";
 import { ErrorPage } from "@/pages/ErrorPage";
-import { OperationsPage } from "@/pages/OperationsPage";
-import { OverviewPage } from "@/pages/OverviewPage";
-import { SettingsPage } from "@/pages/SettingsPage";
-import { appPaths } from "@/routes/routePaths";
 
 export const router = createBrowserRouter([
 	{
-		path: appPaths.overview,
-		element: <AppShell />,
+		path: "/",
+		element: <AccountLayout />,
 		errorElement: <ErrorPage />,
 		children: [
-			{ index: true, element: <OverviewPage /> },
-			{ path: appPaths.operations.slice(1), element: <OperationsPage /> },
-			{ path: appPaths.settings.slice(1), element: <SettingsPage /> },
+			{ path: "setup", element: <SetupPage /> },
+			{ path: "instance-settings", element: <InstanceSettingsPage /> },
+			{ index: true, element: <ProfilePage /> },
+			{ path: "security", element: <SecurityPage /> },
+			{ path: "sessions", element: <SessionsPage /> },
+			{ path: "sign-in", element: <SignInPage /> },
+			{ path: "sign-up", element: <SignUpPage /> },
+			{ path: "recover", element: <RequestMailPage /> },
+			{
+				path: "resend-verification",
+				element: <RequestMailPage verification />,
+			},
+			{ path: "verify-email", element: <ChallengePage kind="verify" /> },
+			{ path: "reset-password", element: <ChallengePage kind="reset" /> },
+			{ path: "confirm-email", element: <ChallengePage kind="email" /> },
+			{ path: "admin", element: <ManagementPage /> },
 			{ path: "*", element: <ErrorPage /> },
 		],
 	},

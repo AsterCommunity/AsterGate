@@ -17,16 +17,32 @@ pub async fn prepare_state(config: crate::config::AppConfig) -> Result<crate::ru
     .await?;
     let config_sync =
         aster_forge_config::build_config_sync_runtime(&config.config_sync, env!("CARGO_PKG_NAME"))?;
-    let mail_sender = aster_forge_mail::memory_sender();
+    let account_security =
+        std::sync::Arc::new(crate::services::account::AccountSecurity::new(&config).await?);
+    crate::db::repository::system_config_repo::seed(db_handles.writer())
+        .await
+        .map_err(|_| {
+            crate::errors::AppError::Config("cannot initialize system config registry".into())
+        })?;
+    let snapshot = crate::db::repository::system_config_repo::load_snapshot(db_handles.writer())
+        .await
+        .map_err(|_| crate::errors::AppError::Config("cannot load runtime config".into()))?;
+    let runtime_config = std::sync::Arc::new(crate::config::runtime_config::RuntimeConfig::new(
+        snapshot,
+        account_security.master_key,
+    ));
+    let mail_sender = crate::services::system_settings::smtp_sender(runtime_config.clone());
 
-    Ok(crate::runtime::AppState::new(
-        config,
+    Ok(crate::runtime::AppState {
+        config: std::sync::Arc::new(config),
         db_handles,
         cache,
         config_sync,
         metrics,
         mail_sender,
-    ))
+        account_security,
+        runtime_config,
+    })
 }
 
 /// Assembles and runs the Forge runtime.
@@ -46,9 +62,11 @@ pub async fn run(state: crate::runtime::AppState) -> std::io::Result<()> {
             state.clone(),
         ))?
         .component(crate::tasks::runtime::background_tasks_component(
-            app_state.metrics.clone(),
+            state.clone(),
         ))
-        .component(crate::services::mail_outbox_service::runtime::mail_runtime_component(app_state))
+        .component(
+            crate::services::mail_outbox_service::runtime::mail_runtime_component(state.clone()),
+        )
         .component(crate::services::audit_service::runtime::audit_runtime_component())
         .component(crate::db::runtime::database_component(
             app_state.db_handles.clone(),

@@ -42,8 +42,8 @@ void i18next.use(initReactI18next).init({
 	resources,
 	lng: defaultLanguage,
 	fallbackLng: defaultLanguage,
-	defaultNS: "shell",
-	ns: ["shell", "overview", "operations", "settings", "errors"],
+	defaultNS: "account",
+	ns: ["account", "errors"],
 	interpolation: {
 		escapeValue: false,
 	},

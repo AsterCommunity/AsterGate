@@ -109,6 +109,9 @@ carry a tenant display profile. Leaving one organization does not delete the Acc
 Memberships. Irreversible Account deletion is a separate retention workflow across all tenants.
 
 Internal Account and Membership database IDs never serve directly as public OIDC subjects.
+First-party session JWTs may identify the internal Account UUID as their private `sub`; this does
+not alter public/pairwise OIDC subjects. RFC 0009 defines access/refresh JWTs bound to a live `sid`
+and Account `session_version`, separate from ordinary mutation revisions and tenant grants.
 
 ### Identifier
 
@@ -220,6 +223,11 @@ for those checks.
 
 ### Token projection
 
+This section describes downstream audience/tenant projection. First-party Account/management JWTs
+follow RFC 0009: identity/session binding plus live authorization, rather than a frozen full grant list.
+The frontend reads current `system_permissions`; services recheck exact permissions and high-risk
+password proof regardless of claims or button visibility.
+
 Tokens expose the minimum context required by the audience:
 
 - `iss`, `sub`, `aud`, `iat`, `exp`, and token identifier where appropriate;
@@ -330,8 +338,12 @@ sequential primary keys.
 
 ## Administration boundaries
 
-Management permissions are scoped roles, not a single `is_admin` bit. Bootstrap creates a
-separately authenticated service operator and an organization owner group. Operators manage
+Management permissions are explicitly scoped, not a single `is_admin` bit. Instance setup creates
+an operator Account authenticated through the same Account session machinery, with registered
+`astergate.system.<resource>.<action>` permissions. It does not grant Organization membership or
+tenant access. The current system-permission slice is defined in
+[System authorization](../system-authorization.md); scoped role/delegation and Organization-owner
+group provisioning remain future implementations. Operators manage
 tenant provisioning and issuer keys but do not inherit tenant data access; organization owners
 manage only their tenant. Explicit, audited elevation is required for cross-tenant support.
 Administrative actions use the same role and audit model as automation.

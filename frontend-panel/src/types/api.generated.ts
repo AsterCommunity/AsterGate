@@ -4,6 +4,326 @@
  */
 
 export interface paths {
+    "/api/v1/account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["profile"];
+        put?: never;
+        post?: never;
+        delete: operations["delete_account"];
+        options?: never;
+        head?: never;
+        patch: operations["update_profile"];
+        trace?: never;
+    };
+    "/api/v1/account/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["request_email_change"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/account/email/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirm_email_change"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/account/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["export"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/account/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["change_password"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/account/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sessions"];
+        put?: never;
+        post?: never;
+        delete: operations["revoke_all"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/account/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["revoke_session"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/recovery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["request_recovery"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reset_password"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["request_verification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/verify-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["verify_email"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["manage_list"];
+        put?: never;
+        post: operations["provision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/accounts/{id}/lifecycle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["manage_lifecycle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["settings"];
+        put: operations["update_settings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/frontend-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["frontend_config"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["initialize"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/setup/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -40,21 +360,243 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** @description Minimal JSON error response returned by the generated skeleton. */
-        ErrorResponse: {
-            /** @description Stable product error code. */
-            code: string;
-            /** @description Human-readable error summary. */
-            message: string;
-            /** @description Cargo package name. */
-            service: string;
+        AccountDto: {
+            /** Format: int64 */
+            created_at: number;
+            display_name: string;
+            email: string;
+            email_verified: boolean;
+            id: string;
+            status: components["schemas"]["AccountStatusDto"];
+            system_permissions: components["schemas"]["SystemPermissionDto"][];
+            /** Format: int64 */
+            updated_at: number;
+            username: string;
         };
+        AccountExportDto: {
+            account: components["schemas"]["AccountDto"];
+            sessions: components["schemas"]["SessionDto"][];
+        };
+        AccountResponse: {
+            code: components["schemas"]["ApiErrorCode"];
+            data: components["schemas"]["AccountDto"];
+            msg: string;
+        };
+        /** @enum {string} */
+        AccountStatusDto: "pending_verification" | "active" | "suspended" | "deleted";
+        AccountsResponse: {
+            code: components["schemas"]["ApiErrorCode"];
+            data: components["schemas"]["CursorPage_AccountDto_String"];
+            msg: string;
+        };
+        /** @enum {string} */
+        ApiErrorCode: "success" | "validation.failed" | "auth.credentials_failed" | "auth.session_required" | "auth.forbidden" | "account.identifier_conflict" | "settings.revision_conflict" | "account.not_found" | "account.invalid_transition" | "auth.challenge_invalid" | "rate_limited" | "mail.not_configured" | "service.unavailable" | "setup.required" | "setup.already_initialized" | "account.last_operator" | "endpoint.not_found";
+        ApiErrorInfo: {
+            retryable: boolean;
+        };
+        /** @description Serialized cursor page response. */
+        CursorPage_AccountDto_String: {
+            /** @description Items in the current page. */
+            items: {
+                /** Format: int64 */
+                created_at: number;
+                display_name: string;
+                email: string;
+                email_verified: boolean;
+                id: string;
+                status: components["schemas"]["AccountStatusDto"];
+                system_permissions: components["schemas"]["SystemPermissionDto"][];
+                /** Format: int64 */
+                updated_at: number;
+                username: string;
+            }[];
+            /**
+             * Format: int64
+             * @description Effective page size.
+             */
+            limit: number;
+            next_cursor?: string;
+            /**
+             * Format: int64
+             * @description Total number of items matching the query.
+             */
+            total: number;
+        };
+        DeleteAccountRequest: {
+            password: string;
+        };
+        EmailChangeRequest: {
+            email: string;
+            password: string;
+        };
+        /** @enum {string} */
+        EmailVerificationDto: "optional" | "required";
+        /** @description Product error envelope, matching the AsterDrive wire contract. */
+        ErrorResponse: {
+            code: components["schemas"]["ApiErrorCode"];
+            error: components["schemas"]["ApiErrorInfo"];
+            msg: string;
+        };
+        ExportResponse: {
+            code: components["schemas"]["ApiErrorCode"];
+            data: components["schemas"]["AccountExportDto"];
+            msg: string;
+        };
+        IdentifierRequest: {
+            identifier: string;
+        };
+        /** @enum {string} */
+        LifecycleActionDto: "suspend" | "restore" | "delete";
+        LifecycleRequest: {
+            action: components["schemas"]["LifecycleActionDto"];
+            current_password?: string | null;
+        };
+        LoginRequest: {
+            identifier: string;
+            password: string;
+        };
+        MailSettingsDto: {
+            from_address: string;
+            from_name: string;
+            has_password: boolean;
+            host: string;
+            /** Format: int32 */
+            port: number;
+            security: components["schemas"]["SmtpSecurityDto"];
+            username: string;
+        };
+        MailSettingsInput: {
+            from_address: string;
+            from_name?: string;
+            host: string;
+            password?: string | null;
+            /** Format: int32 */
+            port: number;
+            security?: components["schemas"]["SmtpSecurityDto"];
+            username?: string;
+        };
+        PasswordRequest: {
+            current_password: string;
+            new_password: string;
+        };
+        ProfileRequest: {
+            display_name: string;
+        };
+        PublicAccountPolicyDto: {
+            email_verification_required: boolean;
+            mail_enabled: boolean;
+            /** Format: int32 */
+            minimum_password_length: number;
+            registration_enabled: boolean;
+            setup_state: components["schemas"]["SetupStateDto"];
+        };
+        PublicBrandingDto: {
+            description: string;
+            title: string;
+        };
+        PublicFrontendConfigDto: {
+            account: components["schemas"]["PublicAccountPolicyDto"];
+            branding: components["schemas"]["PublicBrandingDto"];
+        };
+        PublicFrontendConfigResponse: {
+            code: components["schemas"]["ApiErrorCode"];
+            data: components["schemas"]["PublicFrontendConfigDto"];
+            msg: string;
+        };
+        RegisterRequest: {
+            display_name: string;
+            email: string;
+            password: string;
+            username: string;
+        };
+        /** @enum {string} */
+        RegistrationDto: "closed" | "open";
+        ResetPasswordRequest: {
+            password: string;
+            token: string;
+        };
+        SessionDto: {
+            /** Format: int64 */
+            created_at: number;
+            current: boolean;
+            /** Format: int64 */
+            expires_at: number;
+            id: string;
+            user_agent: string;
+        };
+        SessionsResponse: {
+            code: components["schemas"]["ApiErrorCode"];
+            data: components["schemas"]["SessionDto"][];
+            msg: string;
+        };
+        SettingsDto: {
+            branding_description: string;
+            branding_title: string;
+            /** Format: int64 */
+            challenge_ttl_seconds: number;
+            email_verification: components["schemas"]["EmailVerificationDto"];
+            mail?: components["schemas"]["MailSettingsDto"] | null;
+            registration: components["schemas"]["RegistrationDto"];
+            /** Format: int64 */
+            revision: number;
+            /** Format: int64 */
+            session_ttl_seconds: number;
+            site_urls: string[];
+        };
+        SettingsRequest: {
+            branding_description: string;
+            branding_title: string;
+            /** Format: int64 */
+            challenge_ttl_seconds: number;
+            current_password?: string | null;
+            email_verification: components["schemas"]["EmailVerificationDto"];
+            mail?: components["schemas"]["MailSettingsInput"] | null;
+            registration: components["schemas"]["RegistrationDto"];
+            /** Format: int64 */
+            revision: number;
+            /** Format: int64 */
+            session_ttl_seconds: number;
+            site_urls: string[];
+        };
+        SettingsResponse: {
+            code: components["schemas"]["ApiErrorCode"];
+            data: components["schemas"]["SettingsDto"];
+            msg: string;
+        };
+        SetupRequest: {
+            branding_description?: string;
+            branding_title?: string;
+            email_verification?: components["schemas"]["EmailVerificationDto"];
+            initial_account: components["schemas"]["RegisterRequest"];
+            mail?: components["schemas"]["MailSettingsInput"] | null;
+            registration?: components["schemas"]["RegistrationDto"];
+            site_urls: string[];
+        };
+        /** @enum {string} */
+        SetupStateDto: "needs_setup" | "ready";
+        SetupStatusResponse: {
+            code: components["schemas"]["ApiErrorCode"];
+            data: components["schemas"]["SetupStateDto"];
+            msg: string;
+        };
+        /** @enum {string} */
+        SmtpSecurityDto: "start_tls" | "implicit_tls" | "loopback_plaintext";
         /** @description Basic status response returned by the generated skeleton. */
         StatusResponse: {
             /** @description Cargo package name. */
             service: string;
             /** @description Public health or readiness status. */
             status: string;
+        };
+        SuccessResponse: {
+            code: components["schemas"]["ApiErrorCode"];
+            data: boolean;
+            msg: string;
+        };
+        /** @enum {string} */
+        SystemPermissionDto: "astergate.system.accounts.read" | "astergate.system.accounts.create" | "astergate.system.accounts.suspend" | "astergate.system.accounts.restore" | "astergate.system.accounts.delete" | "astergate.system.settings.read" | "astergate.system.settings.update";
+        TokenRequest: {
+            token: string;
         };
     };
     responses: never;
@@ -65,6 +607,626 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    profile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountResponse"];
+                };
+            };
+        };
+    };
+    delete_account: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                "X-AsterGate-Request": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteAccountRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+        };
+    };
+    update_profile: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                "X-AsterGate-Request": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountResponse"];
+                };
+            };
+        };
+    };
+    request_email_change: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                "X-AsterGate-Request": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailChangeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+        };
+    };
+    confirm_email_change: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                "X-AsterGate-Request": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TokenRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+        };
+    };
+    export: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExportResponse"];
+                };
+            };
+        };
+    };
+    change_password: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                "X-AsterGate-Request": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+        };
+    };
+    sessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionsResponse"];
+                };
+            };
+        };
+    };
+    revoke_all: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                "X-AsterGate-Request": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+        };
+    };
+    revoke_session: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                "X-AsterGate-Request": "1";
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+        };
+    };
+    login: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                "X-AsterGate-Request": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountResponse"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    logout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                "X-AsterGate-Request": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+        };
+    };
+    request_recovery: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                "X-AsterGate-Request": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IdentifierRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+        };
+    };
+    register: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                "X-AsterGate-Request": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountResponse"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    reset_password: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                "X-AsterGate-Request": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetPasswordRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+        };
+    };
+    request_verification: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                "X-AsterGate-Request": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IdentifierRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+        };
+    };
+    verify_email: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                "X-AsterGate-Request": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TokenRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+        };
+    };
+    manage_list: {
+        parameters: {
+            query?: {
+                after?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountsResponse"];
+                };
+            };
+        };
+    };
+    provision: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                "X-AsterGate-Request": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountResponse"];
+                };
+            };
+        };
+    };
+    manage_lifecycle: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                "X-AsterGate-Request": "1";
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LifecycleRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountResponse"];
+                };
+            };
+        };
+    };
+    settings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsResponse"];
+                };
+            };
+        };
+    };
+    update_settings: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                "X-AsterGate-Request": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettingsRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsResponse"];
+                };
+            };
+        };
+    };
+    frontend_config: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicFrontendConfigResponse"];
+                };
+            };
+        };
+    };
+    initialize: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                "X-AsterGate-Request": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetupRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountResponse"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetupStatusResponse"];
+                };
+            };
+        };
+    };
     health: {
         parameters: {
             query?: never;

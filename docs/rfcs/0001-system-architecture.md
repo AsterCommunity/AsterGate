@@ -112,7 +112,7 @@ Proposed product modules:
 | `interaction` | sign-in/sign-up/consent/MFA flow state and browser interaction lifecycle |
 | `oauth` | clients, authorization requests/codes, grants, access and refresh token issuance |
 | `oidc` | discovery, ID tokens, userinfo, subject identifiers, OIDC logout |
-| `session` | browser and refresh-token families, revocation, device/session presentation |
+| `session` | first-party access/refresh JWT sessions, Account security epochs, rotation/reuse, immediate revocation; downstream refresh families retain their grant binding |
 | `authorization` | API resources, scopes, roles, permissions, policy evaluation |
 | `organization` | tenant organizations, account memberships, groups, group membership, and JIT assignments |
 | `connectors/upstream` | external source adapters and normalized identity evidence across protocol families |
@@ -134,6 +134,11 @@ AsterGate uses AsterForge directly for product-neutral mechanics:
 - mail outbox, scheduled/background task mechanics, and audit-log storage mechanics;
 - API helpers, validation, cryptographic primitives, and product-neutral upstream external-auth
   drivers; additional shared protocol-family crates may be added or changed under RFC 0006.
+
+RFC 0009 adopts AD-style first-party JWT sessions. [AF #42](https://github.com/AsterCommunity/AsterForge/issues/42)
+tracks extracting typed token verification/issuance and refresh-rotation mechanisms through product
+ports. AG retains its Account/session schema, signing policy, immediate revocation, precise permission
+checks, transactions, transport and audit. This shared mechanism is pending, not an available dependency.
 
 AsterGate retains:
 
@@ -193,8 +198,8 @@ client.
 | OAuth/OIDC protocol | registered clients and resource servers | protocol-defined client/user credentials |
 | Future SAML2 application protocol | registered SPs | protocol-defined assertions and Account session |
 | Experience API | hosted or custom sign-in UI | short-lived interaction handle plus browser binding |
-| Account API | global Account self-service | Account session or dedicated Account audience token; step-up for sensitive actions |
-| Management API | operators and automation | scoped admin user or machine token |
+| Account API | global Account self-service | first-party access JWT bound to live Account/session; step-up for sensitive actions (RFC 0009) |
+| Management API | operators and automation | human first-party access JWT plus current exact permissions; separately scoped machine credentials |
 | Internal operations | probes and deployment tooling | network/operator boundary |
 
 The hosted sign-in UI is a first-party consumer of the Experience API. It must not gain hidden
@@ -284,8 +289,9 @@ Every security-sensitive use case produces structured, redacted telemetry:
 
 ## Alternatives rejected
 
-- **Copy AsterDrive authentication into AsterGate:** it produces another RP with local cookies,
-  not an authorization server for other applications.
+- **Treat AsterDrive's local login as the complete IdP:** its RP/local-session implementation does
+  not implement AG's downstream authorization server. Reusing AD's JWT session architecture through
+  AF is the chosen first-party authentication mechanism (RFC 0009), with separate protocol issuance.
 - **Start as microservices:** transaction and deployment complexity arrives before independent
   scaling or ownership needs exist.
 - **Use email as identity:** email can change, can be absent, and has provider-specific trust

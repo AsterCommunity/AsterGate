@@ -18,32 +18,21 @@ pub struct AppState {
     pub cache: Arc<dyn aster_forge_cache::CacheBackend>,
     /// Cross-process runtime config reload handle.
     pub config_sync: aster_forge_config::ConfigSyncRuntime,
+    pub runtime_config: Arc<crate::config::runtime_config::RuntimeConfig>,
     /// Shared metrics recorder.
     pub metrics: aster_forge_metrics::SharedMetricsRecorder,
     /// Product mail sender.
     pub mail_sender: Arc<dyn aster_forge_mail::MailSender>,
+    pub account_security: Arc<crate::services::account::AccountSecurity>,
 }
 
 impl AppState {
-    /// Creates runtime state from prepared resources.
-    pub fn new(
-        config: AppConfig,
-        db_handles: aster_forge_db::DbHandles,
-        cache: Arc<dyn aster_forge_cache::CacheBackend>,
-        config_sync: aster_forge_config::ConfigSyncRuntime,
-        metrics: aster_forge_metrics::SharedMetricsRecorder,
-        mail_sender: Arc<dyn aster_forge_mail::MailSender>,
-    ) -> Self {
-        Self {
-            config: Arc::new(config),
-            db_handles,
-            cache,
-            config_sync,
-            metrics,
-            mail_sender,
-        }
+    pub fn management_settings(
+        &self,
+    ) -> crate::services::account::Result<crate::services::system_settings::models::SystemSettings>
+    {
+        self.runtime_config.management_settings()
     }
-
     /// Returns the configured cache backend name.
     pub fn cache_backend_name(&self) -> &'static str {
         self.cache.backend_name()

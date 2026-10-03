@@ -25,7 +25,11 @@ pub async fn health() -> impl IntoResponse {
 #[aster_forge_api_docs_macros::path(get, path = "/health/ready", tag = "health", responses((status = 200, description = "Service is ready", body = StatusResponse), (status = 503, description = "Service dependency is not ready", body = StatusResponse)))]
 pub async fn ready(State(state): State<Arc<crate::runtime::AppState>>) -> impl IntoResponse {
     let started = std::time::Instant::now();
-    let reports = vec![check_database(&state).await, check_cache(&state).await];
+    let reports = vec![
+        check_database(&state).await,
+        check_cache(&state).await,
+        check_configuration(&state),
+    ];
     let report = SystemHealthReport::with_duration(reports, started.elapsed());
     crate::metrics::record_health_report(aster_forge_runtime::HealthCheckScope::Readiness, &report);
     let ready = report
@@ -44,6 +48,21 @@ pub async fn ready(State(state): State<Arc<crate::runtime::AppState>>) -> impl I
         },
         response,
     )
+}
+
+fn check_configuration(state: &crate::runtime::AppState) -> HealthComponentReport {
+    let valid_authentication = matches!(
+        state.runtime_config.authentication(),
+        Ok(_) | Err(crate::services::account::AccountError::SetupRequired)
+    );
+    if valid_authentication
+        && state.runtime_config.branding().is_ok()
+        && state.runtime_config.mail().is_ok()
+    {
+        HealthComponentReport::healthy("configuration", "runtime configuration validated")
+    } else {
+        HealthComponentReport::unhealthy("configuration", "runtime configuration is invalid")
+    }
 }
 
 async fn check_database(state: &crate::runtime::AppState) -> HealthComponentReport {

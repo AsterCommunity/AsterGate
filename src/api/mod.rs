@@ -4,7 +4,10 @@ use axum::{Router, middleware};
 use std::sync::Arc;
 use tower_http::compression::CompressionLayer;
 
+pub(crate) mod account_security;
+pub mod api_error_code;
 pub(crate) mod common;
+pub mod dto;
 pub mod http;
 #[cfg(all(debug_assertions, feature = "openapi"))]
 pub mod openapi;
@@ -15,7 +18,7 @@ pub fn router(state: Arc<crate::runtime::AppState>) -> Router {
     #[cfg(feature = "metrics")]
     let metrics = state.metrics.clone();
     let router = Router::new()
-        .nest("/api/v1", routes::api_router())
+        .nest("/api/v1", routes::api_router(state.clone()))
         .merge(routes::health::router())
         .merge(routes::frontend::router())
         .with_state(state)

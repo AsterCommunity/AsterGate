@@ -1,7 +1,17 @@
 export const appPaths = {
-	overview: "/",
-	operations: "/operations",
-	settings: "/settings",
+	setup: "/setup",
+	instanceSettings: "/instance-settings",
+	profile: "/",
+	security: "/security",
+	sessions: "/sessions",
+	signIn: "/sign-in",
+	signUp: "/sign-up",
+	recover: "/recover",
+	resendVerification: "/resend-verification",
+	verifyEmail: "/verify-email",
+	resetPassword: "/reset-password",
+	confirmEmail: "/confirm-email",
+	management: "/admin",
 } as const;
 
 export const backendPaths = {

@@ -33,4 +33,37 @@ describe("requestJson", () => {
 			payload: { message: "not ready" },
 		});
 	});
+	it("keeps HTTP status for HTML proxy failures", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () => new Response("<html>Bad Gateway</html>", { status: 502 }),
+			),
+		);
+		await expect(requestJson("/api/v1/account")).rejects.toMatchObject({
+			status: 502,
+			code: null,
+			payload: null,
+		});
+	});
+	it("exposes typed codes and retry metadata without classifying wrong passwords as expired sessions", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(
+						JSON.stringify({
+							code: "auth.credentials_failed",
+							msg: "Invalid credentials",
+							error: { retryable: false },
+						}),
+						{ status: 401 },
+					),
+			),
+		);
+		await expect(requestJson("/api/v1/auth/login")).rejects.toMatchObject({
+			code: "auth.credentials_failed",
+			retryable: false,
+		});
+	});
 });

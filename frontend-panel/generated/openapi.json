@@ -1,14 +1,1072 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "generated-aster-service",
-    "description": "Generated Aster service OpenAPI document.",
+    "title": "AsterGate",
+    "description": "AsterGate Account and management API.",
     "license": {
       "name": "MIT"
     },
-    "version": "0.1.0"
+    "version": "0.1.0-alpha.1"
   },
   "paths": {
+    "/api/v1/account": {
+      "get": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "profile",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "LocalSessionCookie": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "delete_account",
+        "parameters": [
+          {
+            "name": "X-AsterGate-Request",
+            "in": "header",
+            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteAccountRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "LocalSessionCookie": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "update_profile",
+        "parameters": [
+          {
+            "name": "X-AsterGate-Request",
+            "in": "header",
+            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "LocalSessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/account/email": {
+      "post": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "request_email_change",
+        "parameters": [
+          {
+            "name": "X-AsterGate-Request",
+            "in": "header",
+            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailChangeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "LocalSessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/account/email/confirm": {
+      "post": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "confirm_email_change",
+        "parameters": [
+          {
+            "name": "X-AsterGate-Request",
+            "in": "header",
+            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "LocalSessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/account/export": {
+      "get": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "export",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "LocalSessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/account/password": {
+      "post": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "change_password",
+        "parameters": [
+          {
+            "name": "X-AsterGate-Request",
+            "in": "header",
+            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "LocalSessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/account/sessions": {
+      "get": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "sessions",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "LocalSessionCookie": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "revoke_all",
+        "parameters": [
+          {
+            "name": "X-AsterGate-Request",
+            "in": "header",
+            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "LocalSessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/account/sessions/{id}": {
+      "delete": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "revoke_session",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-AsterGate-Request",
+            "in": "header",
+            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "LocalSessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "login",
+        "parameters": [
+          {
+            "name": "X-AsterGate-Request",
+            "in": "header",
+            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "logout",
+        "parameters": [
+          {
+            "name": "X-AsterGate-Request",
+            "in": "header",
+            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "LocalSessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/recovery": {
+      "post": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "request_recovery",
+        "parameters": [
+          {
+            "name": "X-AsterGate-Request",
+            "in": "header",
+            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentifierRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "register",
+        "parameters": [
+          {
+            "name": "X-AsterGate-Request",
+            "in": "header",
+            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/reset-password": {
+      "post": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "reset_password",
+        "parameters": [
+          {
+            "name": "X-AsterGate-Request",
+            "in": "header",
+            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/verification": {
+      "post": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "request_verification",
+        "parameters": [
+          {
+            "name": "X-AsterGate-Request",
+            "in": "header",
+            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentifierRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/verify-email": {
+      "post": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "verify_email",
+        "parameters": [
+          {
+            "name": "X-AsterGate-Request",
+            "in": "header",
+            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/management/accounts": {
+      "get": {
+        "tags": [
+          "account-management"
+        ],
+        "operationId": "manage_list",
+        "parameters": [
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "LocalSessionCookie": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "account-management"
+        ],
+        "operationId": "provision",
+        "parameters": [
+          {
+            "name": "X-AsterGate-Request",
+            "in": "header",
+            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "LocalSessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/management/accounts/{id}/lifecycle": {
+      "post": {
+        "tags": [
+          "account-management"
+        ],
+        "operationId": "manage_lifecycle",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-AsterGate-Request",
+            "in": "header",
+            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LifecycleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "LocalSessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/management/settings": {
+      "get": {
+        "tags": [
+          "instance-settings"
+        ],
+        "operationId": "settings",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "LocalSessionCookie": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "instance-settings"
+        ],
+        "operationId": "update_settings",
+        "parameters": [
+          {
+            "name": "X-AsterGate-Request",
+            "in": "header",
+            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "LocalSessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/public/frontend-config": {
+      "get": {
+        "tags": [
+          "public"
+        ],
+        "operationId": "frontend_config",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicFrontendConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/setup": {
+      "post": {
+        "tags": [
+          "setup"
+        ],
+        "operationId": "initialize",
+        "parameters": [
+          {
+            "name": "X-AsterGate-Request",
+            "in": "header",
+            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/setup/status": {
+      "get": {
+        "tags": [
+          "setup"
+        ],
+        "operationId": "status",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -62,28 +1120,848 @@
   },
   "components": {
     "schemas": {
-      "ErrorResponse": {
+      "AccountDto": {
         "type": "object",
-        "description": "Minimal JSON error response returned by the generated skeleton.",
         "required": [
-          "service",
+          "id",
+          "username",
+          "email",
+          "email_verified",
+          "display_name",
+          "status",
+          "created_at",
+          "updated_at",
+          "system_permissions"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "email_verified": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AccountStatusDto"
+          },
+          "system_permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SystemPermissionDto"
+            }
+          },
+          "updated_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "username": {
+            "type": "string"
+          }
+        }
+      },
+      "AccountExportDto": {
+        "type": "object",
+        "required": [
+          "account",
+          "sessions"
+        ],
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/AccountDto"
+          },
+          "sessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SessionDto"
+            }
+          }
+        }
+      },
+      "AccountResponse": {
+        "type": "object",
+        "required": [
           "code",
-          "message"
+          "msg",
+          "data"
         ],
         "properties": {
           "code": {
-            "type": "string",
-            "description": "Stable product error code."
+            "$ref": "#/components/schemas/ApiErrorCode"
           },
-          "message": {
-            "type": "string",
-            "description": "Human-readable error summary."
+          "data": {
+            "$ref": "#/components/schemas/AccountDto"
           },
-          "service": {
-            "type": "string",
-            "description": "Cargo package name."
+          "msg": {
+            "type": "string"
           }
         }
+      },
+      "AccountStatusDto": {
+        "type": "string",
+        "enum": [
+          "pending_verification",
+          "active",
+          "suspended",
+          "deleted"
+        ]
+      },
+      "AccountsResponse": {
+        "type": "object",
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ApiErrorCode"
+          },
+          "data": {
+            "$ref": "#/components/schemas/CursorPage_AccountDto_String"
+          },
+          "msg": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiErrorCode": {
+        "type": "string",
+        "enum": [
+          "success",
+          "validation.failed",
+          "auth.credentials_failed",
+          "auth.session_required",
+          "auth.forbidden",
+          "account.identifier_conflict",
+          "settings.revision_conflict",
+          "account.not_found",
+          "account.invalid_transition",
+          "auth.challenge_invalid",
+          "rate_limited",
+          "mail.not_configured",
+          "service.unavailable",
+          "setup.required",
+          "setup.already_initialized",
+          "account.last_operator",
+          "endpoint.not_found"
+        ]
+      },
+      "ApiErrorInfo": {
+        "type": "object",
+        "required": [
+          "retryable"
+        ],
+        "properties": {
+          "retryable": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CursorPage_AccountDto_String": {
+        "type": "object",
+        "description": "Serialized cursor page response.",
+        "required": [
+          "items",
+          "total",
+          "limit"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "username",
+                "email",
+                "email_verified",
+                "display_name",
+                "status",
+                "created_at",
+                "updated_at",
+                "system_permissions"
+              ],
+              "properties": {
+                "created_at": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "display_name": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "email_verified": {
+                  "type": "boolean"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "status": {
+                  "$ref": "#/components/schemas/AccountStatusDto"
+                },
+                "system_permissions": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SystemPermissionDto"
+                  }
+                },
+                "updated_at": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "username": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Items in the current page."
+          },
+          "limit": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Effective page size.",
+            "minimum": 0
+          },
+          "next_cursor": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Total number of items matching the query.",
+            "minimum": 0
+          }
+        }
+      },
+      "DeleteAccountRequest": {
+        "type": "object",
+        "required": [
+          "password"
+        ],
+        "properties": {
+          "password": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "EmailChangeRequest": {
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "EmailVerificationDto": {
+        "type": "string",
+        "enum": [
+          "optional",
+          "required"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "description": "Product error envelope, matching the AsterDrive wire contract.",
+        "required": [
+          "code",
+          "msg",
+          "error"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ApiErrorCode"
+          },
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorInfo"
+          },
+          "msg": {
+            "type": "string"
+          }
+        }
+      },
+      "ExportResponse": {
+        "type": "object",
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ApiErrorCode"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AccountExportDto"
+          },
+          "msg": {
+            "type": "string"
+          }
+        }
+      },
+      "IdentifierRequest": {
+        "type": "object",
+        "required": [
+          "identifier"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LifecycleActionDto": {
+        "type": "string",
+        "enum": [
+          "suspend",
+          "restore",
+          "delete"
+        ]
+      },
+      "LifecycleRequest": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/LifecycleActionDto"
+          },
+          "current_password": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": [
+          "identifier",
+          "password"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MailSettingsDto": {
+        "type": "object",
+        "required": [
+          "host",
+          "port",
+          "username",
+          "has_password",
+          "from_address",
+          "from_name",
+          "security"
+        ],
+        "properties": {
+          "from_address": {
+            "type": "string"
+          },
+          "from_name": {
+            "type": "string"
+          },
+          "has_password": {
+            "type": "boolean"
+          },
+          "host": {
+            "type": "string"
+          },
+          "port": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "security": {
+            "$ref": "#/components/schemas/SmtpSecurityDto"
+          },
+          "username": {
+            "type": "string"
+          }
+        }
+      },
+      "MailSettingsInput": {
+        "type": "object",
+        "required": [
+          "host",
+          "port",
+          "from_address"
+        ],
+        "properties": {
+          "from_address": {
+            "type": "string"
+          },
+          "from_name": {
+            "type": "string"
+          },
+          "host": {
+            "type": "string"
+          },
+          "password": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "port": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "security": {
+            "$ref": "#/components/schemas/SmtpSecurityDto"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PasswordRequest": {
+        "type": "object",
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "properties": {
+          "current_password": {
+            "type": "string"
+          },
+          "new_password": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProfileRequest": {
+        "type": "object",
+        "required": [
+          "display_name"
+        ],
+        "properties": {
+          "display_name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PublicAccountPolicyDto": {
+        "type": "object",
+        "required": [
+          "setup_state",
+          "registration_enabled",
+          "mail_enabled",
+          "email_verification_required",
+          "minimum_password_length"
+        ],
+        "properties": {
+          "email_verification_required": {
+            "type": "boolean"
+          },
+          "mail_enabled": {
+            "type": "boolean"
+          },
+          "minimum_password_length": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "registration_enabled": {
+            "type": "boolean"
+          },
+          "setup_state": {
+            "$ref": "#/components/schemas/SetupStateDto"
+          }
+        }
+      },
+      "PublicBrandingDto": {
+        "type": "object",
+        "required": [
+          "title",
+          "description"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "PublicFrontendConfigDto": {
+        "type": "object",
+        "required": [
+          "branding",
+          "account"
+        ],
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/PublicAccountPolicyDto"
+          },
+          "branding": {
+            "$ref": "#/components/schemas/PublicBrandingDto"
+          }
+        }
+      },
+      "PublicFrontendConfigResponse": {
+        "type": "object",
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ApiErrorCode"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PublicFrontendConfigDto"
+          },
+          "msg": {
+            "type": "string"
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": [
+          "username",
+          "email",
+          "display_name",
+          "password"
+        ],
+        "properties": {
+          "display_name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegistrationDto": {
+        "type": "string",
+        "enum": [
+          "closed",
+          "open"
+        ]
+      },
+      "ResetPasswordRequest": {
+        "type": "object",
+        "required": [
+          "token",
+          "password"
+        ],
+        "properties": {
+          "password": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SessionDto": {
+        "type": "object",
+        "required": [
+          "id",
+          "current",
+          "created_at",
+          "expires_at",
+          "user_agent"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "current": {
+            "type": "boolean"
+          },
+          "expires_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "id": {
+            "type": "string"
+          },
+          "user_agent": {
+            "type": "string"
+          }
+        }
+      },
+      "SessionsResponse": {
+        "type": "object",
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ApiErrorCode"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SessionDto"
+            }
+          },
+          "msg": {
+            "type": "string"
+          }
+        }
+      },
+      "SettingsDto": {
+        "type": "object",
+        "required": [
+          "revision",
+          "branding_title",
+          "branding_description",
+          "site_urls",
+          "registration",
+          "email_verification",
+          "session_ttl_seconds",
+          "challenge_ttl_seconds"
+        ],
+        "properties": {
+          "branding_description": {
+            "type": "string"
+          },
+          "branding_title": {
+            "type": "string"
+          },
+          "challenge_ttl_seconds": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "email_verification": {
+            "$ref": "#/components/schemas/EmailVerificationDto"
+          },
+          "mail": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/MailSettingsDto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "registration": {
+            "$ref": "#/components/schemas/RegistrationDto"
+          },
+          "revision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "session_ttl_seconds": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "site_urls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "SettingsRequest": {
+        "type": "object",
+        "required": [
+          "revision",
+          "site_urls",
+          "branding_title",
+          "branding_description",
+          "registration",
+          "email_verification",
+          "session_ttl_seconds",
+          "challenge_ttl_seconds"
+        ],
+        "properties": {
+          "branding_description": {
+            "type": "string"
+          },
+          "branding_title": {
+            "type": "string"
+          },
+          "challenge_ttl_seconds": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "current_password": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email_verification": {
+            "$ref": "#/components/schemas/EmailVerificationDto"
+          },
+          "mail": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/MailSettingsInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "registration": {
+            "$ref": "#/components/schemas/RegistrationDto"
+          },
+          "revision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "session_ttl_seconds": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "site_urls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "SettingsResponse": {
+        "type": "object",
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ApiErrorCode"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SettingsDto"
+          },
+          "msg": {
+            "type": "string"
+          }
+        }
+      },
+      "SetupRequest": {
+        "type": "object",
+        "required": [
+          "site_urls",
+          "initial_account"
+        ],
+        "properties": {
+          "branding_description": {
+            "type": "string"
+          },
+          "branding_title": {
+            "type": "string"
+          },
+          "email_verification": {
+            "$ref": "#/components/schemas/EmailVerificationDto"
+          },
+          "initial_account": {
+            "$ref": "#/components/schemas/RegisterRequest"
+          },
+          "mail": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/MailSettingsInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "registration": {
+            "$ref": "#/components/schemas/RegistrationDto"
+          },
+          "site_urls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "SetupStateDto": {
+        "type": "string",
+        "enum": [
+          "needs_setup",
+          "ready"
+        ]
+      },
+      "SetupStatusResponse": {
+        "type": "object",
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ApiErrorCode"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SetupStateDto"
+          },
+          "msg": {
+            "type": "string"
+          }
+        }
+      },
+      "SmtpSecurityDto": {
+        "type": "string",
+        "enum": [
+          "start_tls",
+          "implicit_tls",
+          "loopback_plaintext"
+        ]
       },
       "StatusResponse": {
         "type": "object",
@@ -102,6 +1980,61 @@
             "description": "Public health or readiness status."
           }
         }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ApiErrorCode"
+          },
+          "data": {
+            "type": "boolean"
+          },
+          "msg": {
+            "type": "string"
+          }
+        }
+      },
+      "SystemPermissionDto": {
+        "type": "string",
+        "enum": [
+          "astergate.system.accounts.read",
+          "astergate.system.accounts.create",
+          "astergate.system.accounts.suspend",
+          "astergate.system.accounts.restore",
+          "astergate.system.accounts.delete",
+          "astergate.system.settings.read",
+          "astergate.system.settings.update"
+        ]
+      },
+      "TokenRequest": {
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "LocalSessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "ag_session"
+      },
+      "SessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-ag_session"
       }
     }
   }

@@ -3,7 +3,7 @@ import type {
 	components,
 } from "@/types/api.generated";
 
-export type { operations, paths } from "@/types/api.generated";
+export type { components, operations, paths } from "@/types/api.generated";
 
 type OperationResponses<Operation extends keyof ApiOperations> =
 	ApiOperations[Operation] extends { responses: infer Responses }
@@ -64,21 +64,5 @@ export type OperationRequestBody<Operation extends keyof ApiOperations> =
 		? NonNullable<Body>
 		: never;
 
-export type StatusResponse = components["schemas"] extends {
-	StatusResponse: infer Schema;
-}
-	? Schema
-	: {
-			service: string;
-			status: string;
-		};
-
-export type ErrorResponse = components["schemas"] extends {
-	ErrorResponse: infer Schema;
-}
-	? Schema
-	: {
-			service: string;
-			code: string;
-			message: string;
-		};
+export type StatusResponse = components["schemas"]["StatusResponse"];
+export type ErrorResponse = components["schemas"]["ErrorResponse"];

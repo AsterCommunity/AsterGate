@@ -19,6 +19,7 @@
 pub use sea_orm_migration::prelude::*;
 
 mod m20260627_000001_forge_foundation_schema;
+mod m20261003_000001_account_lifecycle;
 
 /// Service migrator.
 pub struct Migrator;
@@ -36,8 +37,9 @@ impl Migrator {
 #[async_trait::async_trait]
 impl MigratorTrait for Migrator {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
-        vec![Box::new(
-            m20260627_000001_forge_foundation_schema::Migration,
-        )]
+        vec![
+            Box::new(m20260627_000001_forge_foundation_schema::Migration),
+            Box::new(m20261003_000001_account_lifecycle::Migration),
+        ]
     }
 }

@@ -4,6 +4,10 @@ This directory is the design authority for AsterGate product architecture. RFCs 
 contracts and acceptance criteria; they do not claim that the current skeleton already implements
 them.
 
+[Module tracking: AG #1](https://github.com/AsterCommunity/AsterGate/issues/1) links the implementation
+issues and their dependencies. The [implementation matrix](IMPLEMENTATION-MATRIX.md) separates
+accepted design, verified local implementation and missing or upstream-dependent capabilities.
+
 ## Status vocabulary
 
 - **Proposed**: under review; implementation must not silently invent conflicting behavior.
@@ -28,6 +32,7 @@ details may be settled in code and tests as long as they preserve the accepted c
 | [0006](0006-bidirectional-connectors.md) | Proposed | Bidirectional upstream/downstream connector architecture |
 | [0007](0007-instance-identity-boundaries.md) | Proposed | One identity domain per instance, independent deployments, and federation boundaries |
 | [0008](0008-independent-idp-and-application-access-policy.md) | Proposed | Independent IdP product boundary and Application access policy |
+| [0009](0009-first-party-jwt-sessions.md) | Accepted | AD-style first-party JWT sessions, immediate revocation and Forge mechanism ownership |
 
 ## Reading order
 
@@ -42,6 +47,9 @@ RFC 0007 amends the instance/identity-domain terminology and deployment boundari
 configuration and uses independent deployments for independent identity domains.
 RFC 0008 defines AsterGate as an independent general-purpose IdP and freezes the distinction
 between Group-based Application admission and Role/Permission-based resource authorization.
+RFC 0009 selects access/refresh JWTs for first-party Account/management authentication and amends
+the session/security/delivery contracts. It preserves immediate revocation and separates first-party
+sessions from downstream OAuth grants. The architecture is accepted; JWT implementation is pending.
 
 ## Evidence and references
 

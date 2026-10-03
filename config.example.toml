@@ -16,7 +16,7 @@ pool_size = 10
 retry_count = 3
 
 [cache]
-# Supported backends in this template: "memory", "redis".
+# Supported backends: "memory", "redis".
 backend = "memory"
 # Redis examples: "redis://127.0.0.1:6379/0" or
 # { base_url = "redis://127.0.0.1:6379/0", username = "", password = "RAW_PASSWORD" }.
@@ -24,7 +24,8 @@ endpoint = ""
 default_ttl = 3600
 
 [config_sync]
-# Supported backends in this template: "disabled", "redis".
+# Supported backends: "disabled", "redis". Use Redis to refresh config across replicas.
+# AG publishes after committed writes and reloads through Forge's subscription supervisor.
 backend = "disabled"
 # Redis pubsub examples: "redis://127.0.0.1:6379/0" or
 # { base_url = "redis://127.0.0.1:6379/0", username = "", password = "RAW_PASSWORD" }.
@@ -39,3 +40,14 @@ format = "text"
 file = ""
 enable_rotation = false
 max_backups = 5
+
+[security]
+# A missing master_key is generated once into the local config file at startup, as in AsterDrive.
+# Generate a 64-character hexadecimal key with: openssl rand -hex 32
+# For deployments with multiple replicas, inject one shared 32-byte key in this hex format:
+# ASTER__SECURITY__MASTER_KEY. Back up this key with the database; never regenerate it on upgrade.
+# master_key = "64_HEXADECIMAL_CHARACTERS"
+# Ordered public site URLs (first is primary for email), site name/description, registration,
+# verification policy, session lifetimes and optional SMTP settings are initialized through
+# setup and stored in system_config. They can be changed from Instance settings. The initial management Account is
+# created through setup. Account sessions + exact system permissions authorize management APIs.

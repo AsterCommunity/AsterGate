@@ -5,7 +5,7 @@
 
 /// Static service configuration used by the generated skeleton.
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
-#[serde(default)]
+#[serde(default, deny_unknown_fields)]
 pub struct AppConfig {
     /// HTTP server settings.
     pub server: ServerConfig,
@@ -17,11 +17,13 @@ pub struct AppConfig {
     pub config_sync: aster_forge_config::ConfigSyncConfig,
     /// Logging settings.
     pub logging: aster_forge_logging::LoggingConfig,
+    pub security: super::SecurityConfig,
 }
 
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
+            security: super::SecurityConfig::default(),
             server: ServerConfig::default(),
             database: DatabaseConfig::default(),
             cache: aster_forge_cache::CacheConfig {
@@ -47,7 +49,7 @@ impl Default for AppConfig {
 
 /// HTTP server settings.
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
-#[serde(default)]
+#[serde(default, deny_unknown_fields)]
 pub struct ServerConfig {
     /// HTTP bind host.
     pub host: String,
@@ -69,7 +71,7 @@ impl Default for ServerConfig {
 
 /// Database connection settings.
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
-#[serde(default)]
+#[serde(default, deny_unknown_fields)]
 pub struct DatabaseConfig {
     /// Complete SeaORM URL or a credential-free base URL plus raw credentials.
     pub url: aster_forge_db::DatabaseUrl,

@@ -63,7 +63,7 @@ export function ErrorPage() {
 					</code>
 				) : null}
 				<Link
-					to={appPaths.overview}
+					to={appPaths.profile}
 					className="mt-6 inline-flex h-10 items-center rounded-lg bg-slate-950 px-4 font-semibold text-sm text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 dark:bg-slate-50 dark:text-slate-950 dark:hover:bg-slate-200"
 				>
 					{t("backHome")}

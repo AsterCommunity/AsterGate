@@ -8,6 +8,8 @@ pub async fn setup() -> (aster_gate::runtime::AppState, SqliteTestDatabase) {
     config.database.url = database.url().into();
     config.cache = CacheConfig::default();
     config.logging.file = String::new();
+
+    config.security.master_key = hex::encode([7_u8; 32]);
     let state = aster_gate::runtime::assembly::prepare_state(config)
         .await
         .expect("runtime state should prepare");
