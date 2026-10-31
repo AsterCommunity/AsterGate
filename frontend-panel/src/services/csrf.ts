@@ -26,6 +26,8 @@ export async function csrfHeaders(
 	if (!token) {
 		bootstrap ??= fetch("/api/v1/setup/status", {
 			credentials: "same-origin",
+			// Preserve the same-host scheme during pre-setup HTTPS loopback bootstrap.
+			referrerPolicy: "same-origin",
 			cache: "no-store",
 			headers: { Accept: "application/json" },
 		})

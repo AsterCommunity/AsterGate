@@ -28,6 +28,18 @@
   OpenAPI and the panel SDK use operation response types; browser error handling distinguishes
   expired sessions from failed credentials and treats Retry-After as advisory without automatic retries.
 
+### Fixed
+
+- HTTPS loopback setup selects Secure host-prefixed CSRF/session cookies using the same-host
+  browser source; forwarded scheme/host stay untrusted and configured sites take over after setup.
+- Allowlisted CORS clients can read HTTP admission 429 responses and Retry-After; preflight still
+  consumes quotas and denied origins receive no allow-origin header.
+- Account middleware, extractors, response mapping and explicit committed Cookie operations have
+  separate ownership; route groups define bootstrap/setup/readiness without path exemptions.
+
+- Forge is pinned to 2483171e4c7201e64e8f3a9dcecbd9b4cc86235b; CORS denials use its typed
+  rejection callback, removing the empty-403 response heuristic.
+
 ### Configuration
 
 - Registration defaults to closed. Setup enables open registration independently of optional SMTP;

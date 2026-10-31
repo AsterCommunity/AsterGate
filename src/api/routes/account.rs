@@ -1,8 +1,10 @@
 use crate::api::{api_error_code::ApiErrorCode, response::NoData};
 use crate::{
     api::{
-        account_security::{self, Authenticated, JsonInput, SessionCookiePolicy},
+        cookies::{self, SessionCookiePolicy},
         dto::account::*,
+        extractors::{Authenticated, JsonInput},
+        middleware::account as account_middleware,
     },
     runtime::AppState,
     services::account::{self, AccountError, Result, models::*},
@@ -19,10 +21,7 @@ use axum::{
 use std::sync::Arc;
 
 pub fn router(state: Arc<AppState>) -> Router<Arc<AppState>> {
-    Router::new()
-        .route("/setup/status", get(super::system::status))
-        .nest("/public", super::public::router())
-        .route("/setup", post(super::system::initialize))
+    let protected = Router::new()
         .route(
             "/management/settings",
             get(super::system::settings).put(super::system::update_settings),
@@ -49,11 +48,26 @@ pub fn router(state: Arc<AppState>) -> Router<Arc<AppState>> {
             "/management/accounts/{id}/lifecycle",
             post(manage_lifecycle),
         )
-        .layer(DefaultBodyLimit::max(16 * 1024))
-        .layer(middleware::from_fn_with_state(
+        .route_layer(middleware::from_fn_with_state(
+            state.clone(),
+            account_middleware::require_ready,
+        ));
+    let bootstrap = Router::new()
+        .route("/setup/status", get(super::system::status))
+        .nest("/public", super::public::router())
+        .route_layer(middleware::from_fn_with_state(
+            state.clone(),
+            account_middleware::bootstrap,
+        ));
+    Router::new()
+        .merge(protected)
+        .route("/setup", post(super::system::initialize))
+        .route_layer(middleware::from_fn_with_state(
             state,
-            account_security::boundary,
+            account_middleware::protect,
         ))
+        .merge(bootstrap)
+        .layer(DefaultBodyLimit::max(16 * 1024))
 }
 
 fn success() -> Result<Json<ApiResponse<bool, ApiErrorCode, NoData>>> {
@@ -61,10 +75,7 @@ fn success() -> Result<Json<ApiResponse<bool, ApiErrorCode, NoData>>> {
 }
 fn clear(policy: &SessionCookiePolicy) -> Result<Response> {
     let mut response = success()?.into_response();
-    response.headers_mut().insert(
-        header::SET_COOKIE,
-        account_security::session_cookie(policy, "")?,
-    );
+    cookies::clear_session(&mut response, policy)?;
     Ok(response)
 }
 
@@ -97,10 +108,7 @@ pub async fn login(
         result.account.into(),
     )?)
     .into_response();
-    response.headers_mut().insert(
-        header::SET_COOKIE,
-        account_security::session_cookie(&cookie_policy, &result.session_token)?,
-    );
+    cookies::issue_session(&mut response, &cookie_policy, &result.session_token)?;
     Ok(response)
 }
 

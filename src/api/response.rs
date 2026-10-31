@@ -3,6 +3,12 @@
 //! messages, retryability and diagnostic disclosure. Protocol and health responses stay separate.
 
 use super::api_error_code::ApiErrorCode;
+use crate::services::account::AccountError;
+use axum::{
+    http::{StatusCode, header},
+    response::{IntoResponse, Response},
+};
+
 use aster_forge_api::response::{ApiErrorInfo, ApiResponse, ResponseEnvelopeError};
 use serde::Serialize;
 
@@ -37,4 +43,19 @@ pub fn failure(code: ApiErrorCode) -> Result<ApiResponse<(), ApiErrorCode>, Resp
             diagnostic: None,
         }),
     )
+}
+
+impl IntoResponse for AccountError {
+    fn into_response(self) -> Response {
+        let code = ApiErrorCode::from(&self);
+        let status = code.status();
+        let mut response = code.into_response();
+        if status == StatusCode::TOO_MANY_REQUESTS {
+            response.headers_mut().insert(
+                header::RETRY_AFTER,
+                axum::http::HeaderValue::from_static("900"),
+            );
+        }
+        response
+    }
 }

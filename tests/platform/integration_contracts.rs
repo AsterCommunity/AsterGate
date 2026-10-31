@@ -2,7 +2,7 @@
 use super::common;
 
 use aster_gate::{
-    api::transport_security::HttpSecurity,
+    api::middleware::HttpSecurity,
     config::transport::{CorsConfig, HttpRateLimitConfig, HttpSecurityConfig},
 };
 use axum::{

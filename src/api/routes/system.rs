@@ -1,8 +1,9 @@
 use crate::api::{api_error_code::ApiErrorCode, response::NoData};
 use crate::{
     api::{
-        account_security::{Authenticated, JsonInput, SessionCookiePolicy, session_cookie},
+        cookies::{self, SessionCookiePolicy},
         dto::{account::AccountDto, system::*},
+        extractors::{Authenticated, JsonInput},
     },
     runtime::AppState,
     services::{
@@ -48,10 +49,7 @@ pub async fn initialize(
         )?),
     )
         .into_response();
-    response.headers_mut().insert(
-        header::SET_COOKIE,
-        session_cookie(&cookie_policy, &result.session_token)?,
-    );
+    cookies::issue_session(&mut response, &cookie_policy, &result.session_token)?;
     Ok(response)
 }
 #[aster_forge_api_docs_macros::path(get, path = "/api/v1/management/settings", tag = "instance-settings", responses((status = 200, body = ApiResponse<SettingsDto, ApiErrorCode, NoData>)))]

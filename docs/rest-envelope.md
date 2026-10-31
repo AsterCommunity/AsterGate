@@ -1,7 +1,7 @@
 # REST response contract
 
 AsterGate consumes the shared controlled REST response from aster_forge_api at Forge revision
-fa8167a5769369a2b6d97339411b731223129427. The Git dependency and Cargo.lock must agree.
+2483171e4c7201e64e8f3a9dcecbd9b4cc86235b. The Git dependency and Cargo.lock must agree.
 
 ## Migration ownership
 

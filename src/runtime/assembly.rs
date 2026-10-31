@@ -7,7 +7,7 @@ use crate::errors::Result;
 
 /// Prepares all resources needed by the runtime component graph.
 pub async fn prepare_state(config: crate::config::AppConfig) -> Result<crate::runtime::AppState> {
-    let http_security = std::sync::Arc::new(crate::api::transport_security::HttpSecurity::new(
+    let http_security = std::sync::Arc::new(crate::api::middleware::HttpSecurity::new(
         &config.http_security,
     )?);
     let metrics = crate::runtime::metrics::create_metrics_recorder()?;

@@ -197,7 +197,9 @@ are rejected rather than silently accepted.
 Every unsafe API write requires exactly one X-AsterGate-Request: 1 and matching
 X-AsterGate-CSRF / host-only CSRF Cookie values. GET setup/status and public/frontend-config
 bootstrap the readable CSRF Cookie; successful session issuance rotates it and logout clears it.
-HTTP loopback uses ag_csrf; HTTPS uses __Host-ag_csrf. CSRF Cookies use SameSite=Strict,
+HTTP loopback uses ag_csrf; HTTPS (including loopback) uses __Host-ag_csrf. Before setup,
+a same-Host browser Origin/Referer disambiguates the scheme; source-less HTTPS loopback CLI
+bootstrap must supply that Origin or Referer. After setup the registered site determines it. CSRF Cookies use SameSite=Strict,
 Path=/ and Secure on HTTPS; session Cookies retain HttpOnly. Duplicate/invalid token or source
 headers are rejected. Forge performs double-submit comparison and Origin/Referer/Fetch Metadata
 validation. CLI writes may omit source headers but still need the custom header, bootstrap Cookie,

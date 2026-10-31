@@ -22,7 +22,7 @@ fn system_authorization_has_no_transport_or_orm_dependencies_in_its_models() {
     for forbidden in ["axum", "serde", "sea_orm", "db::entities", "HeaderMap"] {
         assert!(!models.contains(forbidden));
     }
-    let transport = include_str!("../../src/api/account_security.rs");
+    let transport = include_str!("../../src/api/middleware/account.rs");
     assert!(
         !transport.contains("management/settings"),
         "Transport must not infer permissions from the URL"

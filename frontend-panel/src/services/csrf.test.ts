@@ -52,20 +52,28 @@ describe("CSRF request headers", () => {
 			"/api/v1/setup/status",
 			expect.objectContaining({
 				credentials: "same-origin",
+				referrerPolicy: "same-origin",
 				cache: "no-store",
 			}),
 		);
 	});
 
-	it("selects the HTTPS host cookie and reads rotated values on every mutation", async () => {
+	it("bootstraps the HTTPS loopback cookie and reads rotated values on every mutation", async () => {
 		vi.stubGlobal("location", {
 			protocol: "https:",
-			href: "https://gate.example.test/",
-			origin: "https://gate.example.test",
+			href: "https://localhost:5173/",
+			origin: "https://localhost:5173",
 		});
 		const cookie = vi
 			.spyOn(document, "cookie", "get")
-			.mockReturnValue(`ag_csrf=wrong; __Host-ag_csrf=${token}`);
+			.mockReturnValue(`ag_csrf=wrong`);
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => {
+				cookie.mockReturnValue(`ag_csrf=wrong; __Host-ag_csrf=${token}`);
+				return { ok: true };
+			}),
+		);
 		expect(await csrfHeaders("POST")).toEqual({ "X-AsterGate-CSRF": token });
 		cookie.mockReturnValue(`__Host-ag_csrf=${"b".repeat(43)}`);
 		expect(await csrfHeaders("POST")).toEqual({

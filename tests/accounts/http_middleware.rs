@@ -152,6 +152,197 @@ async fn csrf_bootstrap_setup_rotation_and_logout_clear_are_one_cookie_lifecycle
 }
 
 #[tokio::test]
+async fn bootstrap_cookie_scheme_tracks_same_host_browser_source_before_and_after_setup() {
+    for origin in [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://[::1]:5173",
+        "https://localhost:5173",
+        "https://127.0.0.1:5173",
+        "https://[::1]:5173",
+        "https://gate.example.test",
+    ] {
+        let f = Fixture::fresh().await;
+        let host = origin.split_once("://").unwrap().1;
+        let referer = format!("{origin}/setup");
+        let secure = origin.starts_with("https:");
+        let csrf_name = if secure { "__Host-ag_csrf" } else { "ag_csrf" };
+        let session_name = if secure {
+            "__Host-ag_session"
+        } else {
+            "ag_session"
+        };
+        for path in ["/api/v1/setup/status", "/api/v1/public/frontend-config"] {
+            let response = send(
+                &f,
+                request(
+                    "GET",
+                    path,
+                    &[
+                        ("host", host),
+                        ("referer", &referer),
+                        ("sec-fetch-site", "same-origin"),
+                        ("x-forwarded-proto", if secure { "http" } else { "https" }),
+                    ],
+                    None,
+                    None,
+                ),
+            )
+            .await;
+            assert_eq!(response.status(), StatusCode::OK, "{origin}");
+            let token = cookie(&response, csrf_name);
+            assert!(!token.is_empty());
+            let raw = response.headers()["set-cookie"].to_str().unwrap();
+            assert_eq!(raw.contains("Secure"), secure);
+            let pair = format!("{csrf_name}={token}");
+            let retained = send(
+                &f,
+                request(
+                    "GET",
+                    path,
+                    &[("host", host), ("referer", &referer), ("cookie", &pair)],
+                    None,
+                    None,
+                ),
+            )
+            .await;
+            assert!(!retained.headers().contains_key("set-cookie"));
+            let response = send(
+                &f,
+                request(
+                    "POST",
+                    "/api/v1/setup",
+                    &[
+                        ("host", host),
+                        ("origin", origin),
+                        ("cookie", &pair),
+                        ("x-astergate-request", "1"),
+                        ("x-astergate-csrf", &token),
+                    ],
+                    Some(Value::Null),
+                    None,
+                ),
+            )
+            .await;
+            assert_eq!(response.status(), StatusCode::BAD_REQUEST, "{origin}");
+            assert!(!response.headers().contains_key("set-cookie"));
+        }
+        let pair = format!("{csrf_name}={CSRF_TOKEN}");
+        let mut input = setup_input("operator");
+        input["site_urls"] = json!([origin]);
+        let response = send(
+            &f,
+            request(
+                "POST",
+                "/api/v1/setup",
+                &[
+                    ("host", host),
+                    ("origin", origin),
+                    ("cookie", &pair),
+                    ("x-astergate-request", "1"),
+                    ("x-astergate-csrf", CSRF_TOKEN),
+                ],
+                Some(input),
+                None,
+            ),
+        )
+        .await;
+        assert_eq!(response.status(), StatusCode::CREATED, "{origin}");
+        assert_ne!(cookie(&response, csrf_name), CSRF_TOKEN);
+        assert!(!cookie(&response, session_name).is_empty());
+        let response = send(
+            &f,
+            request(
+                "GET",
+                "/api/v1/setup/status",
+                &[("host", host), ("referer", &referer)],
+                None,
+                None,
+            ),
+        )
+        .await;
+        assert_eq!(response.status(), StatusCode::OK);
+        assert!(!cookie(&response, csrf_name).is_empty());
+    }
+}
+
+#[tokio::test]
+async fn allowed_cors_actual_rate_limit_responses_remain_readable() {
+    let origin = "https://client.example.test";
+    let mut config = limits(1, 100, &[]);
+    config.cors = CorsConfig {
+        enabled: true,
+        allowed_origins: vec![origin.into()],
+    };
+    let f = Fixture::with_http_security(false, config).await;
+    for (peer, source, allowed) in [
+        ("198.51.100.1:1234", origin, true),
+        ("198.51.100.2:1234", "https://denied.example.test", false),
+    ] {
+        for attempt in 0..2 {
+            let response = send(
+                &f,
+                request(
+                    "GET",
+                    "/api/v1/public/frontend-config",
+                    &[("host", "localhost:5173"), ("origin", source)],
+                    None,
+                    Some(peer),
+                ),
+            )
+            .await;
+            security_headers(response.headers());
+            assert_eq!(
+                response
+                    .headers()
+                    .contains_key("access-control-allow-origin"),
+                allowed
+            );
+            if allowed {
+                assert_eq!(response.headers()["access-control-allow-origin"], origin);
+                assert!(
+                    response.headers()["access-control-expose-headers"]
+                        .to_str()
+                        .unwrap()
+                        .contains("retry-after")
+                );
+                if attempt == 0 {
+                    assert_eq!(response.status(), StatusCode::OK);
+                } else {
+                    assert!(
+                        response.headers()["vary"]
+                            .to_str()
+                            .unwrap()
+                            .contains("Origin")
+                    );
+                    assert!(
+                        response.headers()["retry-after"]
+                            .to_str()
+                            .unwrap()
+                            .parse::<u64>()
+                            .unwrap()
+                            > 0
+                    );
+                    failure(response, StatusCode::TOO_MANY_REQUESTS, "rate_limited").await;
+                }
+            } else {
+                assert!(
+                    response.headers()["vary"]
+                        .to_str()
+                        .unwrap()
+                        .contains("Origin")
+                );
+                if attempt == 0 {
+                    failure(response, StatusCode::FORBIDDEN, "auth.forbidden").await;
+                } else {
+                    failure(response, StatusCode::TOO_MANY_REQUESTS, "rate_limited").await;
+                }
+            }
+        }
+    }
+}
+
+#[tokio::test]
 async fn csrf_missing_duplicate_mismatch_and_source_ambiguity_are_typed_rejections() {
     let f = Fixture::new().await;
     let pair = format!("ag_csrf={CSRF_TOKEN}");
@@ -652,6 +843,16 @@ async fn authentication_keyed_quota_is_separate_from_general_ip_and_counts_prefl
         ),
     )
     .await;
+    assert_eq!(
+        response.headers()["access-control-allow-origin"],
+        "https://client.example.test"
+    );
+    assert!(response.headers().contains_key("retry-after"));
+    assert!(
+        !response
+            .headers()
+            .contains_key("access-control-allow-credentials")
+    );
     failure(response, StatusCode::TOO_MANY_REQUESTS, "rate_limited").await;
     assert_eq!(
         send(
@@ -692,7 +893,7 @@ async fn authentication_keyed_quota_is_separate_from_general_ip_and_counts_prefl
 
 #[test]
 fn transport_configuration_rejects_invalid_limits_and_ambiguous_policy() {
-    use aster_gate::api::transport_security::HttpSecurity;
+    use aster_gate::api::middleware::HttpSecurity;
     for value in ["not-an-ip", "0.0.0.0/33", "2001:db8::/129"] {
         assert!(
             HttpSecurity::new(&HttpSecurityConfig {
@@ -830,4 +1031,276 @@ async fn frontend_product_csp_and_cache_policy_survive_outer_middlewares() {
     );
     assert_eq!(response.headers()["cache-control"], "no-cache");
     assert!(response.headers().contains_key("x-request-id"));
+}
+
+#[tokio::test]
+async fn bootstrap_sources_cannot_change_authority_or_bypass_source_policy() {
+    let config = HttpSecurityConfig {
+        cors: CorsConfig {
+            enabled: true,
+            allowed_origins: vec!["https://client.example.test".into()],
+        },
+        ..Default::default()
+    };
+    let f = Fixture::with_http_security(false, config).await;
+    let pair = format!("__Host-ag_csrf={CSRF_TOKEN}");
+    for extra in [
+        vec![("referer", "http://localhost:5173/setup")],
+        vec![
+            ("origin", "https://localhost:5173"),
+            ("sec-fetch-site", "cross-site"),
+        ],
+        vec![
+            ("origin", "https://other.example.test"),
+            ("referer", "https://localhost:5173/setup"),
+        ],
+        vec![
+            ("origin", "https://localhost:5173"),
+            ("origin", "https://localhost:5173"),
+        ],
+    ] {
+        let mut headers = vec![
+            ("host", "localhost:5173"),
+            ("cookie", &pair),
+            ("x-astergate-request", "1"),
+            ("x-astergate-csrf", CSRF_TOKEN),
+        ];
+        headers.extend(extra);
+        let response = send(
+            &f,
+            request("POST", "/api/v1/setup", &headers, Some(Value::Null), None),
+        )
+        .await;
+        assert!(!response.headers().contains_key("set-cookie"));
+        failure(response, StatusCode::FORBIDDEN, "auth.forbidden").await;
+    }
+    // Same-host HTTPS is same-origin even with an unrelated explicit CORS allowlist.
+    let response = send(
+        &f,
+        request(
+            "POST",
+            "/api/v1/setup",
+            &[
+                ("host", "localhost:5173"),
+                ("origin", "https://localhost:5173"),
+                ("cookie", &pair),
+                ("x-astergate-request", "1"),
+                ("x-astergate-csrf", CSRF_TOKEN),
+            ],
+            Some(Value::Null),
+            None,
+        ),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+}
+
+#[tokio::test]
+async fn route_groups_keep_bootstrap_public_setup_protected_and_accounts_not_ready() {
+    let f = Fixture::fresh().await;
+    for path in ["/api/v1/setup/status", "/api/v1/public/frontend-config"] {
+        let response = send(
+            &f,
+            request("GET", path, &[("host", "localhost:5173")], None, None),
+        )
+        .await;
+        assert_eq!(response.status(), StatusCode::OK);
+        assert!(!cookie(&response, "ag_csrf").is_empty());
+    }
+    failure(
+        send(
+            &f,
+            request(
+                "POST",
+                "/api/v1/setup",
+                &[("host", "localhost:5173")],
+                Some(setup_input("operator")),
+                None,
+            ),
+        )
+        .await,
+        StatusCode::FORBIDDEN,
+        "auth.forbidden",
+    )
+    .await;
+    let pair = format!("ag_csrf={CSRF_TOKEN}");
+    for (method, path, body) in [
+        ("GET", "/api/v1/account", None),
+        ("GET", "/api/v1/management/accounts", None),
+        ("POST", "/api/v1/auth/login", Some(Value::Null)),
+        ("POST", "/api/v1/auth/register", Some(Value::Null)),
+    ] {
+        let response = send(
+            &f,
+            request(
+                method,
+                path,
+                &[
+                    ("host", "localhost:5173"),
+                    ("cookie", &pair),
+                    ("x-astergate-request", "1"),
+                    ("x-astergate-csrf", CSRF_TOKEN),
+                ],
+                body,
+                None,
+            ),
+        )
+        .await;
+        assert!(!response.headers().contains_key("set-cookie"));
+        failure(response, StatusCode::CONFLICT, "setup.required").await;
+    }
+}
+
+#[tokio::test]
+async fn session_cookie_pairs_follow_committed_revocation_and_audit_rollback() {
+    for operation in [
+        "logout", "current", "all", "other", "password", "email", "delete",
+    ] {
+        for fail_audit in [false, true] {
+            let f = Fixture::new().await;
+            let (_, session) = f.activate("alice").await;
+            let pair = format!("{session}; ag_csrf={CSRF_TOKEN}");
+            let (method, path, body) = match operation {
+                "logout" => ("POST", "/api/v1/auth/logout".into(), None),
+                "all" => ("DELETE", "/api/v1/account/sessions".into(), None),
+                "current" | "other" => {
+                    if operation == "other" {
+                        f.login("alice", PASSWORD).await;
+                    }
+                    let (_, data, _) = f
+                        .request(
+                            "GET",
+                            "/api/v1/account/sessions",
+                            None,
+                            Some(&session),
+                            false,
+                        )
+                        .await;
+                    let row = data["data"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .find(|s| s["current"] == (operation == "current"))
+                        .unwrap();
+                    (
+                        "DELETE",
+                        format!("/api/v1/account/sessions/{}", row["id"].as_str().unwrap()),
+                        None,
+                    )
+                }
+                "password" => (
+                    "POST",
+                    "/api/v1/account/password".into(),
+                    Some(json!({"current_password":PASSWORD, "new_password":NEW_PASSWORD})),
+                ),
+                "email" => {
+                    assert_eq!(
+                        f.request(
+                            "POST",
+                            "/api/v1/account/email",
+                            Some(json!({"email":"replacement@example.test", "password":PASSWORD})),
+                            Some(&session),
+                            false
+                        )
+                        .await
+                        .0,
+                        StatusCode::OK
+                    );
+                    (
+                        "POST",
+                        "/api/v1/account/email/confirm".into(),
+                        Some(json!({"token": f.token().await})),
+                    )
+                }
+                "delete" => (
+                    "DELETE",
+                    "/api/v1/account".into(),
+                    Some(json!({"password":PASSWORD})),
+                ),
+                _ => unreachable!(),
+            };
+            if fail_audit {
+                f.reject_inserts("audit_logs").await;
+            }
+            let response = send(
+                &f,
+                request(
+                    method,
+                    &path,
+                    &[
+                        ("host", "localhost:5173"),
+                        ("cookie", &pair),
+                        ("x-astergate-request", "1"),
+                        ("x-astergate-csrf", CSRF_TOKEN),
+                    ],
+                    body,
+                    None,
+                ),
+            )
+            .await;
+            assert_eq!(
+                response.status(),
+                if fail_audit {
+                    StatusCode::SERVICE_UNAVAILABLE
+                } else {
+                    StatusCode::OK
+                },
+                "{operation} audit_failure={fail_audit}"
+            );
+            if fail_audit || operation == "other" {
+                assert!(
+                    !response.headers().contains_key("set-cookie"),
+                    "{operation}"
+                );
+                assert_eq!(
+                    f.request("GET", "/api/v1/account", None, Some(&session), false)
+                        .await
+                        .0,
+                    StatusCode::OK
+                );
+            } else {
+                assert!(cookie(&response, "ag_session").is_empty());
+                assert!(cookie(&response, "ag_csrf").is_empty());
+                assert_eq!(response.headers().get_all("set-cookie").iter().count(), 2);
+                assert!(
+                    response
+                        .headers()
+                        .get_all("set-cookie")
+                        .iter()
+                        .all(|value| value.to_str().unwrap().contains("Max-Age=0"))
+                );
+                assert_eq!(
+                    f.request("GET", "/api/v1/account", None, Some(&session), false)
+                        .await
+                        .0,
+                    StatusCode::UNAUTHORIZED
+                );
+            }
+        }
+    }
+}
+
+#[tokio::test]
+async fn setup_audit_failure_does_not_issue_either_cookie() {
+    let f = Fixture::fresh().await;
+    f.reject_inserts("audit_logs").await;
+    let pair = format!("ag_csrf={CSRF_TOKEN}");
+    let response = send(
+        &f,
+        request(
+            "POST",
+            "/api/v1/setup",
+            &[
+                ("host", "localhost:5173"),
+                ("cookie", &pair),
+                ("x-astergate-request", "1"),
+                ("x-astergate-csrf", CSRF_TOKEN),
+            ],
+            Some(setup_input("operator")),
+            None,
+        ),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    assert!(!response.headers().contains_key("set-cookie"));
 }
