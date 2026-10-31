@@ -135,11 +135,6 @@ impl From<models::Session> for SessionDto {
     }
 }
 
-crate::api::response::response!(AccountResponse, AccountDto);
-crate::api::response::response!(AccountsResponse, aster_forge_api::CursorPage<AccountDto, String>);
-crate::api::response::response!(SessionsResponse, Vec<SessionDto>);
-crate::api::response::response!(SuccessResponse, bool);
-crate::api::response::response!(ExportResponse, AccountExportDto);
 #[derive(Serialize)]
 #[cfg_attr(all(debug_assertions, feature = "openapi"), derive(utoipa::ToSchema))]
 pub struct AccountExportDto {

@@ -1,3 +1,4 @@
+use crate::api::{api_error_code::ApiErrorCode, response::NoData};
 use crate::{
     api::{
         account_security::{self, Authenticated, JsonInput, SessionCookiePolicy},
@@ -6,6 +7,7 @@ use crate::{
     runtime::AppState,
     services::account::{self, AccountError, Result, models::*},
 };
+use aster_forge_api::response::ApiResponse;
 use axum::{
     Extension, Json, Router,
     extract::{DefaultBodyLimit, Path, Query, State},
@@ -54,11 +56,11 @@ pub fn router(state: Arc<AppState>) -> Router<Arc<AppState>> {
         ))
 }
 
-fn success() -> Json<SuccessResponse> {
-    Json(SuccessResponse::ok(true))
+fn success() -> Result<Json<ApiResponse<bool, ApiErrorCode, NoData>>> {
+    Ok(Json(crate::api::response::success(true)?))
 }
 fn clear(policy: &SessionCookiePolicy) -> Result<Response> {
-    let mut response = success().into_response();
+    let mut response = success()?.into_response();
     response.headers_mut().insert(
         header::SET_COOKIE,
         account_security::session_cookie(policy, "")?,
@@ -66,20 +68,20 @@ fn clear(policy: &SessionCookiePolicy) -> Result<Response> {
     Ok(response)
 }
 
-#[aster_forge_api_docs_macros::path(post, path = "/api/v1/auth/register", tag = "account", request_body = RegisterRequest, responses((status = 201, body = AccountResponse), (status = 409, body = crate::api::response::ErrorResponse)))]
+#[aster_forge_api_docs_macros::path(post, path = "/api/v1/auth/register", tag = "account", request_body = RegisterRequest, responses((status = 201, body = ApiResponse<AccountDto, ApiErrorCode, NoData>), (status = 409, body = ApiResponse<NoData, ApiErrorCode, NoData>)))]
 pub async fn register(
     State(state): State<Arc<AppState>>,
     JsonInput(input): JsonInput<RegisterRequest>,
 ) -> Result<impl IntoResponse> {
     Ok((
         StatusCode::CREATED,
-        Json(AccountResponse::ok(
+        Json(crate::api::response::success::<AccountDto>(
             account::register(&state, input.try_into()?).await?.into(),
-        )),
+        )?),
     ))
 }
 
-#[aster_forge_api_docs_macros::path(post, path = "/api/v1/auth/login", tag = "account", request_body = LoginRequest, responses((status = 200, body = AccountResponse), (status = 401, body = crate::api::response::ErrorResponse)))]
+#[aster_forge_api_docs_macros::path(post, path = "/api/v1/auth/login", tag = "account", request_body = LoginRequest, responses((status = 200, body = ApiResponse<AccountDto, ApiErrorCode, NoData>), (status = 401, body = ApiResponse<NoData, ApiErrorCode, NoData>)))]
 pub async fn login(
     State(state): State<Arc<AppState>>,
     Extension(cookie_policy): Extension<SessionCookiePolicy>,
@@ -91,7 +93,10 @@ pub async fn login(
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
     let result = account::login(&state, &input.identifier, input.password, ua).await?;
-    let mut response = Json(AccountResponse::ok(result.account.into())).into_response();
+    let mut response = Json(crate::api::response::success::<AccountDto>(
+        result.account.into(),
+    )?)
+    .into_response();
     response.headers_mut().insert(
         header::SET_COOKIE,
         account_security::session_cookie(&cookie_policy, &result.session_token)?,
@@ -99,7 +104,7 @@ pub async fn login(
     Ok(response)
 }
 
-#[aster_forge_api_docs_macros::path(post, path = "/api/v1/auth/logout", tag = "account", responses((status = 200, body = SuccessResponse)))]
+#[aster_forge_api_docs_macros::path(post, path = "/api/v1/auth/logout", tag = "account", responses((status = 200, body = ApiResponse<bool, ApiErrorCode, NoData>)))]
 pub async fn logout(
     State(state): State<Arc<AppState>>,
     Extension(cookie_policy): Extension<SessionCookiePolicy>,
@@ -114,66 +119,66 @@ pub async fn logout(
     clear(&cookie_policy)
 }
 
-#[aster_forge_api_docs_macros::path(post, path = "/api/v1/auth/verification", tag = "account", request_body = IdentifierRequest, responses((status = 200, body = SuccessResponse)))]
+#[aster_forge_api_docs_macros::path(post, path = "/api/v1/auth/verification", tag = "account", request_body = IdentifierRequest, responses((status = 200, body = ApiResponse<bool, ApiErrorCode, NoData>)))]
 pub async fn request_verification(
     State(state): State<Arc<AppState>>,
     JsonInput(input): JsonInput<IdentifierRequest>,
-) -> Result<Json<SuccessResponse>> {
+) -> Result<Json<ApiResponse<bool, ApiErrorCode, NoData>>> {
     account::request_challenge(&state, &input.identifier, ChallengePurpose::VerifyEmail).await?;
-    Ok(success())
+    success()
 }
 
-#[aster_forge_api_docs_macros::path(post, path = "/api/v1/auth/verify-email", tag = "account", request_body = TokenRequest, responses((status = 200, body = SuccessResponse)))]
+#[aster_forge_api_docs_macros::path(post, path = "/api/v1/auth/verify-email", tag = "account", request_body = TokenRequest, responses((status = 200, body = ApiResponse<bool, ApiErrorCode, NoData>)))]
 pub async fn verify_email(
     State(state): State<Arc<AppState>>,
     JsonInput(input): JsonInput<TokenRequest>,
-) -> Result<Json<SuccessResponse>> {
+) -> Result<Json<ApiResponse<bool, ApiErrorCode, NoData>>> {
     account::verify_email(&state, &input.token).await?;
-    Ok(success())
+    success()
 }
 
-#[aster_forge_api_docs_macros::path(post, path = "/api/v1/auth/recovery", tag = "account", request_body = IdentifierRequest, responses((status = 200, body = SuccessResponse)))]
+#[aster_forge_api_docs_macros::path(post, path = "/api/v1/auth/recovery", tag = "account", request_body = IdentifierRequest, responses((status = 200, body = ApiResponse<bool, ApiErrorCode, NoData>)))]
 pub async fn request_recovery(
     State(state): State<Arc<AppState>>,
     JsonInput(input): JsonInput<IdentifierRequest>,
-) -> Result<Json<SuccessResponse>> {
+) -> Result<Json<ApiResponse<bool, ApiErrorCode, NoData>>> {
     account::request_challenge(&state, &input.identifier, ChallengePurpose::ResetPassword).await?;
-    Ok(success())
+    success()
 }
 
-#[aster_forge_api_docs_macros::path(post, path = "/api/v1/auth/reset-password", tag = "account", request_body = ResetPasswordRequest, responses((status = 200, body = SuccessResponse)))]
+#[aster_forge_api_docs_macros::path(post, path = "/api/v1/auth/reset-password", tag = "account", request_body = ResetPasswordRequest, responses((status = 200, body = ApiResponse<bool, ApiErrorCode, NoData>)))]
 pub async fn reset_password(
     State(state): State<Arc<AppState>>,
     JsonInput(input): JsonInput<ResetPasswordRequest>,
-) -> Result<Json<SuccessResponse>> {
+) -> Result<Json<ApiResponse<bool, ApiErrorCode, NoData>>> {
     account::reset_password(&state, &input.token, input.password).await?;
-    Ok(success())
+    success()
 }
 
-#[aster_forge_api_docs_macros::path(get, path = "/api/v1/account", tag = "account", responses((status = 200, body = AccountResponse)))]
+#[aster_forge_api_docs_macros::path(get, path = "/api/v1/account", tag = "account", responses((status = 200, body = ApiResponse<AccountDto, ApiErrorCode, NoData>)))]
 pub async fn profile(
     State(state): State<Arc<AppState>>,
     Authenticated(principal): Authenticated,
-) -> Result<Json<AccountResponse>> {
-    Ok(Json(AccountResponse::ok(
+) -> Result<Json<ApiResponse<AccountDto, ApiErrorCode, NoData>>> {
+    Ok(Json(crate::api::response::success::<AccountDto>(
         account::profile(&state, &principal).await?.into(),
-    )))
+    )?))
 }
 
-#[aster_forge_api_docs_macros::path(patch, path = "/api/v1/account", tag = "account", request_body = ProfileRequest, responses((status = 200, body = AccountResponse)))]
+#[aster_forge_api_docs_macros::path(patch, path = "/api/v1/account", tag = "account", request_body = ProfileRequest, responses((status = 200, body = ApiResponse<AccountDto, ApiErrorCode, NoData>)))]
 pub async fn update_profile(
     State(state): State<Arc<AppState>>,
     Authenticated(principal): Authenticated,
     JsonInput(input): JsonInput<ProfileRequest>,
-) -> Result<Json<AccountResponse>> {
-    Ok(Json(AccountResponse::ok(
+) -> Result<Json<ApiResponse<AccountDto, ApiErrorCode, NoData>>> {
+    Ok(Json(crate::api::response::success::<AccountDto>(
         account::update_profile(&state, &principal, &input.display_name)
             .await?
             .into(),
-    )))
+    )?))
 }
 
-#[aster_forge_api_docs_macros::path(post, path = "/api/v1/account/password", tag = "account", request_body = PasswordRequest, responses((status = 200, body = SuccessResponse)))]
+#[aster_forge_api_docs_macros::path(post, path = "/api/v1/account/password", tag = "account", request_body = PasswordRequest, responses((status = 200, body = ApiResponse<bool, ApiErrorCode, NoData>)))]
 pub async fn change_password(
     State(state): State<Arc<AppState>>,
     Extension(cookie_policy): Extension<SessionCookiePolicy>,
@@ -190,17 +195,17 @@ pub async fn change_password(
     clear(&cookie_policy)
 }
 
-#[aster_forge_api_docs_macros::path(post, path = "/api/v1/account/email", tag = "account", request_body = EmailChangeRequest, responses((status = 200, body = SuccessResponse)))]
+#[aster_forge_api_docs_macros::path(post, path = "/api/v1/account/email", tag = "account", request_body = EmailChangeRequest, responses((status = 200, body = ApiResponse<bool, ApiErrorCode, NoData>)))]
 pub async fn request_email_change(
     State(state): State<Arc<AppState>>,
     Authenticated(principal): Authenticated,
     JsonInput(input): JsonInput<EmailChangeRequest>,
-) -> Result<Json<SuccessResponse>> {
+) -> Result<Json<ApiResponse<bool, ApiErrorCode, NoData>>> {
     account::request_email_change(&state, &principal, &input.email, input.password).await?;
-    Ok(success())
+    success()
 }
 
-#[aster_forge_api_docs_macros::path(post, path = "/api/v1/account/email/confirm", tag = "account", request_body = TokenRequest, responses((status = 200, body = SuccessResponse)))]
+#[aster_forge_api_docs_macros::path(post, path = "/api/v1/account/email/confirm", tag = "account", request_body = TokenRequest, responses((status = 200, body = ApiResponse<bool, ApiErrorCode, NoData>)))]
 pub async fn confirm_email_change(
     State(state): State<Arc<AppState>>,
     Extension(cookie_policy): Extension<SessionCookiePolicy>,
@@ -211,21 +216,21 @@ pub async fn confirm_email_change(
     clear(&cookie_policy)
 }
 
-#[aster_forge_api_docs_macros::path(get, path = "/api/v1/account/sessions", tag = "account", responses((status = 200, body = SessionsResponse)))]
+#[aster_forge_api_docs_macros::path(get, path = "/api/v1/account/sessions", tag = "account", responses((status = 200, body = ApiResponse<Vec<SessionDto>, ApiErrorCode, NoData>)))]
 pub async fn sessions(
     State(state): State<Arc<AppState>>,
     Authenticated(principal): Authenticated,
-) -> Result<Json<SessionsResponse>> {
-    Ok(Json(SessionsResponse::ok(
+) -> Result<Json<ApiResponse<Vec<SessionDto>, ApiErrorCode, NoData>>> {
+    Ok(Json(crate::api::response::success::<Vec<SessionDto>>(
         account::list_sessions(&state, &principal)
             .await?
             .into_iter()
             .map(Into::into)
             .collect(),
-    )))
+    )?))
 }
 
-#[aster_forge_api_docs_macros::path(delete, path = "/api/v1/account/sessions/{id}", tag = "account", params(("id" = String, Path)), responses((status = 200, body = SuccessResponse)))]
+#[aster_forge_api_docs_macros::path(delete, path = "/api/v1/account/sessions/{id}", tag = "account", params(("id" = String, Path)), responses((status = 200, body = ApiResponse<bool, ApiErrorCode, NoData>)))]
 pub async fn revoke_session(
     State(state): State<Arc<AppState>>,
     Extension(cookie_policy): Extension<SessionCookiePolicy>,
@@ -237,11 +242,11 @@ pub async fn revoke_session(
     if current {
         clear(&cookie_policy)
     } else {
-        Ok(success().into_response())
+        Ok(success()?.into_response())
     }
 }
 
-#[aster_forge_api_docs_macros::path(delete, path = "/api/v1/account/sessions", tag = "account", responses((status = 200, body = SuccessResponse)))]
+#[aster_forge_api_docs_macros::path(delete, path = "/api/v1/account/sessions", tag = "account", responses((status = 200, body = ApiResponse<bool, ApiErrorCode, NoData>)))]
 pub async fn revoke_all(
     State(state): State<Arc<AppState>>,
     Extension(cookie_policy): Extension<SessionCookiePolicy>,
@@ -251,22 +256,24 @@ pub async fn revoke_all(
     clear(&cookie_policy)
 }
 
-#[aster_forge_api_docs_macros::path(get, path = "/api/v1/account/export", tag = "account", responses((status = 200, body = ExportResponse)))]
+#[aster_forge_api_docs_macros::path(get, path = "/api/v1/account/export", tag = "account", responses((status = 200, body = ApiResponse<AccountExportDto, ApiErrorCode, NoData>)))]
 pub async fn export(
     State(state): State<Arc<AppState>>,
     Authenticated(principal): Authenticated,
-) -> Result<Json<ExportResponse>> {
-    Ok(Json(ExportResponse::ok(AccountExportDto {
-        account: account::profile(&state, &principal).await?.into(),
-        sessions: account::list_sessions(&state, &principal)
-            .await?
-            .into_iter()
-            .map(Into::into)
-            .collect(),
-    })))
+) -> Result<Json<ApiResponse<AccountExportDto, ApiErrorCode, NoData>>> {
+    Ok(Json(crate::api::response::success::<AccountExportDto>(
+        AccountExportDto {
+            account: account::profile(&state, &principal).await?.into(),
+            sessions: account::list_sessions(&state, &principal)
+                .await?
+                .into_iter()
+                .map(Into::into)
+                .collect(),
+        },
+    )?))
 }
 
-#[aster_forge_api_docs_macros::path(delete, path = "/api/v1/account", tag = "account", request_body = DeleteAccountRequest, responses((status = 200, body = SuccessResponse)))]
+#[aster_forge_api_docs_macros::path(delete, path = "/api/v1/account", tag = "account", request_body = DeleteAccountRequest, responses((status = 200, body = ApiResponse<bool, ApiErrorCode, NoData>)))]
 pub async fn delete_account(
     State(state): State<Arc<AppState>>,
     Extension(cookie_policy): Extension<SessionCookiePolicy>,
@@ -277,12 +284,13 @@ pub async fn delete_account(
     clear(&cookie_policy)
 }
 
-#[aster_forge_api_docs_macros::path(get, path = "/api/v1/management/accounts", tag = "account-management", params(("after" = Option<String>, Query), ("limit" = Option<u64>, Query)), responses((status = 200, body = AccountsResponse)))]
+#[aster_forge_api_docs_macros::path(get, path = "/api/v1/management/accounts", tag = "account-management", params(("after" = Option<String>, Query), ("limit" = Option<u64>, Query)), responses((status = 200, body = ApiResponse<aster_forge_api::CursorPage<AccountDto, String>, ApiErrorCode, NoData>)))]
 pub async fn manage_list(
     State(state): State<Arc<AppState>>,
     Authenticated(operator): Authenticated,
     query: std::result::Result<Query<AccountListQuery>, axum::extract::rejection::QueryRejection>,
-) -> Result<Json<AccountsResponse>> {
+) -> Result<Json<ApiResponse<aster_forge_api::CursorPage<AccountDto, String>, ApiErrorCode, NoData>>>
+{
     let Query(query) = query.map_err(|_| AccountError::InvalidInput)?;
     let after = query.after.as_deref().map(AccountId::parse).transpose()?;
     let limit = query.limit.unwrap_or(50);
@@ -297,12 +305,17 @@ pub async fn manage_list(
         None
     };
     let total = crate::db::repository::account_repo::count(state.db_handles.writer()).await?;
-    Ok(Json(AccountsResponse::ok(
-        aster_forge_api::CursorPage::new(data, total, limit, next_cursor),
-    )))
+    Ok(Json(crate::api::response::success::<
+        aster_forge_api::CursorPage<AccountDto, String>,
+    >(aster_forge_api::CursorPage::new(
+        data,
+        total,
+        limit,
+        next_cursor,
+    ))?))
 }
 
-#[aster_forge_api_docs_macros::path(post, path = "/api/v1/management/accounts", tag = "account-management", request_body = RegisterRequest, responses((status = 201, body = AccountResponse)))]
+#[aster_forge_api_docs_macros::path(post, path = "/api/v1/management/accounts", tag = "account-management", request_body = RegisterRequest, responses((status = 201, body = ApiResponse<AccountDto, ApiErrorCode, NoData>)))]
 pub async fn provision(
     State(state): State<Arc<AppState>>,
     Authenticated(operator): Authenticated,
@@ -310,22 +323,22 @@ pub async fn provision(
 ) -> Result<impl IntoResponse> {
     Ok((
         StatusCode::CREATED,
-        Json(AccountResponse::ok(
+        Json(crate::api::response::success::<AccountDto>(
             account::provision(&state, &operator, input.try_into()?)
                 .await?
                 .into(),
-        )),
+        )?),
     ))
 }
 
-#[aster_forge_api_docs_macros::path(post, path = "/api/v1/management/accounts/{id}/lifecycle", tag = "account-management", params(("id" = String, Path)), request_body = LifecycleRequest, responses((status = 200, body = AccountResponse)))]
+#[aster_forge_api_docs_macros::path(post, path = "/api/v1/management/accounts/{id}/lifecycle", tag = "account-management", params(("id" = String, Path)), request_body = LifecycleRequest, responses((status = 200, body = ApiResponse<AccountDto, ApiErrorCode, NoData>)))]
 pub async fn manage_lifecycle(
     State(state): State<Arc<AppState>>,
     Authenticated(operator): Authenticated,
     Path(id): Path<String>,
     JsonInput(input): JsonInput<LifecycleRequest>,
-) -> Result<Json<AccountResponse>> {
-    Ok(Json(AccountResponse::ok(
+) -> Result<Json<ApiResponse<AccountDto, ApiErrorCode, NoData>>> {
+    Ok(Json(crate::api::response::success::<AccountDto>(
         account::manage_lifecycle(
             &state,
             &operator,
@@ -335,5 +348,5 @@ pub async fn manage_lifecycle(
         )
         .await?
         .into(),
-    )))
+    )?))
 }

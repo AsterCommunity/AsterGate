@@ -40,7 +40,7 @@ export type OperationData<
 		: keyof OperationResponses<Operation>,
 > =
 	OperationJsonResponse<Operation, Status> extends { data?: infer Data }
-		? NonNullable<Data>
+		? Exclude<Data, undefined>
 		: never;
 
 export type OperationQuery<Operation extends keyof ApiOperations> =
@@ -65,4 +65,12 @@ export type OperationRequestBody<Operation extends keyof ApiOperations> =
 		: never;
 
 export type StatusResponse = components["schemas"]["StatusResponse"];
-export type ErrorResponse = components["schemas"]["ErrorResponse"];
+/** A product service has checked success, required data and absent error at runtime. */
+export type ApiSuccessResponse<Response extends { data?: unknown }> = Omit<
+	Response,
+	"code" | "data" | "error"
+> & {
+	code: "success";
+	data: Exclude<Response["data"], undefined>;
+	error?: never;
+};

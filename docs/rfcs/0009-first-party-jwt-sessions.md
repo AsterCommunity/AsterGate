@@ -132,7 +132,8 @@ route scope. A restricted refresh Path requires a `__Secure-` rather than `__Hos
 names are used; `__Host-` requires Path `/`. Clear operations exactly match the original names, paths
 and security attributes. Multi-site hosts keep independent Cookies and logins.
 
-Login, refresh and logout keep existing Origin/custom-header CSRF protection and no-store responses.
+Login, refresh and logout preserve Gate's same-origin/custom-header and double-submit CSRF policy,
+matching token-cookie rotation/clearing and no-store responses; see [HTTP middleware](../http-middleware.md).
 JWTs and long-lived refresh credentials never enter localStorage or JavaScript-readable Cookies.
 Browser token delivery uses Set-Cookie rather than plaintext JSON. A future Bearer API profile must
 declare accepted credential types and reject ambiguous Cookie/Bearer identities; it is not added

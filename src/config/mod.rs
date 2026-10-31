@@ -11,6 +11,7 @@ pub mod runtime_config;
 mod schema;
 pub mod security;
 pub mod system_config;
+pub mod transport;
 
 pub use loader::{CONFIG_ENV_VAR, DEFAULT_CONFIG_PATH, load};
 pub use schema::{AppConfig, DatabaseConfig};

@@ -1,7 +1,5 @@
 //! HTTP health route integration tests.
-#[macro_use]
-#[path = "../common/mod.rs"]
-mod common;
+use super::common;
 use axum::{
     body::{Body, to_bytes},
     http::{Request, StatusCode},
@@ -138,17 +136,38 @@ async fn middleware_adds_request_id_and_security_headers() {
 #[cfg(feature = "metrics")]
 #[tokio::test]
 async fn metrics_route_exports_prometheus_text() {
-    let _ = aster_forge_metrics::prometheus::init_metrics();
     let (state, _database) = common::setup().await;
-    let app = create_test_app!(state);
-    let response = request(&app, "GET", "/health/metrics").await;
-    assert_eq!(response.status(), StatusCode::OK);
-    let body = to_bytes(response.into_body(), 4 * 1024 * 1024)
-        .await
-        .expect("metrics body should read");
-    assert!(
-        std::str::from_utf8(&body)
-            .expect("metrics should be utf-8")
-            .contains("process_uptime_seconds")
+    let shutdown = tokio_util::sync::CancellationToken::new();
+    let _cancel_on_drop = shutdown.clone().drop_guard();
+    let sampler = tokio::spawn(
+        state
+            .metrics
+            .system_metrics_updater_task(shutdown.clone())
+            .expect("real metrics recorder should supply the runtime sampler"),
     );
+    let app = create_test_app!(state);
+    let sampled = tokio::time::timeout(std::time::Duration::from_secs(5), async {
+        loop {
+            let response = request(&app, "GET", "/health/metrics").await;
+            assert_eq!(response.status(), StatusCode::OK);
+            assert!(
+                response.headers()["content-type"]
+                    .to_str()
+                    .unwrap()
+                    .starts_with("text/plain")
+            );
+            let body = to_bytes(response.into_body(), 4 * 1024 * 1024)
+                .await
+                .unwrap();
+            let text = std::str::from_utf8(&body).unwrap();
+            if text.contains("process_uptime_seconds") {
+                break;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+    })
+    .await;
+    shutdown.cancel();
+    sampler.await.expect("sampler should shut down cleanly");
+    sampled.expect("runtime sampler should publish process metrics");
 }

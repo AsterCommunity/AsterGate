@@ -39,11 +39,13 @@ forwarded headers. Previously delivered links cannot be rewritten; retain the ol
 outstanding challenges expire when moving a primary site. Public sites do not define additional OIDC
 issuers. The proposed canonical issuer lifecycle remains a separate RFC capability.
 
-Browser writes require the custom request header and an exact configured Origin matching the
-configured request Host. Proxies must preserve Host. Unconfigured/removed authorities are rejected.
+Browser writes require the custom request header, matching double-submit CSRF cookie/header values
+and an exact configured source matching the request Host. Proxies must preserve Host.
+Unconfigured/removed authorities are rejected.
 Cookie security/name follows the request's configured site, so changing the primary does not change
 cookies on other sites. Cookies are host-only, not port-specific; different hostnames require separate
-logins. No cross-origin CORS or silent cross-domain SSO is added.
+logins. Site URLs do not enable CORS or silent cross-domain SSO; explicit deployment-owned CORS
+and cookie policy are documented in [HTTP middleware](http-middleware.md).
 
 ## Cache And Synchronization
 

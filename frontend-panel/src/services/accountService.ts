@@ -1,5 +1,10 @@
-import type { components } from "@/types/api";
-import { ApiErrorCode } from "@/types/api-helpers";
+import type {
+	ApiSuccessResponse,
+	components,
+	OperationJsonResponse,
+} from "@/types/api";
+import { isApiSuccessEnvelope } from "@/types/api-helpers";
+import { csrfHeaders } from "./csrf";
 import { requestJson } from "./httpClient";
 
 type Schema = components["schemas"];
@@ -8,109 +13,144 @@ export type Session = Schema["SessionDto"];
 export type RegisterInput = Schema["RegisterRequest"];
 export type LifecycleAction = Schema["LifecycleActionDto"];
 
-export async function accountRequest<T>(
+export async function accountRequest<T extends { data?: unknown }>(
 	path: string,
 	method = "GET",
 	body?: unknown,
-) {
+): Promise<ApiSuccessResponse<T>> {
 	const response = await requestJson<T>(`/api/v1${path}`, {
 		method,
 		credentials: "same-origin",
 		cache: "no-store",
 		headers: {
 			"X-AsterGate-Request": "1",
+			...(await csrfHeaders(method, `/api/v1${path}`)),
 			...(body === undefined ? {} : { "Content-Type": "application/json" }),
 		},
 		...(body === undefined ? {} : { body: JSON.stringify(body) }),
 	});
-	if (
-		typeof response !== "object" ||
-		response === null ||
-		!("code" in response) ||
-		response.code !== ApiErrorCode.Success ||
-		!("data" in response)
-	) {
+	if (!isApiSuccessEnvelope(response)) {
 		throw new Error("Invalid API response envelope");
 	}
-	return response;
+	return response as ApiSuccessResponse<T>;
 }
 
 export const accountService = {
-	me: () => accountRequest<Schema["AccountResponse"]>("/account"),
+	me: () => accountRequest<OperationJsonResponse<"profile">>("/account"),
 	login: (identifier: string, password: string) =>
-		accountRequest<Schema["AccountResponse"]>("/auth/login", "POST", {
+		accountRequest<OperationJsonResponse<"login">>("/auth/login", "POST", {
 			identifier,
 			password,
 		}),
 	register: (input: RegisterInput) =>
-		accountRequest<Schema["AccountResponse"]>("/auth/register", "POST", input),
+		accountRequest<OperationJsonResponse<"register", 201>>(
+			"/auth/register",
+			"POST",
+			input,
+		),
 	logout: () =>
-		accountRequest<Schema["SuccessResponse"]>("/auth/logout", "POST"),
+		accountRequest<OperationJsonResponse<"logout">>("/auth/logout", "POST"),
 	updateProfile: (display_name: string) =>
-		accountRequest<Schema["AccountResponse"]>("/account", "PATCH", {
-			display_name,
-		}),
+		accountRequest<OperationJsonResponse<"update_profile">>(
+			"/account",
+			"PATCH",
+			{
+				display_name,
+			},
+		),
 	sessions: () =>
-		accountRequest<Schema["SessionsResponse"]>("/account/sessions"),
+		accountRequest<OperationJsonResponse<"sessions">>("/account/sessions"),
 	revokeSession: (id: string) =>
-		accountRequest<Schema["SuccessResponse"]>(
+		accountRequest<OperationJsonResponse<"revoke_session">>(
 			`/account/sessions/${id}`,
 			"DELETE",
 		),
 	revokeAll: () =>
-		accountRequest<Schema["SuccessResponse"]>("/account/sessions", "DELETE"),
+		accountRequest<OperationJsonResponse<"revoke_all">>(
+			"/account/sessions",
+			"DELETE",
+		),
 	changePassword: (current_password: string, new_password: string) =>
-		accountRequest<Schema["SuccessResponse"]>("/account/password", "POST", {
-			current_password,
-			new_password,
-		}),
+		accountRequest<OperationJsonResponse<"change_password">>(
+			"/account/password",
+			"POST",
+			{
+				current_password,
+				new_password,
+			},
+		),
 	changeEmail: (email: string, password: string) =>
-		accountRequest<Schema["SuccessResponse"]>("/account/email", "POST", {
-			email,
-			password,
-		}),
+		accountRequest<OperationJsonResponse<"request_email_change">>(
+			"/account/email",
+			"POST",
+			{
+				email,
+				password,
+			},
+		),
 	requestVerification: (identifier: string) =>
-		accountRequest<Schema["SuccessResponse"]>("/auth/verification", "POST", {
-			identifier,
-		}),
+		accountRequest<OperationJsonResponse<"request_verification">>(
+			"/auth/verification",
+			"POST",
+			{
+				identifier,
+			},
+		),
 	requestRecovery: (identifier: string) =>
-		accountRequest<Schema["SuccessResponse"]>("/auth/recovery", "POST", {
-			identifier,
-		}),
+		accountRequest<OperationJsonResponse<"request_recovery">>(
+			"/auth/recovery",
+			"POST",
+			{
+				identifier,
+			},
+		),
 	verify: (token: string) =>
-		accountRequest<Schema["SuccessResponse"]>("/auth/verify-email", "POST", {
-			token,
-		}),
+		accountRequest<OperationJsonResponse<"verify_email">>(
+			"/auth/verify-email",
+			"POST",
+			{
+				token,
+			},
+		),
 	reset: (token: string, password: string) =>
-		accountRequest<Schema["SuccessResponse"]>("/auth/reset-password", "POST", {
-			token,
-			password,
-		}),
+		accountRequest<OperationJsonResponse<"reset_password">>(
+			"/auth/reset-password",
+			"POST",
+			{
+				token,
+				password,
+			},
+		),
 	confirmEmail: (token: string) =>
-		accountRequest<Schema["SuccessResponse"]>(
+		accountRequest<OperationJsonResponse<"confirm_email_change">>(
 			"/account/email/confirm",
 			"POST",
 			{ token },
 		),
 	remove: (password: string) =>
-		accountRequest<Schema["SuccessResponse"]>("/account", "DELETE", {
-			password,
-		}),
-	export: () => accountRequest<Schema["ExportResponse"]>("/account/export"),
+		accountRequest<OperationJsonResponse<"delete_account">>(
+			"/account",
+			"DELETE",
+			{
+				password,
+			},
+		),
+	export: () =>
+		accountRequest<OperationJsonResponse<"export">>("/account/export"),
 	manageList: (after?: string) =>
-		accountRequest<Schema["AccountsResponse"]>(
+		accountRequest<OperationJsonResponse<"manage_list">>(
 			`/management/accounts${after ? `?after=${encodeURIComponent(after)}` : ""}`,
 			"GET",
 			undefined,
 		),
 	provision: (input: RegisterInput) =>
-		accountRequest<Schema["AccountResponse"]>(
+		accountRequest<OperationJsonResponse<"provision", 201>>(
 			"/management/accounts",
 			"POST",
 			input,
 		),
 	lifecycle: (id: string, action: LifecycleAction, current_password?: string) =>
-		accountRequest<Schema["AccountResponse"]>(
+		accountRequest<OperationJsonResponse<"manage_lifecycle">>(
 			`/management/accounts/${id}/lifecycle`,
 			"POST",
 			{ action, current_password },

@@ -4,11 +4,21 @@ use aster_forge_runtime::{HealthComponentReport, SystemHealthReport};
 use axum::{Json, Router, extract::State, http::StatusCode, response::IntoResponse, routing::get};
 use std::sync::Arc;
 
-pub fn router() -> Router<Arc<crate::runtime::AppState>> {
+pub fn router(state: &Arc<crate::runtime::AppState>) -> Router<Arc<crate::runtime::AppState>> {
     let router = Router::new()
         .route("/health", get(health).head(health))
         .route("/health/ready", get(ready).head(ready));
-    aster_forge_observability::axum::configure_prometheus_route(router)
+    #[cfg(feature = "metrics")]
+    let router = match state.metrics.provider() {
+        Some(provider) => router.nest(
+            "/health",
+            aster_forge_observability::axum::prometheus_router(provider).with_state(()),
+        ),
+        None => router,
+    };
+    #[cfg(not(feature = "metrics"))]
+    let _ = state;
+    router
 }
 
 #[aster_forge_api_docs_macros::path(get, path = "/health", tag = "health", responses((status = 200, description = "Service health status", body = StatusResponse)))]
@@ -31,7 +41,11 @@ pub async fn ready(State(state): State<Arc<crate::runtime::AppState>>) -> impl I
         check_configuration(&state),
     ];
     let report = SystemHealthReport::with_duration(reports, started.elapsed());
-    crate::metrics::record_health_report(aster_forge_runtime::HealthCheckScope::Readiness, &report);
+    crate::metrics::record_health_report(
+        &state.metrics,
+        aster_forge_runtime::HealthCheckScope::Readiness,
+        &report,
+    );
     let ready = report
         .components
         .iter()

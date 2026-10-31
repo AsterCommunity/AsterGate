@@ -41,9 +41,12 @@ fn build_http_service_component(
     let router = crate::api::router(state);
     let stop = shutdown.clone();
     let service: HttpFuture = Box::pin(async move {
-        axum::serve(listener, router)
-            .with_graceful_shutdown(async move { stop.cancelled().await })
-            .await
+        axum::serve(
+            listener,
+            router.into_make_service_with_connect_info::<SocketAddr>(),
+        )
+        .with_graceful_shutdown(async move { stop.cancelled().await })
+        .await
     });
     Ok(RuntimeServiceComponent::new(
         "http",

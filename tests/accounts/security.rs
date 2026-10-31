@@ -205,6 +205,8 @@ async fn login_reservations_survive_restart_and_session_expiry_is_enforced() {
                 .method("POST")
                 .uri("/api/v1/auth/login")
                 .header("X-AsterGate-Request", "1")
+                .header("X-AsterGate-CSRF", CSRF_TOKEN)
+                .header("Cookie", format!("ag_csrf={CSRF_TOKEN}"))
                 .header("Content-Type", "application/json")
                 .body(Body::from(
                     json!({"identifier":"ghost","password":"wrong"}).to_string(),

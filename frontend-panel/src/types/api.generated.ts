@@ -377,27 +377,17 @@ export interface components {
             account: components["schemas"]["AccountDto"];
             sessions: components["schemas"]["SessionDto"][];
         };
-        AccountResponse: {
-            code: components["schemas"]["ApiErrorCode"];
-            data: components["schemas"]["AccountDto"];
-            msg: string;
-        };
         /** @enum {string} */
         AccountStatusDto: "pending_verification" | "active" | "suspended" | "deleted";
-        AccountsResponse: {
-            code: components["schemas"]["ApiErrorCode"];
-            data: components["schemas"]["CursorPage_AccountDto_String"];
-            msg: string;
-        };
         /** @enum {string} */
         ApiErrorCode: "success" | "validation.failed" | "auth.credentials_failed" | "auth.session_required" | "auth.forbidden" | "account.identifier_conflict" | "settings.revision_conflict" | "account.not_found" | "account.invalid_transition" | "auth.challenge_invalid" | "rate_limited" | "mail.not_configured" | "service.unavailable" | "setup.required" | "setup.already_initialized" | "account.last_operator" | "endpoint.not_found";
-        ApiErrorInfo: {
+        ApiErrorInfo_TupleUnit: {
+            diagnostic?: null;
             retryable: boolean;
         };
-        /** @description Serialized cursor page response. */
-        CursorPage_AccountDto_String: {
-            /** @description Items in the current page. */
-            items: {
+        ApiResponse_AccountDto_ApiErrorCode_TupleUnit: {
+            code: components["schemas"]["ApiErrorCode"];
+            data?: {
                 /** Format: int64 */
                 created_at: number;
                 display_name: string;
@@ -409,18 +399,100 @@ export interface components {
                 /** Format: int64 */
                 updated_at: number;
                 username: string;
+            };
+            error?: components["schemas"]["ApiErrorInfo_TupleUnit"];
+            msg: string;
+        };
+        ApiResponse_AccountExportDto_ApiErrorCode_TupleUnit: {
+            code: components["schemas"]["ApiErrorCode"];
+            data?: {
+                account: components["schemas"]["AccountDto"];
+                sessions: components["schemas"]["SessionDto"][];
+            };
+            error?: components["schemas"]["ApiErrorInfo_TupleUnit"];
+            msg: string;
+        };
+        ApiResponse_CursorPage_AccountDto_String_ApiErrorCode_TupleUnit: {
+            code: components["schemas"]["ApiErrorCode"];
+            /** @description Serialized cursor page response. */
+            data?: {
+                /** @description Items in the current page. */
+                items: components["schemas"]["AccountDto"][];
+                /**
+                 * Format: int64
+                 * @description Effective page size.
+                 */
+                limit: number;
+                next_cursor?: string | null;
+                /**
+                 * Format: int64
+                 * @description Total number of items matching the query.
+                 */
+                total: number;
+            };
+            error?: components["schemas"]["ApiErrorInfo_TupleUnit"];
+            msg: string;
+        };
+        ApiResponse_PublicFrontendConfigDto_ApiErrorCode_TupleUnit: {
+            code: components["schemas"]["ApiErrorCode"];
+            data?: {
+                account: components["schemas"]["PublicAccountPolicyDto"];
+                branding: components["schemas"]["PublicBrandingDto"];
+            };
+            error?: components["schemas"]["ApiErrorInfo_TupleUnit"];
+            msg: string;
+        };
+        ApiResponse_SettingsDto_ApiErrorCode_TupleUnit: {
+            code: components["schemas"]["ApiErrorCode"];
+            data?: {
+                branding_description: string;
+                branding_title: string;
+                /** Format: int64 */
+                challenge_ttl_seconds: number;
+                email_verification: components["schemas"]["EmailVerificationDto"];
+                mail?: components["schemas"]["MailSettingsDto"] | null;
+                registration: components["schemas"]["RegistrationDto"];
+                /** Format: int64 */
+                revision: number;
+                /** Format: int64 */
+                session_ttl_seconds: number;
+                site_urls: string[];
+            };
+            error?: components["schemas"]["ApiErrorInfo_TupleUnit"];
+            msg: string;
+        };
+        ApiResponse_SetupStateDto_ApiErrorCode_TupleUnit: {
+            code: components["schemas"]["ApiErrorCode"];
+            /** @enum {string} */
+            data?: "needs_setup" | "ready";
+            error?: components["schemas"]["ApiErrorInfo_TupleUnit"];
+            msg: string;
+        };
+        ApiResponse_TupleUnit_ApiErrorCode_TupleUnit: {
+            code: components["schemas"]["ApiErrorCode"];
+            data?: null;
+            error?: components["schemas"]["ApiErrorInfo_TupleUnit"];
+            msg: string;
+        };
+        ApiResponse_Vec_SessionDto_ApiErrorCode_TupleUnit: {
+            code: components["schemas"]["ApiErrorCode"];
+            data?: {
+                /** Format: int64 */
+                created_at: number;
+                current: boolean;
+                /** Format: int64 */
+                expires_at: number;
+                id: string;
+                user_agent: string;
             }[];
-            /**
-             * Format: int64
-             * @description Effective page size.
-             */
-            limit: number;
-            next_cursor?: string;
-            /**
-             * Format: int64
-             * @description Total number of items matching the query.
-             */
-            total: number;
+            error?: components["schemas"]["ApiErrorInfo_TupleUnit"];
+            msg: string;
+        };
+        ApiResponse_bool_ApiErrorCode_TupleUnit: {
+            code: components["schemas"]["ApiErrorCode"];
+            data?: boolean;
+            error?: components["schemas"]["ApiErrorInfo_TupleUnit"];
+            msg: string;
         };
         DeleteAccountRequest: {
             password: string;
@@ -431,17 +503,6 @@ export interface components {
         };
         /** @enum {string} */
         EmailVerificationDto: "optional" | "required";
-        /** @description Product error envelope, matching the AsterDrive wire contract. */
-        ErrorResponse: {
-            code: components["schemas"]["ApiErrorCode"];
-            error: components["schemas"]["ApiErrorInfo"];
-            msg: string;
-        };
-        ExportResponse: {
-            code: components["schemas"]["ApiErrorCode"];
-            data: components["schemas"]["AccountExportDto"];
-            msg: string;
-        };
         IdentifierRequest: {
             identifier: string;
         };
@@ -498,11 +559,6 @@ export interface components {
             account: components["schemas"]["PublicAccountPolicyDto"];
             branding: components["schemas"]["PublicBrandingDto"];
         };
-        PublicFrontendConfigResponse: {
-            code: components["schemas"]["ApiErrorCode"];
-            data: components["schemas"]["PublicFrontendConfigDto"];
-            msg: string;
-        };
         RegisterRequest: {
             display_name: string;
             email: string;
@@ -523,11 +579,6 @@ export interface components {
             expires_at: number;
             id: string;
             user_agent: string;
-        };
-        SessionsResponse: {
-            code: components["schemas"]["ApiErrorCode"];
-            data: components["schemas"]["SessionDto"][];
-            msg: string;
         };
         SettingsDto: {
             branding_description: string;
@@ -558,11 +609,6 @@ export interface components {
             session_ttl_seconds: number;
             site_urls: string[];
         };
-        SettingsResponse: {
-            code: components["schemas"]["ApiErrorCode"];
-            data: components["schemas"]["SettingsDto"];
-            msg: string;
-        };
         SetupRequest: {
             branding_description?: string;
             branding_title?: string;
@@ -574,30 +620,20 @@ export interface components {
         };
         /** @enum {string} */
         SetupStateDto: "needs_setup" | "ready";
-        SetupStatusResponse: {
-            code: components["schemas"]["ApiErrorCode"];
-            data: components["schemas"]["SetupStateDto"];
-            msg: string;
-        };
         /** @enum {string} */
         SmtpSecurityDto: "start_tls" | "implicit_tls" | "loopback_plaintext";
-        /** @description Basic status response returned by the generated skeleton. */
+        /** @description Liveness/readiness wire contract, deliberately outside the product REST envelope. */
         StatusResponse: {
-            /** @description Cargo package name. */
             service: string;
-            /** @description Public health or readiness status. */
             status: string;
-        };
-        SuccessResponse: {
-            code: components["schemas"]["ApiErrorCode"];
-            data: boolean;
-            msg: string;
         };
         /** @enum {string} */
         SystemPermissionDto: "astergate.system.accounts.read" | "astergate.system.accounts.create" | "astergate.system.accounts.suspend" | "astergate.system.accounts.restore" | "astergate.system.accounts.delete" | "astergate.system.settings.read" | "astergate.system.settings.update";
         TokenRequest: {
             token: string;
         };
+        /** @default null */
+        TupleUnit: unknown;
     };
     responses: never;
     parameters: never;
@@ -618,10 +654,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AccountResponse"];
+                    "application/json": components["schemas"]["ApiResponse_AccountDto_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -630,8 +763,10 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                "X-AsterGate-CSRF": string;
             };
             path?: never;
             cookie?: never;
@@ -644,10 +779,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessResponse"];
+                    "application/json": components["schemas"]["ApiResponse_bool_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -656,8 +888,10 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                "X-AsterGate-CSRF": string;
             };
             path?: never;
             cookie?: never;
@@ -670,10 +904,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AccountResponse"];
+                    "application/json": components["schemas"]["ApiResponse_AccountDto_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -682,8 +1013,10 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                "X-AsterGate-CSRF": string;
             };
             path?: never;
             cookie?: never;
@@ -696,10 +1029,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessResponse"];
+                    "application/json": components["schemas"]["ApiResponse_bool_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -708,8 +1138,10 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                "X-AsterGate-CSRF": string;
             };
             path?: never;
             cookie?: never;
@@ -722,10 +1154,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessResponse"];
+                    "application/json": components["schemas"]["ApiResponse_bool_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -741,10 +1270,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ExportResponse"];
+                    "application/json": components["schemas"]["ApiResponse_AccountExportDto_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -753,8 +1379,10 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                "X-AsterGate-CSRF": string;
             };
             path?: never;
             cookie?: never;
@@ -767,10 +1395,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessResponse"];
+                    "application/json": components["schemas"]["ApiResponse_bool_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -786,10 +1511,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SessionsResponse"];
+                    "application/json": components["schemas"]["ApiResponse_Vec_SessionDto_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -798,8 +1620,10 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                "X-AsterGate-CSRF": string;
             };
             path?: never;
             cookie?: never;
@@ -808,10 +1632,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessResponse"];
+                    "application/json": components["schemas"]["ApiResponse_bool_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -820,8 +1741,10 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                "X-AsterGate-CSRF": string;
             };
             path: {
                 id: string;
@@ -832,10 +1755,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessResponse"];
+                    "application/json": components["schemas"]["ApiResponse_bool_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -844,8 +1864,10 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                "X-AsterGate-CSRF": string;
             };
             path?: never;
             cookie?: never;
@@ -858,18 +1880,106 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AccountResponse"];
+                    "application/json": components["schemas"]["ApiResponse_AccountDto_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
             401: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -878,8 +1988,10 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                "X-AsterGate-CSRF": string;
             };
             path?: never;
             cookie?: never;
@@ -888,10 +2000,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessResponse"];
+                    "application/json": components["schemas"]["ApiResponse_bool_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -900,8 +2109,10 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                "X-AsterGate-CSRF": string;
             };
             path?: never;
             cookie?: never;
@@ -914,10 +2125,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessResponse"];
+                    "application/json": components["schemas"]["ApiResponse_bool_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -926,8 +2234,10 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                "X-AsterGate-CSRF": string;
             };
             path?: never;
             cookie?: never;
@@ -940,18 +2250,106 @@ export interface operations {
         responses: {
             201: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AccountResponse"];
+                    "application/json": components["schemas"]["ApiResponse_AccountDto_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
             409: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -960,8 +2358,10 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                "X-AsterGate-CSRF": string;
             };
             path?: never;
             cookie?: never;
@@ -974,10 +2374,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessResponse"];
+                    "application/json": components["schemas"]["ApiResponse_bool_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -986,8 +2483,10 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                "X-AsterGate-CSRF": string;
             };
             path?: never;
             cookie?: never;
@@ -1000,10 +2499,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessResponse"];
+                    "application/json": components["schemas"]["ApiResponse_bool_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -1012,8 +2608,10 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                "X-AsterGate-CSRF": string;
             };
             path?: never;
             cookie?: never;
@@ -1026,10 +2624,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessResponse"];
+                    "application/json": components["schemas"]["ApiResponse_bool_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -1048,10 +2743,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AccountsResponse"];
+                    "application/json": components["schemas"]["ApiResponse_CursorPage_AccountDto_String_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -1060,8 +2852,10 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                "X-AsterGate-CSRF": string;
             };
             path?: never;
             cookie?: never;
@@ -1074,10 +2868,107 @@ export interface operations {
         responses: {
             201: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AccountResponse"];
+                    "application/json": components["schemas"]["ApiResponse_AccountDto_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -1086,8 +2977,10 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                "X-AsterGate-CSRF": string;
             };
             path: {
                 id: string;
@@ -1102,10 +2995,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AccountResponse"];
+                    "application/json": components["schemas"]["ApiResponse_AccountDto_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -1121,10 +3111,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SettingsResponse"];
+                    "application/json": components["schemas"]["ApiResponse_SettingsDto_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -1133,8 +3220,10 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                "X-AsterGate-CSRF": string;
             };
             path?: never;
             cookie?: never;
@@ -1147,10 +3236,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SettingsResponse"];
+                    "application/json": components["schemas"]["ApiResponse_SettingsDto_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -1166,10 +3352,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PublicFrontendConfigResponse"];
+                    "application/json": components["schemas"]["ApiResponse_PublicFrontendConfigDto_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -1178,8 +3461,10 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                /** @description Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled. */
+                /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                "X-AsterGate-CSRF": string;
             };
             path?: never;
             cookie?: never;
@@ -1192,18 +3477,106 @@ export interface operations {
         responses: {
             201: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AccountResponse"];
+                    "application/json": components["schemas"]["ApiResponse_AccountDto_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
             409: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };
@@ -1219,10 +3592,107 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SetupStatusResponse"];
+                    "application/json": components["schemas"]["ApiResponse_SetupStateDto_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
                 };
             };
         };

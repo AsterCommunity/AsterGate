@@ -77,3 +77,18 @@ impl ApiErrorCode {
         }
     }
 }
+
+impl aster_forge_api::response::ApiResponseCode for ApiErrorCode {
+    fn is_success(&self) -> bool {
+        *self == Self::Success
+    }
+}
+
+impl axum::response::IntoResponse for ApiErrorCode {
+    fn into_response(self) -> axum::response::Response {
+        match super::response::failure(self) {
+            Ok(body) => (self.status(), axum::Json(body)).into_response(),
+            Err(_) => axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+        }
+    }
+}

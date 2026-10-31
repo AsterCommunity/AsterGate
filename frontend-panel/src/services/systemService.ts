@@ -1,4 +1,4 @@
-import type { components } from "@/types/api";
+import type { components, OperationJsonResponse } from "@/types/api";
 import { accountRequest } from "./accountService";
 
 type Schema = components["schemas"];
@@ -10,15 +10,19 @@ export type PublicBranding = Schema["PublicBrandingDto"];
 export type AccountPolicy = Schema["PublicAccountPolicyDto"];
 export const systemService = {
 	frontendConfig: () =>
-		accountRequest<Schema["PublicFrontendConfigResponse"]>(
+		accountRequest<OperationJsonResponse<"frontend_config">>(
 			"/public/frontend-config",
 		),
 	setup: (input: SetupInput) =>
-		accountRequest<Schema["AccountResponse"]>("/setup", "POST", input),
+		accountRequest<OperationJsonResponse<"initialize", 201>>(
+			"/setup",
+			"POST",
+			input,
+		),
 	settings: () =>
-		accountRequest<Schema["SettingsResponse"]>("/management/settings"),
+		accountRequest<OperationJsonResponse<"settings">>("/management/settings"),
 	updateSettings: (input: SettingsInput) =>
-		accountRequest<Schema["SettingsResponse"]>(
+		accountRequest<OperationJsonResponse<"update_settings">>(
 			"/management/settings",
 			"PUT",
 			input,

@@ -244,7 +244,7 @@ pub async fn complete<C: ConnectionTrait>(db: &C) -> Result<()> {
 
 async fn set<C: ConnectionTrait>(db: &C, key: &str, value: &str) -> Result<()> {
     CONFIG_STORE
-        .upsert(
+        .upsert_prevalidated(
             db,
             aster_forge_db::system_config::SystemConfigUpsert {
                 key,

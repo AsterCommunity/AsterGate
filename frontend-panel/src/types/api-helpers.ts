@@ -54,3 +54,41 @@ export const errorTranslationKeys = {
 	"account.last_operator": "last_operator",
 	"endpoint.not_found": "resource_not_found",
 } as const satisfies Record<ApiErrorCode, string>;
+
+/** REST shape validation shared by product services and HTTP error consumption. */
+export function isJsonRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function isApiSuccessEnvelope(
+	payload: unknown,
+): payload is { code: "success"; msg: string; data: unknown } {
+	return (
+		isJsonRecord(payload) &&
+		payload.code === ApiErrorCode.Success &&
+		typeof payload.msg === "string" &&
+		Object.hasOwn(payload, "data") &&
+		!Object.hasOwn(payload, "error")
+	);
+}
+
+export function isApiFailureEnvelope(payload: unknown): payload is {
+	code: string;
+	msg: string;
+	error?: { retryable: boolean; diagnostic?: unknown };
+} {
+	if (
+		!isJsonRecord(payload) ||
+		typeof payload.code !== "string" ||
+		payload.code.length === 0 ||
+		payload.code === ApiErrorCode.Success ||
+		typeof payload.msg !== "string" ||
+		Object.hasOwn(payload, "data")
+	)
+		return false;
+	return (
+		!Object.hasOwn(payload, "error") ||
+		(isJsonRecord(payload.error) &&
+			typeof payload.error.retryable === "boolean")
+	);
+}

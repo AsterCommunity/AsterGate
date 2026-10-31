@@ -51,3 +51,24 @@ max_backups = 5
 # verification policy, session lifetimes and optional SMTP settings are initialized through
 # setup and stored in system_config. They can be changed from Instance settings. The initial management Account is
 # created through setup. Account sessions + exact system permissions authorize management APIs.
+
+[http_security]
+# Trust only the direct ingress proxies you operate. Empty means every forwarding header is untrusted.
+# Missing connection peers share a localhost IP bucket; headers never manufacture a trusted peer.
+trusted_proxies = []
+
+[http_security.cors]
+# Hosted UI is same-origin. Cross-origin Cookie authentication is deliberately unsupported.
+# Enabling this requires exact HTTP-loopback/HTTPS origins; neither wildcard nor site_urls expands it.
+enabled = false
+allowed_origins = []
+
+[http_security.rate_limit]
+# Process-local HTTP admission supplements, and never replaces, durable Account security budgets.
+# Each accepted request consumes a token; one token is restored per seconds_per_request.
+enabled = true
+seconds_per_request = 1
+burst = 300
+# Auth routes and setup additionally share a per-client-IP keyed budget (including preflight).
+authentication_seconds_per_request = 2
+authentication_burst = 100

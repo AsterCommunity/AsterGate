@@ -338,7 +338,7 @@ dependencies = [
 [[package]]
 name = "aster_forge_alloc"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "tikv-jemalloc-ctl",
  "tracing",
@@ -347,7 +347,7 @@ dependencies = [
 [[package]]
 name = "aster_forge_api"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "chrono",
  "serde",
@@ -358,7 +358,7 @@ dependencies = [
 [[package]]
 name = "aster_forge_api_docs_macros"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -368,17 +368,18 @@ dependencies = [
 [[package]]
 name = "aster_forge_audit"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "aster_forge_mail",
  "aster_forge_runtime",
+ "tokio",
  "tracing",
 ]
 
 [[package]]
 name = "aster_forge_cache"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "aster_forge_runtime",
  "aster_forge_utils",
@@ -396,7 +397,7 @@ dependencies = [
 [[package]]
 name = "aster_forge_config"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "aster_forge_events",
  "aster_forge_utils",
@@ -416,7 +417,7 @@ dependencies = [
 [[package]]
 name = "aster_forge_crypto"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "aes-gcm",
  "argon2",
@@ -430,7 +431,7 @@ dependencies = [
 [[package]]
 name = "aster_forge_db"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "aster_forge_api",
  "aster_forge_config",
@@ -451,16 +452,17 @@ dependencies = [
 [[package]]
 name = "aster_forge_db_migration"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "sea-orm-migration",
+ "tokio",
  "tracing",
 ]
 
 [[package]]
 name = "aster_forge_events"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "aster_forge_utils",
  "async-trait",
@@ -475,7 +477,7 @@ dependencies = [
 [[package]]
 name = "aster_forge_logging"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "serde",
  "tracing-appender",
@@ -485,7 +487,7 @@ dependencies = [
 [[package]]
 name = "aster_forge_mail"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "aster_forge_runtime",
  "aster_forge_tasks",
@@ -503,10 +505,15 @@ dependencies = [
 [[package]]
 name = "aster_forge_metrics"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "aster_forge_alloc",
  "aster_forge_runtime",
+ "hashbrown 0.17.1",
+ "opentelemetry",
+ "opentelemetry-prometheus",
+ "opentelemetry_sdk",
+ "parking_lot 0.13.0",
  "prometheus",
  "sysinfo",
  "thiserror",
@@ -518,15 +525,17 @@ dependencies = [
 [[package]]
 name = "aster_forge_middleware"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "aster_forge_metrics",
  "aster_forge_utils",
  "axum",
  "base64 0.23.1",
+ "cookie",
  "futures",
  "governor",
  "http",
+ "http-body",
  "ipnet",
  "rand 0.10.3",
  "subtle",
@@ -539,7 +548,7 @@ dependencies = [
 [[package]]
 name = "aster_forge_observability"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "aster_forge_metrics",
  "axum",
@@ -549,7 +558,7 @@ dependencies = [
 [[package]]
 name = "aster_forge_panic"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "chrono",
 ]
@@ -557,7 +566,7 @@ dependencies = [
 [[package]]
 name = "aster_forge_runtime"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "aster_forge_utils",
  "async-trait",
@@ -574,7 +583,7 @@ dependencies = [
 [[package]]
 name = "aster_forge_tasks"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "aster_forge_runtime",
  "aster_forge_utils",
@@ -594,15 +603,16 @@ dependencies = [
 [[package]]
 name = "aster_forge_test"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "aster_forge_utils",
+ "rustix",
 ]
 
 [[package]]
 name = "aster_forge_utils"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "headers",
  "http",
@@ -610,6 +620,7 @@ dependencies = [
  "ipnet",
  "md-5",
  "rand 0.10.3",
+ "rustix",
  "serde_json",
  "thiserror",
  "tokio",
@@ -621,7 +632,7 @@ dependencies = [
 [[package]]
 name = "aster_forge_validation"
 version = "0.1.0"
-source = "git+https://github.com/AsterCommunity/AsterForge#1ba5754792ae94bd8888b03d09ada1644b2107c0"
+source = "git+https://github.com/AsterCommunity/AsterForge?rev=fa8167a5769369a2b6d97339411b731223129427#fa8167a5769369a2b6d97339411b731223129427"
 dependencies = [
  "thiserror",
  "unicode-normalization",
@@ -1228,6 +1239,7 @@ version = "0.18.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a373e3602691c3cdea496d2f0ee5935151e6168fe87739483c463db1b2f2f87"
 dependencies = [
+ "percent-encoding",
  "time",
  "version_check",
 ]
@@ -1451,9 +1463,9 @@ dependencies = [
  "cfg-if",
  "crossbeam-utils",
  "hashbrown 0.14.5",
- "lock_api",
+ "lock_api 0.4.14",
  "once_cell",
- "parking_lot_core",
+ "parking_lot_core 0.9.12",
 ]
 
 [[package]]
@@ -1792,8 +1804,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1d930c203dd0b6ff06e0201a4a2fe9149b43c684fd4420555b26d21b1a02956f"
 dependencies = [
  "futures-core",
- "lock_api",
- "parking_lot",
+ "lock_api 0.4.14",
+ "parking_lot 0.12.5",
 ]
 
 [[package]]
@@ -1924,7 +1936,7 @@ dependencies = [
  "getrandom 0.3.4",
  "hashbrown 0.16.1",
  "nonzero_ext",
- "parking_lot",
+ "parking_lot 0.12.5",
  "portable-atomic",
  "quanta",
  "rand 0.9.5",
@@ -1992,6 +2004,11 @@ name = "hashbrown"
 version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
+dependencies = [
+ "allocator-api2",
+ "equivalent",
+ "foldhash",
+]
 
 [[package]]
 name = "hashlink"
@@ -2583,9 +2600,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.189"
+version = "0.2.191"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
+checksum = "65cd87c9a6d60536580b316ad985726104730a5151c99845f2490428ef91240a"
 
 [[package]]
 name = "libm"
@@ -2630,6 +2647,15 @@ name = "lock_api"
 version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "224399e74b87b5f3557511d98dff8b14089b3dadafcab6bb93eab67d3aace965"
+dependencies = [
+ "scopeguard",
+]
+
+[[package]]
+name = "lock_api"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "65d91b22da179613dcf4d6ec8349563f52a363f6849e03b00dd0a185ec4a59af"
 dependencies = [
  "scopeguard",
 ]
@@ -2741,7 +2767,7 @@ dependencies = [
  "equivalent",
  "event-listener",
  "futures-util",
- "parking_lot",
+ "parking_lot 0.12.5",
  "portable-atomic",
  "smallvec",
  "tagptr",
@@ -2921,6 +2947,42 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c87def4c32ab89d880effc9e097653c8da5d6ef28e6b539d313baaacfbafcbe"
 
 [[package]]
+name = "opentelemetry"
+version = "0.33.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8c1f1a6ac9c875a4941e4c7c085b61e8f4daa326de03b4701768c3491a6ad9ee"
+dependencies = [
+ "js-sys",
+ "tracing",
+]
+
+[[package]]
+name = "opentelemetry-prometheus"
+version = "0.33.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9b52a5722eb64d198d6b6f1189e6b75a3c5ddfd224f48ede00c4330e0f11c66"
+dependencies = [
+ "once_cell",
+ "opentelemetry",
+ "opentelemetry_sdk",
+ "prometheus",
+]
+
+[[package]]
+name = "opentelemetry_sdk"
+version = "0.33.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "372a912db2974d1990207006fd0e3aa0ef3fd4ad3be43c65cfaadf2206866061"
+dependencies = [
+ "futures-channel",
+ "futures-executor",
+ "futures-util",
+ "opentelemetry",
+ "portable-atomic",
+ "thiserror",
+]
+
+[[package]]
 name = "option-ext"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2971,8 +3033,18 @@ version = "0.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "93857453250e3077bd71ff98b6a65ea6621a19bb0f559a85248955ac12c45a1a"
 dependencies = [
- "lock_api",
- "parking_lot_core",
+ "lock_api 0.4.14",
+ "parking_lot_core 0.9.12",
+]
+
+[[package]]
+name = "parking_lot"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a9cf937ca4e1d0b7578784559063422fc39ae7c5a00f02471f2614d5486fd226"
+dependencies = [
+ "lock_api 0.5.0",
+ "parking_lot_core 0.10.0",
 ]
 
 [[package]]
@@ -2983,7 +3055,19 @@ checksum = "2621685985a2ebf1c516881c026032ac7deafcda1a2c9b7850dc81e3dfcb64c1"
 dependencies = [
  "cfg-if",
  "libc",
- "redox_syscall",
+ "redox_syscall 0.5.18",
+ "smallvec",
+ "windows-link",
+]
+
+[[package]]
+name = "parking_lot_core"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9cfff060068cc18aa7815010fcaf80c68c7fb9e85fc7f5c0f9bf142c21d19826"
+dependencies = [
+ "libc",
+ "redox_syscall 0.9.5",
  "smallvec",
  "windows-link",
 ]
@@ -3194,7 +3278,7 @@ dependencies = [
  "fnv",
  "lazy_static",
  "memchr",
- "parking_lot",
+ "parking_lot 0.12.5",
  "thiserror",
 ]
 
@@ -3359,9 +3443,9 @@ dependencies = [
 
 [[package]]
 name = "redis"
-version = "1.7.1"
+version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed5b98ae99461e02895c3a96a25dbe4d852a3d5e5b815d31d5d9e4b5344d99e9"
+checksum = "db7f3d75b5a3301746bff39a767bf4c5c42506b08513527308b3875bfb64a031"
 dependencies = [
  "arc-swap",
  "arcstr",
@@ -3393,6 +3477,15 @@ name = "redox_syscall"
 version = "0.5.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed2bf2547551a7053d6fdfafda3f938979645c44812fbfcda098faae3f1a362d"
+dependencies = [
+ "bitflags 2.13.2",
+]
+
+[[package]]
+name = "redox_syscall"
+version = "0.9.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "580c875845b41ecb1564ad1ae4703044cef774145e3d7a94dc2b3fa7c97868fd"
 dependencies = [
  "bitflags 2.13.2",
 ]
@@ -3541,9 +3634,9 @@ dependencies = [
 
 [[package]]
 name = "rustix"
-version = "1.1.4"
+version = "1.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6fe4565b9518b83ef4f91bb47ce29620ca828bd32cb7e408f0062e9930ba190"
+checksum = "e5e76742e5294153d4dde1207dbec5bdd81eef6fabdc0d2118babadabfd858aa"
 dependencies = [
  "bitflags 2.13.2",
  "errno",
@@ -3896,9 +3989,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.151"
+version = "1.0.154"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c841b55ecdae098c80dcae9cf767f6f8a0c2cdb3416bbef72181df4d0fe73f14"
+checksum = "e7e9cc8b1b85264074fbcc02a88680c4096b1e47df8f739dceb03bf482f04bd6"
 dependencies = [
  "itoa",
  "memchr",
@@ -4104,7 +4197,7 @@ version = "0.9.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3763264f6b73151db08c50ff20d7d8a0b8796e021cdea7ceedad07b80155fa0e"
 dependencies = [
- "lock_api",
+ "lock_api 0.4.14",
 ]
 
 [[package]]
@@ -4113,7 +4206,7 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d96d2d1d716fb500937168cc09353ffdc7a012be8475ac7308e1bdf0e3923300"
 dependencies = [
- "lock_api",
+ "lock_api 0.4.14",
 ]
 
 [[package]]
@@ -4414,9 +4507,9 @@ dependencies = [
 
 [[package]]
 name = "sysinfo"
-version = "0.38.4"
+version = "0.40.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92ab6a2f8bfe508deb3c6406578252e491d299cbbf3bc0529ecc3313aee4a52f"
+checksum = "0e8a3edbe0394ce115f3917a00349dd242be09eb5a091ed509eaf67b55cfb8a8"
 dependencies = [
  "libc",
  "memchr",

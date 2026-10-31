@@ -1,81 +1,33 @@
-# HTTP Middleware Integration
+# HTTP middleware product boundary
 
-- Product tracking: [AG #4](https://github.com/AsterCommunity/AsterGate/issues/4)
-- Shared implementation: [AF #41](https://github.com/AsterCommunity/AsterForge/issues/41)
-- Related JWT session integration: [AG #5](https://github.com/AsterCommunity/AsterGate/issues/5)
+AsterGate uses the official Forge Axum adapters for CSRF, runtime CORS, direct-peer/trusted-proxy IP resolution and process-local governors. It does not enable Actix or use a sibling workspace patch. Gate owns route selection, trusted deployment settings, Cookie lifecycle and typed error responses.
 
-## Current Evidence And Dependency
+## Cookie-authenticated API writes
 
-AG currently uses Forge Axum request ID, security headers and optional metrics. Account writes use
-the product's `X-AsterGate-Request: 1` requirement plus configured site/Origin/Host checks, and
-authentication budgets are persisted in the DB. There is no Forge Axum double-submit CSRF, runtime
-CORS, trusted-peer adapter or governor-based HTTP limiting wired into AG yet.
+Every unsafe Account/setup/management request needs exactly one X-AsterGate-Request: 1, exactly one X-AsterGate-CSRF header and exactly one matching readable CSRF cookie. The token is 32–128 URL-safe ASCII bytes. Repeated Cookie token values, token headers, Host, Origin, Referer and Sec-Fetch-Site are rejected. Forge performs token comparison and request-source checks. GET/HEAD/OPTIONS do not require tokens.
 
-At this audit, remote Forge `master` and AG's lockfile use `1ba5754792ae94bd8888b03d09ada1644b2107c0`.
-AF #41 is Open. The sibling Forge working tree has new shared/Axum middleware files under development;
-that is not a published dependency or completed AG integration. AG consumes the tested published
-Git revision once available, updates the lockfile and verifies its real request pipeline. It does
-not use a permanent sibling path override or enable Actix to obtain a missing Axum adapter.
+GET /api/v1/setup/status and /api/v1/public/frontend-config bootstrap the CSRF cookie if it is absent. Existing valid cookies are retained, avoiding bootstrap-induced rotation. HTTP loopback uses ag_csrf; HTTPS uses __Host-ag_csrf. Both are host-only, Path=/, SameSite=Strict, readable by the same-origin frontend; HTTPS adds Secure. Session cookies remain HttpOnly and SameSite=Lax. Successful setup/login/password-related responses that issue a new session rotate CSRF alongside the committed session; logout/session clearing clears both cookies. Handler failures never rotate a cookie. A damaged authentication configuration does not cause public status/branding reads to mint cookies from a fallback policy.
 
-The currently pinned Forge default-security-header middleware can overwrite product headers,
-including Account `Referrer-Policy: no-referrer`; AF #41 owns the correction and regression tests.
-The existing Account layer sets the stricter policy, but that alone does not prove the final outer
-response preserves it. Expanded integration must test the complete Router response.
+The frontend reads its host's token for each mutation. If absent it coalesces concurrent bootstrap calls. It never attaches the token to another origin or a non-API path, never stores the token in localStorage, and never automatically retries a mutation. CLI clients must first retain the bootstrap cookie and then echo it in the two required headers. For example, use a cookie jar with GET setup/status; supply X-AsterGate-Request: 1 and X-AsterGate-CSRF equal to that jar's CSRF cookie on the following request.
 
-## AD Reference And Ownership
+Origin/Referer must match the current configured site and Host; a different configured public site is not a CSRF authorization. Cross-site Fetch Metadata is rejected. CLI requests may omit source headers but must still supply both double-submit values and the custom header. Forwarded host/proto headers never choose cookie security. Before setup, the actual Host can select only HTTP loopback or HTTPS; after setup, only registered site authorities select cookie policy. Initial setup, anonymous login/registration, email challenge consumption, logout and management mutations all use this boundary. OAuth refresh/token endpoints remain unimplemented under their own capability issue; future cookie-authenticated refresh writes must inherit this policy rather than introducing an exception.
 
-AD uses Forge source validation and double-submit CSRF in Cookie-authenticated unsafe operations,
-issues/clears CSRF Cookies with authentication Cookies, and keeps CORS/proxy/rate-limit selection as
-product policy. Reuse those mechanisms through the framework-neutral core and Axum adapters, rather
-than copying Actix-specific request types or maintaining separate verification algorithms in AG.
+## CORS
 
-Forge owns shared token/source/header parsing, runtime CORS mechanics, trusted-peer extraction,
-governor limiters, request correlation, default header behavior and HTTP metrics adapters. AG owns
-route policy, trusted sites/proxies, session authentication, permissions, persisted Account budgets,
-DTO/envelope/error mapping and frontend wiring. Shared middleware does not authorize an Account
-or infer a system permission from a URL.
+CORS is disabled by default. Public sites, redirect URIs and arbitrary request hosts never create an allowlist. Deployment configuration can enable a bounded exact origin list; wildcard, opaque and invalid origins fail configuration validation. The runtime adapter resolves an atomically replaceable validated snapshot on every request, so an existing router sees a replaced policy immediately. The shipped configuration is loaded at startup; there is no new management API or file watcher for CORS. An embedder can call HttpSecurity::replace_cors with validated deployment configuration.
 
-## Product Integration Contract
+Cross-origin Cookie login is unsupported: allow_credentials is always false and no Access-Control-Allow-Credentials header is emitted. Explicit allowlisted public reads/preflight may work without credentials, while credential-bearing unsafe actions must independently satisfy same-origin CSRF. CORS admission never authorizes CSRF. Responses vary on the CORS request headers; preflight passes HTTP and auth admission quotas before the adapter can return 204.
 
-| Capability | AG integration and required boundary |
-| --- | --- |
-| Source validation | Resolve configured public sites and explicit request/peer policy; Origin/Referer/Sec-Fetch-Site handling follows the shared contract without trusting arbitrary forwarded Host |
-| Double-submit CSRF | Check configured Cookie/header token names for Cookie-authenticated unsafe actions, including logout and future refresh; reject missing/duplicate/invalid/mismatched tokens with typed product errors |
-| Anonymous setup/login/mail flows | Apply explicit source and custom-header protection even before a session/CSRF Cookie exists; specify anonymous token bootstrap if one is needed, rather than rejecting all first logins or exempting every auth route |
-| Cookie/frontend lifecycle | Issue, rotate and exactly clear the readable CSRF Cookie along with protected session changes; access/refresh credentials stay HttpOnly; frontend sends the CSRF header only to configured first-party APIs |
-| Runtime CORS | Default disabled for the current same-origin UI; enable exact allowed origins only for an explicit cross-origin surface; CORS never replaces CSRF or Application admission |
-| Trusted client IP | Obtain direct socket peer explicitly; consult forwarded values only when that peer is trusted; absence of peer or a claimed X-Forwarded-For is not a trusted identity |
-| HTTP rate limits | Apply selected IP/keyed quotas with product 429/Retry-After mapping; retain persisted HMAC-keyed Account/password/challenge budgets and their restart/concurrency guarantees |
-| Security headers | Preserve product no-referrer/CSP and deliberate overrides; shared defaults fill missing headers rather than silently weakening a surface's policy |
-| Request ID/metrics | Follow the shared bounded ID trust policy and actual layer ordering; no secret/high-cardinality labels; record both accepted and rejected requests |
+## Peers and quotas
 
-CSRF setup and source validation are transport concerns. Pure policy/Service commands stay free of
-HTTP types; protected use cases still verify live Account/session/grants and transaction revisions.
-First-party JWT adoption retains these protections: token format does not determine whether a
-Cookie-authenticated request needs CSRF validation.
+The TCP server supplies ConnectInfo<SocketAddr> to the router. Trusted proxies are an explicit list of IPs/CIDRs, rejected on malformed input. Forge ignores forwarding headers from an untrusted direct peer, walks a trusted chain according to its shared policy, and supports IPv4/IPv6. When transport peer information is missing, the global IP governor uses a shared localhost bucket and the authentication keyed governor uses an explicit unknown-peer key; neither derives a peer from headers. UDS/alternate transports must provide a trusted extension/adapter or size/disable the process-local IP policy appropriately.
 
-Multiple public sites remain exact trusted Origins, not an automatic CORS wildcard or issuer alias.
-Middleware replacement cannot silently widen accepted Origins, trust proxy input without peer
-evidence, or turn process-local throttling into the authoritative Account security budget.
+The general IP quota applies to /api/v1 requests. Auth paths and setup additionally have a separate IP-keyed authentication quota, checked first; a rejection short-circuits later layers. Malformed/forbidden requests and preflight consume admission tokens before their handler outcome is known. Router clones and routers reconstructed from the same AppState share buckets. Defaults are 300 general tokens replenished one per second and 100 authentication tokens replenished one per two seconds. Configuration values are nonzero typed inputs, and burst windows exceeding the governor's supported nanosecond range are rejected before construction. Periodic request maintenance removes expired governor entries. Health/static routes are exempt; these quotas are per process, so multi-replica deployments also need ingress-level admission if a globally shared HTTP limit is required.
 
-## Adoption And Acceptance
+Database-backed identifier/action Account security budgets continue to provide durable brute-force protection and survive router recreation/restarts. Governors only supplement those budgets. HTTP rejections use Gate's rate_limited error envelope with retryable metadata and Retry-After rounded up from Forge's actual wait; durable Account cooldowns retain their existing policy.
 
-1. Consume AF #41's published adapter/core APIs and remove duplicated generic AG mechanisms only
-   when the replacement preserves the current and explicitly adopted security contracts.
-2. Wire resolver/state/predicate/error factories and direct-peer delivery into the real Axum stack;
-   document layer order, endpoint policy and exclusion of protocol-specific surfaces where required.
-3. Synchronize Cookie issuance/clearing, frontend header handling, error enums/OpenAPI/SDK and tests.
-   No compatibility alias is required for unreleased AG, but first setup/login must remain usable.
-4. Real Router tests cover safe/unsafe methods, token/source absence/duplicates/mismatch/size,
-   Origin/Referer precedence, spoofed fetch metadata, custom names and structured JSON errors.
-5. CORS tests cover disabled/pass-through, dynamic policy, preflight credentials/wildcards/headers,
-   Vary and exact Origin schemes; proxy tests cover trusted/untrusted/missing peer and IPv4/IPv6.
-6. Limit tests cover quota edges, normalized key isolation, concurrent reservations, rejection delay,
-   no inferred trust from proxies, and retention of persisted Account security limits.
-7. Full-stack tests verify no-referrer/CSP, bounded request IDs, low-cardinality success/error metrics
-   and actual browser setup/login/management/refresh workflows with CSRF protection.
-8. Axum-only dependency/feature checks exclude Actix. API generation, frontend checks and relevant
-   Account/session/browser regression suites pass before the matrix marks complete integration.
+## Layer order and responses
 
-Unpublished upstream files, a registered layer or current custom-header tests alone do not establish
-completion. AF's feature/transport contract tests and AG's product acceptance are separate evidence.
+From outside to inside: optional instance metrics extension/middleware, compression, request correlation, Forge security headers, API no-store/no-cache/no-referrer policy, admission governors, runtime CORS, product account/CSRF boundary, handlers. The outer response policy covers early CORS/CSRF/429 errors; Forge preserves stricter Referrer-Policy and product CSP. Gate maps bare Forge CORS denial to its typed auth.forbidden envelope. Health and protocol responses retain their own transport contracts; OAuth/OIDC protocol endpoints must not be wrapped in management envelopes.
+
+Validation lives in tests/accounts/http_middleware.rs, the existing Account lifecycle/transaction tests, frontend CSRF unit tests, and real browser account flows. Metrics/request-ID integration is additionally tested through the real assembled router. The integration must be checked with the Axum-only dependency feature tree and the documented project test commands before capability status is advanced.
