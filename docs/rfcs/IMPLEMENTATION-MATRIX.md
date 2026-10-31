@@ -41,8 +41,8 @@ GitHub main or a released deployment already contains that implementation.
 | SQLite Account/platform/configuration acceptance | 49 Account/site tests, 20 platform tests, 12 configuration tests; 10 library and 3 OpenAPI tests; Redis test additionally run with opt-in enabled | Passed basic slice |
 | PostgreSQL Account acceptance | 49 Account/authorization/setup/settings/site tests and 20 platform tests including migration up/down, opt-in `ASTER_TEST_DATABASE_BACKEND=postgres` | Passed basic slice |
 | MySQL Account acceptance | 49 Account/authorization/setup/settings/site tests and 20 platform tests including migration up/down, opt-in `ASTER_TEST_DATABASE_BACKEND=mysql` | Passed basic slice |
-| Hosted Account workflows and SMTP | 7 Playwright scenarios: direct setup, optional SMTP, full local Account lifecycle, read-only/create-only controls, live branding, hostname-isolated sessions and primary mail; desktop/mobile screenshots | Passed basic slice |
-| Frontend contracts and tooling | 18 unit tests, generated OpenAPI types, TypeScript/Biome check and production frontend build | Passed REST/UI slice |
+| Hosted Account workflows and SMTP | 8 Playwright scenarios: direct setup with optional SMTP, CSRF enforcement and token rotation, full local Account lifecycle, account-bound email replacement, operator suspension/restoration/erasure, read-only controls, create-only controls, and live branding with hostname-isolated sessions and primary mail; desktop/mobile screenshots | Passed basic slice |
+| Frontend contracts and tooling | 53 tests from `bun run test` across 8 files, generated OpenAPI types, TypeScript/Biome check and production frontend build | Passed REST/UI slice |
 | Official OAuth/OIDC conformance suite | No provider implementation or conformance artifact | Missing |
 
 Missing, proposed, partial, and unverified capabilities must not appear as supported in discovery

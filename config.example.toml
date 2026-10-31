@@ -54,6 +54,8 @@ max_backups = 5
 
 [http_security]
 # Trust only the direct ingress proxies you operate. Empty means every forwarding header is untrusted.
+# Behind a reverse proxy, list its IP/CIDR here so clients keep separate rate-limit buckets. If the
+# proxy address cannot be trusted, disable the process-local HTTP limiter and rate-limit at ingress.
 # Missing connection peers share a localhost IP bucket; headers never manufacture a trusted peer.
 trusted_proxies = []
 
