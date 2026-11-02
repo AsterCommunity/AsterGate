@@ -3,6 +3,10 @@
   "info": {
     "title": "AsterGate",
     "description": "AsterGate Account and management API.",
+    "contact": {
+      "name": "AsterCommunity Contributors",
+      "email": "contributors@astercosm.com"
+    },
     "license": {
       "name": "MIT"
     },
@@ -17,10 +21,198 @@
         "operationId": "profile",
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AccountResponse"
+                  "$ref": "#/components/schemas/ApiResponse_AccountDto_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
@@ -44,13 +236,22 @@
           {
             "name": "X-AsterGate-Request",
             "in": "header",
-            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "description": "Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement.",
             "required": true,
             "schema": {
               "type": "string",
               "enum": [
                 "1"
               ]
+            }
+          },
+          {
+            "name": "X-AsterGate-CSRF",
+            "in": "header",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -66,10 +267,198 @@
         },
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
+                  "$ref": "#/components/schemas/ApiResponse_bool_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
@@ -77,9 +466,11 @@
         },
         "security": [
           {
+            "CsrfCookie": [],
             "SessionCookie": []
           },
           {
+            "LocalCsrfCookie": [],
             "LocalSessionCookie": []
           }
         ]
@@ -93,13 +484,22 @@
           {
             "name": "X-AsterGate-Request",
             "in": "header",
-            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "description": "Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement.",
             "required": true,
             "schema": {
               "type": "string",
               "enum": [
                 "1"
               ]
+            }
+          },
+          {
+            "name": "X-AsterGate-CSRF",
+            "in": "header",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -115,10 +515,198 @@
         },
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AccountResponse"
+                  "$ref": "#/components/schemas/ApiResponse_AccountDto_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
@@ -126,9 +714,11 @@
         },
         "security": [
           {
+            "CsrfCookie": [],
             "SessionCookie": []
           },
           {
+            "LocalCsrfCookie": [],
             "LocalSessionCookie": []
           }
         ]
@@ -144,13 +734,22 @@
           {
             "name": "X-AsterGate-Request",
             "in": "header",
-            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "description": "Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement.",
             "required": true,
             "schema": {
               "type": "string",
               "enum": [
                 "1"
               ]
+            }
+          },
+          {
+            "name": "X-AsterGate-CSRF",
+            "in": "header",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -166,10 +765,198 @@
         },
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
+                  "$ref": "#/components/schemas/ApiResponse_bool_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
@@ -177,9 +964,11 @@
         },
         "security": [
           {
+            "CsrfCookie": [],
             "SessionCookie": []
           },
           {
+            "LocalCsrfCookie": [],
             "LocalSessionCookie": []
           }
         ]
@@ -195,13 +984,22 @@
           {
             "name": "X-AsterGate-Request",
             "in": "header",
-            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "description": "Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement.",
             "required": true,
             "schema": {
               "type": "string",
               "enum": [
                 "1"
               ]
+            }
+          },
+          {
+            "name": "X-AsterGate-CSRF",
+            "in": "header",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -217,10 +1015,198 @@
         },
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
+                  "$ref": "#/components/schemas/ApiResponse_bool_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
@@ -228,9 +1214,11 @@
         },
         "security": [
           {
+            "CsrfCookie": [],
             "SessionCookie": []
           },
           {
+            "LocalCsrfCookie": [],
             "LocalSessionCookie": []
           }
         ]
@@ -244,10 +1232,198 @@
         "operationId": "export",
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExportResponse"
+                  "$ref": "#/components/schemas/ApiResponse_AccountExportDto_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
@@ -273,13 +1449,22 @@
           {
             "name": "X-AsterGate-Request",
             "in": "header",
-            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "description": "Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement.",
             "required": true,
             "schema": {
               "type": "string",
               "enum": [
                 "1"
               ]
+            }
+          },
+          {
+            "name": "X-AsterGate-CSRF",
+            "in": "header",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -295,10 +1480,198 @@
         },
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
+                  "$ref": "#/components/schemas/ApiResponse_bool_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
@@ -306,9 +1679,11 @@
         },
         "security": [
           {
+            "CsrfCookie": [],
             "SessionCookie": []
           },
           {
+            "LocalCsrfCookie": [],
             "LocalSessionCookie": []
           }
         ]
@@ -322,10 +1697,198 @@
         "operationId": "sessions",
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SessionsResponse"
+                  "$ref": "#/components/schemas/ApiResponse_Vec_SessionDto_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
@@ -349,7 +1912,7 @@
           {
             "name": "X-AsterGate-Request",
             "in": "header",
-            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "description": "Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement.",
             "required": true,
             "schema": {
               "type": "string",
@@ -357,14 +1920,211 @@
                 "1"
               ]
             }
+          },
+          {
+            "name": "X-AsterGate-CSRF",
+            "in": "header",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
+                  "$ref": "#/components/schemas/ApiResponse_bool_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
@@ -372,9 +2132,11 @@
         },
         "security": [
           {
+            "CsrfCookie": [],
             "SessionCookie": []
           },
           {
+            "LocalCsrfCookie": [],
             "LocalSessionCookie": []
           }
         ]
@@ -398,7 +2160,7 @@
           {
             "name": "X-AsterGate-Request",
             "in": "header",
-            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "description": "Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement.",
             "required": true,
             "schema": {
               "type": "string",
@@ -406,14 +2168,211 @@
                 "1"
               ]
             }
+          },
+          {
+            "name": "X-AsterGate-CSRF",
+            "in": "header",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
+                  "$ref": "#/components/schemas/ApiResponse_bool_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
@@ -421,9 +2380,11 @@
         },
         "security": [
           {
+            "CsrfCookie": [],
             "SessionCookie": []
           },
           {
+            "LocalCsrfCookie": [],
             "LocalSessionCookie": []
           }
         ]
@@ -439,13 +2400,22 @@
           {
             "name": "X-AsterGate-Request",
             "in": "header",
-            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "description": "Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement.",
             "required": true,
             "schema": {
               "type": "string",
               "enum": [
                 "1"
               ]
+            }
+          },
+          {
+            "name": "X-AsterGate-CSRF",
+            "in": "header",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -461,24 +2431,210 @@
         },
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AccountResponse"
+                  "$ref": "#/components/schemas/ApiResponse_AccountDto_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
           },
           "401": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "CsrfCookie": []
+          },
+          {
+            "LocalCsrfCookie": []
+          }
+        ]
       }
     },
     "/api/v1/auth/logout": {
@@ -491,7 +2647,7 @@
           {
             "name": "X-AsterGate-Request",
             "in": "header",
-            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "description": "Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement.",
             "required": true,
             "schema": {
               "type": "string",
@@ -499,14 +2655,211 @@
                 "1"
               ]
             }
+          },
+          {
+            "name": "X-AsterGate-CSRF",
+            "in": "header",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
+                  "$ref": "#/components/schemas/ApiResponse_bool_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
@@ -514,9 +2867,11 @@
         },
         "security": [
           {
+            "CsrfCookie": [],
             "SessionCookie": []
           },
           {
+            "LocalCsrfCookie": [],
             "LocalSessionCookie": []
           }
         ]
@@ -532,13 +2887,22 @@
           {
             "name": "X-AsterGate-Request",
             "in": "header",
-            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "description": "Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement.",
             "required": true,
             "schema": {
               "type": "string",
               "enum": [
                 "1"
               ]
+            }
+          },
+          {
+            "name": "X-AsterGate-CSRF",
+            "in": "header",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -554,15 +2918,211 @@
         },
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
+                  "$ref": "#/components/schemas/ApiResponse_bool_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "CsrfCookie": []
+          },
+          {
+            "LocalCsrfCookie": []
+          }
+        ]
       }
     },
     "/api/v1/auth/register": {
@@ -575,13 +3135,22 @@
           {
             "name": "X-AsterGate-Request",
             "in": "header",
-            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "description": "Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement.",
             "required": true,
             "schema": {
               "type": "string",
               "enum": [
                 "1"
               ]
+            }
+          },
+          {
+            "name": "X-AsterGate-CSRF",
+            "in": "header",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -597,24 +3166,210 @@
         },
         "responses": {
           "201": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AccountResponse"
+                  "$ref": "#/components/schemas/ApiResponse_AccountDto_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
           },
           "409": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "CsrfCookie": []
+          },
+          {
+            "LocalCsrfCookie": []
+          }
+        ]
       }
     },
     "/api/v1/auth/reset-password": {
@@ -627,13 +3382,22 @@
           {
             "name": "X-AsterGate-Request",
             "in": "header",
-            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "description": "Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement.",
             "required": true,
             "schema": {
               "type": "string",
               "enum": [
                 "1"
               ]
+            }
+          },
+          {
+            "name": "X-AsterGate-CSRF",
+            "in": "header",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -649,15 +3413,211 @@
         },
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
+                  "$ref": "#/components/schemas/ApiResponse_bool_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "CsrfCookie": []
+          },
+          {
+            "LocalCsrfCookie": []
+          }
+        ]
       }
     },
     "/api/v1/auth/verification": {
@@ -670,13 +3630,22 @@
           {
             "name": "X-AsterGate-Request",
             "in": "header",
-            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "description": "Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement.",
             "required": true,
             "schema": {
               "type": "string",
               "enum": [
                 "1"
               ]
+            }
+          },
+          {
+            "name": "X-AsterGate-CSRF",
+            "in": "header",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -692,15 +3661,211 @@
         },
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
+                  "$ref": "#/components/schemas/ApiResponse_bool_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "CsrfCookie": []
+          },
+          {
+            "LocalCsrfCookie": []
+          }
+        ]
       }
     },
     "/api/v1/auth/verify-email": {
@@ -713,13 +3878,22 @@
           {
             "name": "X-AsterGate-Request",
             "in": "header",
-            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "description": "Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement.",
             "required": true,
             "schema": {
               "type": "string",
               "enum": [
                 "1"
               ]
+            }
+          },
+          {
+            "name": "X-AsterGate-CSRF",
+            "in": "header",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -735,15 +3909,211 @@
         },
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
+                  "$ref": "#/components/schemas/ApiResponse_bool_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "CsrfCookie": []
+          },
+          {
+            "LocalCsrfCookie": []
+          }
+        ]
       }
     },
     "/api/v1/management/accounts": {
@@ -774,10 +4144,198 @@
         ],
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AccountsResponse"
+                  "$ref": "#/components/schemas/ApiResponse_CursorPage_AccountDto_String_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
@@ -801,13 +4359,22 @@
           {
             "name": "X-AsterGate-Request",
             "in": "header",
-            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "description": "Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement.",
             "required": true,
             "schema": {
               "type": "string",
               "enum": [
                 "1"
               ]
+            }
+          },
+          {
+            "name": "X-AsterGate-CSRF",
+            "in": "header",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -823,10 +4390,198 @@
         },
         "responses": {
           "201": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AccountResponse"
+                  "$ref": "#/components/schemas/ApiResponse_AccountDto_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
@@ -834,9 +4589,11 @@
         },
         "security": [
           {
+            "CsrfCookie": [],
             "SessionCookie": []
           },
           {
+            "LocalCsrfCookie": [],
             "LocalSessionCookie": []
           }
         ]
@@ -860,13 +4617,22 @@
           {
             "name": "X-AsterGate-Request",
             "in": "header",
-            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "description": "Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement.",
             "required": true,
             "schema": {
               "type": "string",
               "enum": [
                 "1"
               ]
+            }
+          },
+          {
+            "name": "X-AsterGate-CSRF",
+            "in": "header",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -882,10 +4648,198 @@
         },
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AccountResponse"
+                  "$ref": "#/components/schemas/ApiResponse_AccountDto_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
@@ -893,9 +4847,11 @@
         },
         "security": [
           {
+            "CsrfCookie": [],
             "SessionCookie": []
           },
           {
+            "LocalCsrfCookie": [],
             "LocalSessionCookie": []
           }
         ]
@@ -909,10 +4865,198 @@
         "operationId": "settings",
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SettingsResponse"
+                  "$ref": "#/components/schemas/ApiResponse_SettingsDto_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
@@ -936,13 +5080,22 @@
           {
             "name": "X-AsterGate-Request",
             "in": "header",
-            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "description": "Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement.",
             "required": true,
             "schema": {
               "type": "string",
               "enum": [
                 "1"
               ]
+            }
+          },
+          {
+            "name": "X-AsterGate-CSRF",
+            "in": "header",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -958,10 +5111,198 @@
         },
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SettingsResponse"
+                  "$ref": "#/components/schemas/ApiResponse_SettingsDto_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
@@ -969,9 +5310,11 @@
         },
         "security": [
           {
+            "CsrfCookie": [],
             "SessionCookie": []
           },
           {
+            "LocalCsrfCookie": [],
             "LocalSessionCookie": []
           }
         ]
@@ -985,10 +5328,198 @@
         "operationId": "frontend_config",
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PublicFrontendConfigResponse"
+                  "$ref": "#/components/schemas/ApiResponse_PublicFrontendConfigDto_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
@@ -1006,13 +5537,22 @@
           {
             "name": "X-AsterGate-Request",
             "in": "header",
-            "description": "Must be 1. Browser writes require a configured site Origin matching Host; cross-origin CORS is not enabled.",
+            "description": "Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement.",
             "required": true,
             "schema": {
               "type": "string",
               "enum": [
                 "1"
               ]
+            }
+          },
+          {
+            "name": "X-AsterGate-CSRF",
+            "in": "header",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -1028,24 +5568,210 @@
         },
         "responses": {
           "201": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AccountResponse"
+                  "$ref": "#/components/schemas/ApiResponse_AccountDto_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
           },
           "409": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "CsrfCookie": []
+          },
+          {
+            "LocalCsrfCookie": []
+          }
+        ]
       }
     },
     "/api/v1/setup/status": {
@@ -1056,10 +5782,198 @@
         "operationId": "status",
         "responses": {
           "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SetupStatusResponse"
+                  "$ref": "#/components/schemas/ApiResponse_SetupStateDto_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
                 }
               }
             }
@@ -1186,25 +6100,6 @@
           }
         }
       },
-      "AccountResponse": {
-        "type": "object",
-        "required": [
-          "code",
-          "msg",
-          "data"
-        ],
-        "properties": {
-          "code": {
-            "$ref": "#/components/schemas/ApiErrorCode"
-          },
-          "data": {
-            "$ref": "#/components/schemas/AccountDto"
-          },
-          "msg": {
-            "type": "string"
-          }
-        }
-      },
       "AccountStatusDto": {
         "type": "string",
         "enum": [
@@ -1213,25 +6108,6 @@
           "suspended",
           "deleted"
         ]
-      },
-      "AccountsResponse": {
-        "type": "object",
-        "required": [
-          "code",
-          "msg",
-          "data"
-        ],
-        "properties": {
-          "code": {
-            "$ref": "#/components/schemas/ApiErrorCode"
-          },
-          "data": {
-            "$ref": "#/components/schemas/CursorPage_AccountDto_String"
-          },
-          "msg": {
-            "type": "string"
-          }
-        }
       },
       "ApiErrorCode": {
         "type": "string",
@@ -1255,92 +6131,397 @@
           "endpoint.not_found"
         ]
       },
-      "ApiErrorInfo": {
+      "ApiErrorInfo_TupleUnit": {
         "type": "object",
         "required": [
           "retryable"
         ],
         "properties": {
+          "diagnostic": {
+            "type": "null"
+          },
           "retryable": {
             "type": "boolean"
           }
         }
       },
-      "CursorPage_AccountDto_String": {
+      "ApiResponse_AccountDto_ApiErrorCode_TupleUnit": {
         "type": "object",
-        "description": "Serialized cursor page response.",
         "required": [
-          "items",
-          "total",
-          "limit"
+          "code",
+          "msg"
         ],
         "properties": {
-          "items": {
+          "code": {
+            "$ref": "#/components/schemas/ApiErrorCode"
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "id",
+              "username",
+              "email",
+              "email_verified",
+              "display_name",
+              "status",
+              "created_at",
+              "updated_at",
+              "system_permissions"
+            ],
+            "properties": {
+              "created_at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "display_name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "email_verified": {
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "status": {
+                "$ref": "#/components/schemas/AccountStatusDto"
+              },
+              "system_permissions": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SystemPermissionDto"
+                }
+              },
+              "updated_at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "username": {
+                "type": "string"
+              }
+            }
+          },
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorInfo_TupleUnit"
+          },
+          "msg": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiResponse_AccountExportDto_ApiErrorCode_TupleUnit": {
+        "type": "object",
+        "required": [
+          "code",
+          "msg"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ApiErrorCode"
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "account",
+              "sessions"
+            ],
+            "properties": {
+              "account": {
+                "$ref": "#/components/schemas/AccountDto"
+              },
+              "sessions": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SessionDto"
+                }
+              }
+            }
+          },
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorInfo_TupleUnit"
+          },
+          "msg": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiResponse_CursorPage_AccountDto_String_ApiErrorCode_TupleUnit": {
+        "type": "object",
+        "required": [
+          "code",
+          "msg"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ApiErrorCode"
+          },
+          "data": {
+            "type": "object",
+            "description": "Serialized cursor page response.",
+            "required": [
+              "items",
+              "total",
+              "limit"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AccountDto"
+                },
+                "description": "Items in the current page."
+              },
+              "limit": {
+                "type": "integer",
+                "format": "int64",
+                "description": "Effective page size.",
+                "minimum": 0
+              },
+              "next_cursor": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "total": {
+                "type": "integer",
+                "format": "int64",
+                "description": "Total number of items matching the query.",
+                "minimum": 0
+              }
+            }
+          },
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorInfo_TupleUnit"
+          },
+          "msg": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiResponse_PublicFrontendConfigDto_ApiErrorCode_TupleUnit": {
+        "type": "object",
+        "required": [
+          "code",
+          "msg"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ApiErrorCode"
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "branding",
+              "account"
+            ],
+            "properties": {
+              "account": {
+                "$ref": "#/components/schemas/PublicAccountPolicyDto"
+              },
+              "branding": {
+                "$ref": "#/components/schemas/PublicBrandingDto"
+              }
+            }
+          },
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorInfo_TupleUnit"
+          },
+          "msg": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiResponse_SettingsDto_ApiErrorCode_TupleUnit": {
+        "type": "object",
+        "required": [
+          "code",
+          "msg"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ApiErrorCode"
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "revision",
+              "branding_title",
+              "branding_description",
+              "site_urls",
+              "registration",
+              "email_verification",
+              "session_ttl_seconds",
+              "challenge_ttl_seconds"
+            ],
+            "properties": {
+              "branding_description": {
+                "type": "string"
+              },
+              "branding_title": {
+                "type": "string"
+              },
+              "challenge_ttl_seconds": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "email_verification": {
+                "$ref": "#/components/schemas/EmailVerificationDto"
+              },
+              "mail": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/MailSettingsDto"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "registration": {
+                "$ref": "#/components/schemas/RegistrationDto"
+              },
+              "revision": {
+                "type": "integer",
+                "format": "int64",
+                "minimum": 0
+              },
+              "session_ttl_seconds": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "site_urls": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorInfo_TupleUnit"
+          },
+          "msg": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiResponse_SetupStateDto_ApiErrorCode_TupleUnit": {
+        "type": "object",
+        "required": [
+          "code",
+          "msg"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ApiErrorCode"
+          },
+          "data": {
+            "type": "string",
+            "enum": [
+              "needs_setup",
+              "ready"
+            ]
+          },
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorInfo_TupleUnit"
+          },
+          "msg": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiResponse_TupleUnit_ApiErrorCode_TupleUnit": {
+        "type": "object",
+        "required": [
+          "code",
+          "msg"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ApiErrorCode"
+          },
+          "data": {
+            "type": "null"
+          },
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorInfo_TupleUnit"
+          },
+          "msg": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiResponse_Vec_SessionDto_ApiErrorCode_TupleUnit": {
+        "type": "object",
+        "required": [
+          "code",
+          "msg"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ApiErrorCode"
+          },
+          "data": {
             "type": "array",
             "items": {
               "type": "object",
               "required": [
                 "id",
-                "username",
-                "email",
-                "email_verified",
-                "display_name",
-                "status",
+                "current",
                 "created_at",
-                "updated_at",
-                "system_permissions"
+                "expires_at",
+                "user_agent"
               ],
               "properties": {
                 "created_at": {
                   "type": "integer",
                   "format": "int64"
                 },
-                "display_name": {
-                  "type": "string"
-                },
-                "email": {
-                  "type": "string"
-                },
-                "email_verified": {
+                "current": {
                   "type": "boolean"
+                },
+                "expires_at": {
+                  "type": "integer",
+                  "format": "int64"
                 },
                 "id": {
                   "type": "string"
                 },
-                "status": {
-                  "$ref": "#/components/schemas/AccountStatusDto"
-                },
-                "system_permissions": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SystemPermissionDto"
-                  }
-                },
-                "updated_at": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "username": {
+                "user_agent": {
                   "type": "string"
                 }
               }
-            },
-            "description": "Items in the current page."
+            }
           },
-          "limit": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Effective page size.",
-            "minimum": 0
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorInfo_TupleUnit"
           },
-          "next_cursor": {
+          "msg": {
             "type": "string"
+          }
+        }
+      },
+      "ApiResponse_bool_ApiErrorCode_TupleUnit": {
+        "type": "object",
+        "required": [
+          "code",
+          "msg"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ApiErrorCode"
           },
-          "total": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Total number of items matching the query.",
-            "minimum": 0
+          "data": {
+            "type": "boolean"
+          },
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorInfo_TupleUnit"
+          },
+          "msg": {
+            "type": "string"
           }
         }
       },
@@ -1378,45 +6559,6 @@
           "optional",
           "required"
         ]
-      },
-      "ErrorResponse": {
-        "type": "object",
-        "description": "Product error envelope, matching the AsterDrive wire contract.",
-        "required": [
-          "code",
-          "msg",
-          "error"
-        ],
-        "properties": {
-          "code": {
-            "$ref": "#/components/schemas/ApiErrorCode"
-          },
-          "error": {
-            "$ref": "#/components/schemas/ApiErrorInfo"
-          },
-          "msg": {
-            "type": "string"
-          }
-        }
-      },
-      "ExportResponse": {
-        "type": "object",
-        "required": [
-          "code",
-          "msg",
-          "data"
-        ],
-        "properties": {
-          "code": {
-            "$ref": "#/components/schemas/ApiErrorCode"
-          },
-          "data": {
-            "$ref": "#/components/schemas/AccountExportDto"
-          },
-          "msg": {
-            "type": "string"
-          }
-        }
       },
       "IdentifierRequest": {
         "type": "object",
@@ -1633,25 +6775,6 @@
           }
         }
       },
-      "PublicFrontendConfigResponse": {
-        "type": "object",
-        "required": [
-          "code",
-          "msg",
-          "data"
-        ],
-        "properties": {
-          "code": {
-            "$ref": "#/components/schemas/ApiErrorCode"
-          },
-          "data": {
-            "$ref": "#/components/schemas/PublicFrontendConfigDto"
-          },
-          "msg": {
-            "type": "string"
-          }
-        }
-      },
       "RegisterRequest": {
         "type": "object",
         "required": [
@@ -1724,28 +6847,6 @@
             "type": "string"
           },
           "user_agent": {
-            "type": "string"
-          }
-        }
-      },
-      "SessionsResponse": {
-        "type": "object",
-        "required": [
-          "code",
-          "msg",
-          "data"
-        ],
-        "properties": {
-          "code": {
-            "$ref": "#/components/schemas/ApiErrorCode"
-          },
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SessionDto"
-            }
-          },
-          "msg": {
             "type": "string"
           }
         }
@@ -1869,25 +6970,6 @@
         },
         "additionalProperties": false
       },
-      "SettingsResponse": {
-        "type": "object",
-        "required": [
-          "code",
-          "msg",
-          "data"
-        ],
-        "properties": {
-          "code": {
-            "$ref": "#/components/schemas/ApiErrorCode"
-          },
-          "data": {
-            "$ref": "#/components/schemas/SettingsDto"
-          },
-          "msg": {
-            "type": "string"
-          }
-        }
-      },
       "SetupRequest": {
         "type": "object",
         "required": [
@@ -1936,25 +7018,6 @@
           "ready"
         ]
       },
-      "SetupStatusResponse": {
-        "type": "object",
-        "required": [
-          "code",
-          "msg",
-          "data"
-        ],
-        "properties": {
-          "code": {
-            "$ref": "#/components/schemas/ApiErrorCode"
-          },
-          "data": {
-            "$ref": "#/components/schemas/SetupStateDto"
-          },
-          "msg": {
-            "type": "string"
-          }
-        }
-      },
       "SmtpSecurityDto": {
         "type": "string",
         "enum": [
@@ -1965,37 +7028,16 @@
       },
       "StatusResponse": {
         "type": "object",
-        "description": "Basic status response returned by the generated skeleton.",
+        "description": "Liveness/readiness wire contract, deliberately outside the product REST envelope.",
         "required": [
           "service",
           "status"
         ],
         "properties": {
           "service": {
-            "type": "string",
-            "description": "Cargo package name."
+            "type": "string"
           },
           "status": {
-            "type": "string",
-            "description": "Public health or readiness status."
-          }
-        }
-      },
-      "SuccessResponse": {
-        "type": "object",
-        "required": [
-          "code",
-          "msg",
-          "data"
-        ],
-        "properties": {
-          "code": {
-            "$ref": "#/components/schemas/ApiErrorCode"
-          },
-          "data": {
-            "type": "boolean"
-          },
-          "msg": {
             "type": "string"
           }
         }
@@ -2023,9 +7065,22 @@
           }
         },
         "additionalProperties": false
+      },
+      "TupleUnit": {
+        "default": null
       }
     },
     "securitySchemes": {
+      "CsrfCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-ag_csrf"
+      },
+      "LocalCsrfCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "ag_csrf"
+      },
       "LocalSessionCookie": {
         "type": "apiKey",
         "in": "cookie",

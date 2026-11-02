@@ -308,6 +308,8 @@ async fn host_and_origin_spoofing_do_not_select_cookie_policy() {
             .uri("/api/v1/auth/login")
             .header("Host", host)
             .header("X-AsterGate-Request", "1")
+            .header("X-AsterGate-CSRF", CSRF_TOKEN)
+            .header("Cookie", format!("__Host-ag_csrf={CSRF_TOKEN}"))
             .header("Content-Type", "application/json")
             .header("Forwarded", "host=primary.example.test;proto=https")
             .header("X-Forwarded-Host", "primary.example.test")

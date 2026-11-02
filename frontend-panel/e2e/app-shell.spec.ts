@@ -5,6 +5,15 @@ const password = "correct horse battery staple";
 const nextPassword = "replacement password for browser";
 const finalPassword = "recovered password for browser";
 
+async function mutationHeaders(page: Page, origin = "http://127.0.0.1:4173") {
+	await page.request.get(`${origin}/api/v1/setup/status`);
+	const token = (await page.context().cookies(origin)).find(
+		(cookie) => cookie.name === "ag_csrf",
+	)?.value;
+	expect(token).toBeDefined();
+	return { "X-AsterGate-Request": "1", "X-AsterGate-CSRF": token ?? "" };
+}
+
 async function mailLink(page: Page, email: string, purpose: string) {
 	let link = "";
 	await expect
@@ -74,7 +83,7 @@ test.beforeEach(async ({ page }, testInfo) => {
 		!testInfo.title.startsWith("initial setup")
 	) {
 		await page.request.post("/api/v1/setup", {
-			headers: { "X-AsterGate-Request": "1" },
+			headers: await mutationHeaders(page),
 			data: {
 				site_urls: ["http://127.0.0.1:4173"],
 				initial_account: {
@@ -170,6 +179,107 @@ test("initial setup skips SMTP and creates a working operator; settings can add 
 		path: testInfo.outputPath("instance-settings-desktop.png"),
 		fullPage: true,
 	});
+});
+
+test("browser enforces CSRF and rotates readable host token beside HttpOnly session", async ({
+	page,
+}) => {
+	await page.goto("/sign-in");
+	await expect(
+		page.getByRole("button", { name: "Sign in", exact: true }),
+	).toBeVisible();
+	const results = await page.evaluate(async (password) => {
+		const readToken = () =>
+			document.cookie
+				.split(";")
+				.map((value) => value.trim())
+				.find((value) => value.startsWith("ag_csrf="))
+				?.slice("ag_csrf=".length) ?? "";
+		const before = readToken();
+		const login = async (token: string | null, secret: string) => {
+			const headers: Record<string, string> = {
+				"Content-Type": "application/json",
+				"X-AsterGate-Request": "1",
+			};
+			if (token !== null) headers["X-AsterGate-CSRF"] = token;
+			const response = await fetch("/api/v1/auth/login", {
+				method: "POST",
+				credentials: "same-origin",
+				headers,
+				body: JSON.stringify({
+					identifier: "instance-operator",
+					password: secret,
+				}),
+			});
+			return {
+				status: response.status,
+				code: (await response.json()).code,
+				cache: response.headers.get("cache-control"),
+				referrer: response.headers.get("referrer-policy"),
+			};
+		};
+		const missing = await login(null, password);
+		const mismatch = await login("x".repeat(43), password);
+		const credentials = await login(before, "incorrect browser password");
+		const signedIn = await login(before, password);
+		return {
+			before,
+			after: readToken(),
+			missing,
+			mismatch,
+			credentials,
+			signedIn,
+			visibleCookies: document.cookie,
+		};
+	}, password);
+	expect(results.before).toMatch(/^[A-Za-z0-9_-]{32,128}$/);
+	for (const denied of [results.missing, results.mismatch]) {
+		expect(denied).toEqual({
+			status: 403,
+			code: "auth.forbidden",
+			cache: "no-store",
+			referrer: "no-referrer",
+		});
+	}
+	expect(results.credentials.status).toBe(401);
+	expect(results.credentials.code).toBe("auth.credentials_failed");
+	expect(results.signedIn.status).toBe(200);
+	expect(results.after).not.toBe(results.before);
+	expect(results.visibleCookies).not.toContain("ag_session=");
+	const cookies = await page.context().cookies("http://127.0.0.1:4173");
+	expect(cookies.find((cookie) => cookie.name === "ag_csrf")).toMatchObject({
+		httpOnly: false,
+		path: "/",
+		sameSite: "Strict",
+		domain: "127.0.0.1",
+	});
+	expect(cookies.find((cookie) => cookie.name === "ag_session")).toMatchObject({
+		httpOnly: true,
+		path: "/",
+		sameSite: "Lax",
+		domain: "127.0.0.1",
+	});
+	const logout = await page.evaluate(async () => {
+		const token =
+			document.cookie
+				.split(";")
+				.map((value) => value.trim())
+				.find((value) => value.startsWith("ag_csrf="))
+				?.slice("ag_csrf=".length) ?? "";
+		const response = await fetch("/api/v1/auth/logout", {
+			method: "POST",
+			credentials: "same-origin",
+			headers: { "X-AsterGate-Request": "1", "X-AsterGate-CSRF": token },
+		});
+		return { status: response.status, visibleCookies: document.cookie };
+	});
+	expect(logout.status).toBe(200);
+	expect(logout.visibleCookies).not.toContain("ag_csrf=");
+	expect(
+		(await page.context().cookies()).some((cookie) =>
+			["ag_csrf", "ag_session"].includes(cookie.name),
+		),
+	).toBe(false);
 });
 
 test("real registration, SMTP verification, profile, sessions, password change, recovery and deletion", async ({
@@ -497,7 +607,7 @@ test("site branding is editable and alternate hosts keep independent sessions an
 	const registered = await secondary.request.post(
 		"http://localhost:4173/api/v1/auth/register",
 		{
-			headers: { "X-AsterGate-Request": "1" },
+			headers: await mutationHeaders(secondary, "http://localhost:4173"),
 			data: { username, email, display_name: "Multi-site user", password },
 		},
 	);

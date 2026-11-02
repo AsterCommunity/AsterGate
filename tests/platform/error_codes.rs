@@ -1,4 +1,4 @@
-use aster_gate::api::{api_error_code::ApiErrorCode, response::ErrorResponse};
+use aster_gate::api::{api_error_code::ApiErrorCode, response::failure};
 
 #[test]
 fn error_codes_roundtrip_and_have_unique_wire_values() {
@@ -10,7 +10,11 @@ fn error_codes_roundtrip_and_have_unique_wire_values() {
             serde_json::from_str::<ApiErrorCode>(&serde_json::to_string(&code).unwrap()).unwrap(),
             code
         );
-        let response = serde_json::to_value(ErrorResponse::failure(code)).unwrap();
+        if code == ApiErrorCode::Success {
+            assert!(failure(code).is_err());
+            continue;
+        }
+        let response = serde_json::to_value(failure(code).unwrap()).unwrap();
         assert_eq!(response["code"], code.as_str());
         assert_ne!(response["msg"], response["code"]);
         assert!(

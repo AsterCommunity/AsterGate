@@ -7,7 +7,10 @@ use crate::errors::Result;
 
 /// Prepares all resources needed by the runtime component graph.
 pub async fn prepare_state(config: crate::config::AppConfig) -> Result<crate::runtime::AppState> {
-    let metrics = crate::runtime::metrics::create_metrics_recorder();
+    let http_security = std::sync::Arc::new(crate::api::middleware::HttpSecurity::new(
+        &config.http_security,
+    )?);
+    let metrics = crate::runtime::metrics::create_metrics_recorder()?;
     let db_handles =
         crate::db::runtime::prepare_database_handles(&config.database, metrics.clone()).await?;
     let cache = aster_forge_cache::create_cache_with_policy(
@@ -42,6 +45,7 @@ pub async fn prepare_state(config: crate::config::AppConfig) -> Result<crate::ru
         mail_sender,
         account_security,
         runtime_config,
+        http_security,
     })
 }
 
@@ -53,27 +57,42 @@ pub async fn run(state: crate::runtime::AppState) -> std::io::Result<()> {
     let state = std::sync::Arc::new(state);
     let app_state = state.as_ref();
 
-    aster_forge_runtime::AsterRuntime::builder()
-        .component(crate::api::http::http_component(
-            crate::api::http::HttpRuntimeConfig {
-                host: host.as_str(),
-                port,
-            },
-            state.clone(),
-        ))?
-        .component(crate::tasks::runtime::background_tasks_component(
-            state.clone(),
-        ))
-        .component(
-            crate::services::mail_outbox_service::runtime::mail_runtime_component(state.clone()),
-        )
-        .component(crate::services::audit_service::runtime::audit_runtime_component())
-        .component(crate::db::runtime::database_component(
-            app_state.db_handles.clone(),
-        ))
-        .run()
-        .await
-        .map_err(to_io_error)?
+    let metrics_provider = state.metrics.provider();
+    let result = async {
+        aster_forge_runtime::AsterRuntime::builder()
+            .component(crate::api::http::http_component(
+                crate::api::http::HttpRuntimeConfig {
+                    host: host.as_str(),
+                    port,
+                },
+                state.clone(),
+            ))?
+            .component(crate::tasks::runtime::background_tasks_component(
+                state.clone(),
+            ))
+            .component(
+                crate::services::mail_outbox_service::runtime::mail_runtime_component(
+                    state.clone(),
+                ),
+            )
+            .component(crate::services::audit_service::runtime::audit_runtime_component())
+            .component(crate::db::runtime::database_component(
+                app_state.db_handles.clone(),
+            ))
+            .run()
+            .await
+            .map_err(to_io_error)?
+    }
+    .await;
+    let metrics_shutdown = match metrics_provider {
+        Some(provider) => provider
+            .shutdown(std::time::Duration::from_secs(5))
+            .await
+            .map_err(to_io_error),
+        None => Ok(()),
+    };
+    result?;
+    metrics_shutdown
 }
 
 fn to_io_error(error: impl ToString) -> std::io::Error {

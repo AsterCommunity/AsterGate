@@ -33,4 +33,3 @@ pub struct PublicFrontendConfigDto {
     pub branding: PublicBrandingDto,
     pub account: PublicAccountPolicyDto,
 }
-crate::api::response::response!(PublicFrontendConfigResponse, PublicFrontendConfigDto);

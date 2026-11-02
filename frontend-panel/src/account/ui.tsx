@@ -2,7 +2,7 @@ import { type ComponentProps, type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LuEye, LuEyeOff, LuLoaderCircle } from "react-icons/lu";
 import { HttpError } from "@/services/httpClient";
-import { ApiErrorCode, errorTranslationKeys } from "@/types/api-helpers";
+import { errorTranslationKeys } from "@/types/api-helpers";
 import { useAccount } from "./AccountContext";
 
 export function SiteName() {
@@ -106,12 +106,7 @@ export function useAction() {
 					{ defaultValue: t("errors.service_unavailable") },
 				),
 			);
-			if (
-				e instanceof HttpError &&
-				e.status === 401 &&
-				code === ApiErrorCode.SessionRequired
-			)
-				setAccount(null);
+			if (e instanceof HttpError && e.requiresSignIn) setAccount(null);
 		} finally {
 			setBusy(false);
 		}

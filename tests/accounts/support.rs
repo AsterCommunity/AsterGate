@@ -1,4 +1,5 @@
 use super::*;
+pub(super) const CSRF_TOKEN: &str = "test_csrf_token_0123456789_abcdefghijklmno";
 
 pub(super) fn setup_input(username: &str) -> Value {
     json!({"site_urls":["http://localhost:5173"], "initial_account":registration(username), "registration":"open", "email_verification":"optional"})
@@ -27,8 +28,21 @@ impl Fixture {
         Self::with_setup(false).await
     }
     pub(super) async fn with_setup(initialized: bool) -> Self {
+        Self::with_http_security(
+            initialized,
+            aster_gate::config::transport::HttpSecurityConfig::default(),
+        )
+        .await
+    }
+    pub(super) async fn with_http_security(
+        initialized: bool,
+        security: aster_gate::config::transport::HttpSecurityConfig,
+    ) -> Self {
         let database = SqliteTestDatabase::new("account-lifecycle");
-        let mut config = aster_gate::config::AppConfig::default();
+        let mut config = aster_gate::config::AppConfig {
+            http_security: security,
+            ..Default::default()
+        };
         config.database.url = database.url().into();
         let container = if let Ok(backend) = std::env::var("ASTER_TEST_DATABASE_BACKEND") {
             use testcontainers::{
@@ -155,8 +169,32 @@ impl Fixture {
         if let Some(csrf) = csrf {
             request = request.header("X-AsterGate-Request", csrf);
         }
+        let secure = origin.map_or_else(
+            || {
+                self.state
+                    .runtime_config
+                    .authentication()
+                    .is_ok_and(|settings| settings.site_urls.primary().secure_cookies())
+            },
+            |origin| origin.starts_with("https://"),
+        );
+        request = request
+            .header(
+                "Cookie",
+                format!(
+                    "{}={CSRF_TOKEN}",
+                    if secure { "__Host-ag_csrf" } else { "ag_csrf" }
+                ),
+            )
+            .header("X-AsterGate-CSRF", CSRF_TOKEN);
         if let Some(origin) = origin {
             request = request.header("Origin", origin);
+            if let Ok(origin) = url::Url::parse(origin) {
+                request = request.header(
+                    "Host",
+                    &origin[url::Position::BeforeHost..url::Position::AfterPort],
+                );
+            }
         }
         let request = if let Some(body) = body {
             request

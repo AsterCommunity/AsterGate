@@ -1,66 +1,61 @@
-//! API response models.
+//! Product response policy over Forge's controlled REST envelope.
+//! Serialization, field omission and success/failure state belong to Forge; Gate owns codes,
+//! messages, retryability and diagnostic disclosure. Protocol and health responses stay separate.
 
+use super::api_error_code::ApiErrorCode;
+use crate::services::account::AccountError;
+use axum::{
+    http::{StatusCode, header},
+    response::{IntoResponse, Response},
+};
+
+use aster_forge_api::response::{ApiErrorInfo, ApiResponse, ResponseEnvelopeError};
 use serde::Serialize;
 
-/// Basic status response returned by the generated skeleton.
+/// Named unit alias accepted by the OpenAPI attribute parser; no wire wrapper.
+pub type NoData = ();
+
+/// Liveness/readiness wire contract, deliberately outside the product REST envelope.
 #[derive(Debug, Clone, Serialize)]
 #[cfg_attr(all(debug_assertions, feature = "openapi"), derive(utoipa::ToSchema))]
 pub struct StatusResponse {
-    /// Cargo package name.
     pub service: &'static str,
-    /// Public health or readiness status.
     pub status: &'static str,
 }
 
-/// Product error envelope, matching the AsterDrive wire contract.
-#[derive(Debug, Clone, Serialize)]
-#[cfg_attr(all(debug_assertions, feature = "openapi"), derive(utoipa::ToSchema))]
-pub struct ErrorResponse {
-    pub code: super::api_error_code::ApiErrorCode,
-    pub msg: String,
-    pub error: ApiErrorInfo,
-}
-#[derive(Debug, Clone, Serialize)]
-#[cfg_attr(all(debug_assertions, feature = "openapi"), derive(utoipa::ToSchema))]
-pub struct ApiErrorInfo {
-    pub retryable: bool,
+/// Inject Gate's success code; construction failures are internal security failures.
+pub fn success<T>(data: T) -> crate::services::account::Result<ApiResponse<T, ApiErrorCode>> {
+    ApiResponse::ok(ApiErrorCode::Success, data)
+        .map_err(|_| crate::services::account::AccountError::Security)
 }
 
-impl ErrorResponse {
-    pub fn failure(code: super::api_error_code::ApiErrorCode) -> Self {
-        Self {
-            code,
-            msg: code.message().into(),
-            error: ApiErrorInfo {
-                retryable: matches!(
-                    code,
-                    super::api_error_code::ApiErrorCode::RateLimited
-                        | super::api_error_code::ApiErrorCode::ServiceUnavailable
-                ),
-            },
+/// Public failures disclose only Gate's stable message and retryability.
+/// No internal diagnostic or error source is accepted by this public boundary.
+pub fn failure(code: ApiErrorCode) -> Result<ApiResponse<(), ApiErrorCode>, ResponseEnvelopeError> {
+    ApiResponse::error_with_details(
+        code,
+        code.message(),
+        Some(ApiErrorInfo {
+            retryable: matches!(
+                code,
+                ApiErrorCode::RateLimited | ApiErrorCode::ServiceUnavailable
+            ),
+            diagnostic: None,
+        }),
+    )
+}
+
+impl IntoResponse for AccountError {
+    fn into_response(self) -> Response {
+        let code = ApiErrorCode::from(&self);
+        let status = code.status();
+        let mut response = code.into_response();
+        if status == StatusCode::TOO_MANY_REQUESTS {
+            response.headers_mut().insert(
+                header::RETRY_AFTER,
+                axum::http::HeaderValue::from_static("900"),
+            );
         }
+        response
     }
 }
-
-// Concrete wire wrappers prevent generic aliases from colliding in OpenAPI component names.
-macro_rules! response {
-    ($name:ident, $data:ty) => {
-        #[derive(serde::Serialize)]
-        #[cfg_attr(all(debug_assertions, feature = "openapi"), derive(utoipa::ToSchema))]
-        pub struct $name {
-            pub code: crate::api::api_error_code::ApiErrorCode,
-            pub msg: String,
-            pub data: $data,
-        }
-        impl $name {
-            pub fn ok(data: $data) -> Self {
-                Self {
-                    code: crate::api::api_error_code::ApiErrorCode::Success,
-                    msg: String::new(),
-                    data,
-                }
-            }
-        }
-    };
-}
-pub(crate) use response;

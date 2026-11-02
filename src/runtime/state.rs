@@ -24,6 +24,7 @@ pub struct AppState {
     /// Product mail sender.
     pub mail_sender: Arc<dyn aster_forge_mail::MailSender>,
     pub account_security: Arc<crate::services::account::AccountSecurity>,
+    pub http_security: Arc<crate::api::middleware::HttpSecurity>,
 }
 
 impl AppState {

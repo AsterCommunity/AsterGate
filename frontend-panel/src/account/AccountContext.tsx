@@ -47,7 +47,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 			const accountResult =
 				config.account.setup_state === "ready"
 					? await accountService.me().catch((error: unknown) => {
-							if (error instanceof HttpError && error.status === 401)
+							if (error instanceof HttpError && error.requiresSignIn)
 								return null;
 							throw error;
 						})

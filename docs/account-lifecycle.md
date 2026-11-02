@@ -135,7 +135,8 @@ An internal JWT is not accepted as a downstream resource token, OIDC ID token or
 Use separate HttpOnly access/refresh Cookies. Access uses Path `/`; refresh is scoped to the
 authentication routes, with matching attributes when clearing. Production Cookies are Secure,
 SameSite=Lax and host-only; use `__Secure-` for a restricted refresh Path, because `__Host-` requires
-Path `/`. Keep exact Host/Origin/custom-header CSRF validation and independent multi-site logins.
+Path `/`. Keep exact Host/Origin/custom-header and double-submit CSRF validation, matching
+CSRF-cookie rotation/clearing and independent multi-site logins; see [HTTP middleware](http-middleware.md).
 Neither token enters localStorage or browser-readable persistent storage.
 
 The frontend coordinates refresh within each tab and retries an eligible request at most once.
@@ -193,15 +194,23 @@ All Account/auth/management responses use `Cache-Control: no-store` and `Referre
 no-referrer`. Request bodies are bounded to 16 KiB; unknown DTO/query fields and malformed JSON
 are rejected rather than silently accepted.
 
-Every write requires `X-AsterGate-Request: 1`. Browser writes require an exact configured site
-Origin matching the configured request Host when an Origin header is present. No cross-origin CORS grant is provided. A foreign
-browser cannot send the required custom header without a rejected preflight. CLI writes can omit
-Origin but must still send the header and the applicable credential.
+Every unsafe API write requires exactly one X-AsterGate-Request: 1 and matching
+X-AsterGate-CSRF / host-only CSRF Cookie values. GET setup/status and public/frontend-config
+bootstrap the readable CSRF Cookie; successful session issuance rotates it and logout clears it.
+HTTP loopback uses ag_csrf; HTTPS (including loopback) uses __Host-ag_csrf. Before setup,
+a same-Host browser Origin/Referer disambiguates the scheme; source-less HTTPS loopback CLI
+bootstrap must supply that Origin or Referer. After setup the registered site determines it. CSRF Cookies use SameSite=Strict,
+Path=/ and Secure on HTTPS; session Cookies retain HttpOnly. Duplicate/invalid token or source
+headers are rejected. Forge performs double-submit comparison and Origin/Referer/Fetch Metadata
+validation. CLI writes may omit source headers but still need the custom header, bootstrap Cookie,
+matching CSRF header and applicable credential.
+
+CORS is disabled by default and can use an explicit deployment allowlist for credential-free reads;
+a CORS grant never authorizes a cross-origin Cookie mutation. HTTP/IP/keyed governors supplement
+the durable Account budgets. See [HTTP middleware integration](http-middleware.md) for exact
+source policy, peer/proxy trust, quota configuration, runtime behavior and browser/router tests.
 Mutable branding and ordered sites, revision checks and configuration synchronization are defined in
 [Runtime configuration](runtime-configuration.md).
-The current custom-header/source checks are not an implementation of AD's double-submit middleware.
-The target [HTTP middleware integration](http-middleware.md) adopts Forge's shared Axum mechanisms
-when AF #41 is published and verified, retaining AG's source, Cookie and permission boundaries.
 
 Management APIs use an active Account session and exact `astergate.system.*` operation permissions.
 The seven permission definitions, authentication requirements, last-holder protection and tests

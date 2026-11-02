@@ -1,12 +1,13 @@
 //! Metrics backend provided by AsterForge.
 use aster_forge_runtime::{HealthCheckScope, SystemHealthReport};
 
-pub fn record_health_report(scope: HealthCheckScope, report: &SystemHealthReport) {
+pub fn record_health_report(
+    recorder: &aster_forge_metrics::SharedMetricsRecorder,
+    scope: HealthCheckScope,
+    report: &SystemHealthReport,
+) {
     #[cfg(feature = "metrics")]
-    report.record_metrics(
-        scope.as_str(),
-        &aster_forge_metrics::prometheus::PrometheusMetricsRecorder,
-    );
+    recorder.record_health(scope.as_str(), report);
     #[cfg(not(feature = "metrics"))]
-    let _ = (scope, report);
+    let _ = (recorder, scope, report);
 }

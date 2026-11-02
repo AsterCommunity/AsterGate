@@ -25,6 +25,7 @@ mod support;
 use support::*;
 mod architecture;
 mod email;
+mod http_middleware;
 mod lifecycle;
 mod mail;
 mod password;

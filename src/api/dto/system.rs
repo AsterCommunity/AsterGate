@@ -21,7 +21,6 @@ impl From<SetupState> for SetupStateDto {
         }
     }
 }
-crate::api::response::response!(SetupStatusResponse, SetupStateDto);
 
 #[derive(Clone, Copy, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
@@ -275,4 +274,3 @@ impl From<SystemSettings> for SettingsDto {
         }
     }
 }
-crate::api::response::response!(SettingsResponse, SettingsDto);
