@@ -19,7 +19,10 @@
   credential decoding, post-commit reload publication and peer subscriptions with connection reconciliation.
 - Forge Axum double-submit CSRF with host-only token bootstrap/rotation/clearing, explicit runtime
   CORS policy, direct-peer/trusted-proxy resolution, and shared process-local IP/authentication quotas.
-  Early rejections retain Gate error envelopes, request correlation, security headers and Retry-After.
+  HTTP/HTTPS loopback setup uses the same-host browser source without trusting forwarded headers.
+  Explicit committed operations issue or clear session/CSRF cookies together. Early rejections retain
+  Gate error envelopes, request correlation, security headers and Retry-After; allowlisted clients can
+  read admission 429 responses while preflight still consumes quotas.
 
 ### Changed
 
@@ -27,18 +30,6 @@
   retaining Gate error codes, HTTP status/headers, boolean acknowledgements and redacted diagnostics.
   OpenAPI and the panel SDK use operation response types; browser error handling distinguishes
   expired sessions from failed credentials and treats Retry-After as advisory without automatic retries.
-
-### Fixed
-
-- HTTPS loopback setup selects Secure host-prefixed CSRF/session cookies using the same-host
-  browser source; forwarded scheme/host stay untrusted and configured sites take over after setup.
-- Allowlisted CORS clients can read HTTP admission 429 responses and Retry-After; preflight still
-  consumes quotas and denied origins receive no allow-origin header.
-- Account middleware, extractors, response mapping and explicit committed Cookie operations have
-  separate ownership; route groups define bootstrap/setup/readiness without path exemptions.
-
-- Forge is pinned to 2483171e4c7201e64e8f3a9dcecbd9b4cc86235b; CORS denials use its typed
-  rejection callback, removing the empty-403 response heuristic.
 
 ### Configuration
 

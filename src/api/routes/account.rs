@@ -4,7 +4,6 @@ use crate::{
         cookies::{self, SessionCookiePolicy},
         dto::account::*,
         extractors::{Authenticated, JsonInput},
-        middleware::account as account_middleware,
     },
     runtime::AppState,
     services::account::{self, AccountError, Result, models::*},
@@ -12,20 +11,15 @@ use crate::{
 use aster_forge_api::response::ApiResponse;
 use axum::{
     Extension, Json, Router,
-    extract::{DefaultBodyLimit, Path, Query, State},
+    extract::{Path, Query, State},
     http::{HeaderMap, StatusCode, header},
-    middleware,
     response::{IntoResponse, Response},
     routing::{delete, get, post},
 };
 use std::sync::Arc;
 
-pub fn router(state: Arc<AppState>) -> Router<Arc<AppState>> {
-    let protected = Router::new()
-        .route(
-            "/management/settings",
-            get(super::system::settings).put(super::system::update_settings),
-        )
+pub fn router() -> Router<Arc<AppState>> {
+    Router::new()
         .route("/auth/register", post(register))
         .route("/auth/login", post(login))
         .route("/auth/logout", post(logout))
@@ -48,26 +42,6 @@ pub fn router(state: Arc<AppState>) -> Router<Arc<AppState>> {
             "/management/accounts/{id}/lifecycle",
             post(manage_lifecycle),
         )
-        .route_layer(middleware::from_fn_with_state(
-            state.clone(),
-            account_middleware::require_ready,
-        ));
-    let bootstrap = Router::new()
-        .route("/setup/status", get(super::system::status))
-        .nest("/public", super::public::router())
-        .route_layer(middleware::from_fn_with_state(
-            state.clone(),
-            account_middleware::bootstrap,
-        ));
-    Router::new()
-        .merge(protected)
-        .route("/setup", post(super::system::initialize))
-        .route_layer(middleware::from_fn_with_state(
-            state,
-            account_middleware::protect,
-        ))
-        .merge(bootstrap)
-        .layer(DefaultBodyLimit::max(16 * 1024))
 }
 
 fn success() -> Result<Json<ApiResponse<bool, ApiErrorCode, NoData>>> {
