@@ -106,9 +106,14 @@ use that same lock so a late refresh response cannot overwrite a new login's Coo
 checks `/account` first, so another tab's successful refresh is reused without replaying refresh.
 Only Account/management requests rejected for missing/expired access qualify, with one retry.
 Permission/password failures, public/auth routes, 429 and 503 do not trigger refresh. Lifecycle
-notifications use BroadcastChannel without credentials; a generation fence prevents an old request
-from being replayed after an observed login/logout. JWTs never enter localStorage, sessionStorage,
-BroadcastChannel payloads or JavaScript-readable cookies.
+notifications use BroadcastChannel without credentials. Each request snapshots the existing CSRF
+Cookie as a synchronously readable identity fence: login/setup rotate it, logout clears it and refresh
+preserves it. Recovery checks that snapshot inside the lock, after the `/account` probe and refresh,
+and before retry dispatch, including after asynchronous request preparation. Retries hold the same
+lock through their response, so identity transitions cannot interleave with them. A missing or changed
+CSRF Cookie aborts recovery with the original authentication error, independently of notification
+delivery. JWTs never enter localStorage, sessionStorage, BroadcastChannel payloads or JavaScript-readable
+cookies; the fence needs no additional browser storage.
 
 Browsers without Web Locks safely require sign-in when access expires. Web Locks normally require
 a secure context (HTTPS or loopback). Cross-origin hosts do not share login state or a refresh lock.

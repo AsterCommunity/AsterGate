@@ -7,6 +7,7 @@ import {
 
 vi.mock("./csrf", () => ({
 	csrfHeaders: async () => ({ "X-AsterGate-CSRF": "csrf" }),
+	readCsrfToken: () => "csrf",
 }));
 
 const success = () =>
@@ -54,7 +55,42 @@ describe("bounded browser refresh", () => {
 		vi.stubGlobal("fetch", fetch);
 		await requestWithSession("/account", init);
 		expect(fetch.mock.calls).toHaveLength(3);
-		expect(navigator.locks.request).toHaveBeenCalledTimes(1);
+		expect(navigator.locks.request).toHaveBeenCalledTimes(2);
+	});
+
+	it("holds the session lock while preparing and sending a successful retry", async () => {
+		let locked = false;
+		vi.stubGlobal("navigator", {
+			locks: {
+				request: vi.fn(async (_name, action) => {
+					expect(locked).toBe(false);
+					locked = true;
+					try {
+						return await action();
+					} finally {
+						locked = false;
+					}
+				}),
+			},
+		});
+		let requests = 0;
+		const fetch = vi.fn(async () => {
+			requests++;
+			if (requests === 1) return failure();
+			expect(locked).toBe(true);
+			return success();
+		});
+		vi.stubGlobal("fetch", fetch);
+		let preparations = 0;
+		await requestWithSession("/account", async () => {
+			preparations++;
+			await Promise.resolve();
+			if (preparations === 2) expect(locked).toBe(true);
+			return init();
+		});
+		expect(preparations).toBe(2);
+		expect(fetch).toHaveBeenCalledTimes(3);
+		expect(locked).toBe(false);
 	});
 
 	it.each([

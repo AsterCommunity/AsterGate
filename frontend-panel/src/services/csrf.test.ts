@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { csrfHeaders } from "./csrf";
+import { csrfHeaders, readCsrfToken } from "./csrf";
 
 const token = "a".repeat(43);
 afterEach(() => {
@@ -9,6 +9,18 @@ afterEach(() => {
 });
 
 describe("CSRF request headers", () => {
+	it("reads the current shared token synchronously without bootstrapping", () => {
+		const cookie = vi
+			.spyOn(document, "cookie", "get")
+			.mockReturnValue(`ag_csrf=${token}`);
+		const fetch = vi.fn();
+		vi.stubGlobal("fetch", fetch);
+		expect(readCsrfToken()).toBe(token);
+		cookie.mockReturnValue(`ag_csrf=${"b".repeat(43)}`);
+		expect(readCsrfToken()).toBe("b".repeat(43));
+		expect(fetch).not.toHaveBeenCalled();
+	});
+
 	it("does not read cookies or bootstrap safe and foreign requests", async () => {
 		const cookies = vi.spyOn(document, "cookie", "get");
 		const fetchMock = vi.fn();
