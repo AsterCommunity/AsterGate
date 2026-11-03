@@ -81,6 +81,7 @@ async function refreshSession(
 			const profile = await requestJson("/api/v1/account", {
 				credentials: "same-origin",
 				cache: "no-store",
+				signal: AbortSignal.timeout(10_000),
 			});
 			if (!isApiSuccessEnvelope(profile))
 				throw new Error("Invalid API response envelope");
@@ -112,15 +113,35 @@ export async function requestWithSession<T>(
 	path: string,
 	init: () => Promise<RequestInit>,
 ): Promise<T> {
+	const protectedPath =
+		path === "/account" ||
+		path.startsWith("/account/") ||
+		path.startsWith("/management/");
 	const expectedGeneration = generation;
 	const expectedCsrf = readCsrfToken();
 	try {
-		return await requestJson<T>(`/api/v1${path}`, await init());
+		const requestInit = await init();
+		const mutation = !["GET", "HEAD", "OPTIONS"].includes(
+			(requestInit.method ?? "GET").toUpperCase(),
+		);
+		const send = () => {
+			if (
+				protectedPath &&
+				(generation !== expectedGeneration ||
+					(expectedCsrf ? readCsrfToken() !== expectedCsrf : mutation))
+			)
+				throw new HttpError(401, {
+					code: ApiErrorCode.SessionRequired,
+					msg: "Session changed before request dispatch",
+				});
+			return requestJson<T>(`/api/v1${path}`, requestInit);
+		};
+		// Writes may clear shared cookies after commit. Let writes run concurrently, but finish
+		// their responses before login/logout or refresh can replace the browser identity.
+		return await (protectedPath && mutation && navigator.locks
+			? navigator.locks.request(SESSION_LOCK, { mode: "shared" }, send)
+			: send());
 	} catch (error) {
-		const protectedPath =
-			path === "/account" ||
-			path.startsWith("/account/") ||
-			path.startsWith("/management/");
 		if (
 			!protectedPath ||
 			!canRefresh(error) ||

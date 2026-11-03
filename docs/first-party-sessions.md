@@ -104,11 +104,20 @@ the successor. Logout/security mutations clear access, refresh and CSRF only aft
 `sessionRefresh.ts` coordinates one promise per tab and a Web Lock across tabs. Login/setup/logout
 use that same lock so a late refresh response cannot overwrite a new login's Cookie pair. Inside the lock it
 checks `/account` first, so another tab's successful refresh is reused without replaying refresh.
+Initial protected writes hold a shared lock through their response: writes can run concurrently, while
+exclusive login/logout/refresh waits for their committed Cookie effects. Authentication rejections release
+the shared lock before acquiring the exclusive recovery lock; ordinary reads do not acquire a lock.
+The read-only `/account` probe has a ten-second timeout, releasing the lock on a stalled response.
+Refresh is never automatically timed out or retried: a committed rotation with a lost response could
+leave the browser holding a predecessor. Retried requests preserve the caller's cancellation signal.
 Only Account/management requests rejected for missing/expired access qualify, with one retry.
 Permission/password failures, public/auth routes, 429 and 503 do not trigger refresh. Lifecycle
 notifications use BroadcastChannel without credentials. Each request snapshots the existing CSRF
 Cookie as a synchronously readable identity fence: login/setup rotate it, logout clears it and refresh
-preserves it. Recovery checks that snapshot inside the lock, after the `/account` probe and refresh,
+preserves it. Protected requests check the snapshot after asynchronous request preparation, before
+their first dispatch. Protected writes require a valid snapshot before preparation; a newly bootstrapped
+marker cannot establish continuity with the identity that initiated the write.
+Recovery checks it inside the lock, after the `/account` probe and refresh,
 and before retry dispatch, including after asynchronous request preparation. Retries hold the same
 lock through their response, so identity transitions cannot interleave with them. A missing or changed
 CSRF Cookie aborts recovery with the original authentication error, independently of notification
@@ -138,7 +147,9 @@ also run against PostgreSQL 16 and MySQL 8.4 with isolated Docker fixtures. `tes
 verifies durable signing configuration and environment handling.
 
 Frontend unit tests cover concurrent callers, another tab's completed refresh, one-retry limits,
-typed failures, lifecycle fences and missing Web Locks. The Chromium suite uses a real backend and
-two tabs to prove one shared refresh, unchanged absolute expiry, immediate revocation and absence
-of stored credentials. Generated OpenAPI/SDK include refresh and both credential schemes.
+typed failures, cookie changes without lifecycle notifications, initial/retry preparation, probe timeout
+and missing Web Locks. The Chromium suite uses a real backend and two tabs to prove one shared refresh,
+unchanged absolute expiry, immediate revocation, absence of stored credentials and rejection of an old
+profile mutation after a second tab changes identity with BroadcastChannel unavailable.
+Generated OpenAPI/SDK include refresh and both credential schemes.
 No test in this slice establishes OAuth/OIDC conformance, MFA or tenant authorization.

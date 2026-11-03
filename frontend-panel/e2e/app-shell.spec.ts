@@ -369,6 +369,103 @@ test("JWT cookies refresh once across two tabs and a revoked session cannot refr
 	await peer.close();
 });
 
+test("an old profile mutation cannot cross a two-tab login when lifecycle notifications are unavailable", async ({
+	page,
+}) => {
+	await page.addInitScript(() => {
+		Object.defineProperty(window, "BroadcastChannel", { value: undefined });
+	});
+	await createAccount(page);
+	const context = page.context();
+	const originalCsrf = (await context.cookies()).find(
+		(cookie) => cookie.name === "ag_csrf",
+	)?.value;
+	expect(originalCsrf).toBeDefined();
+	let releaseMutation!: () => void;
+	const release = new Promise<void>((resolve) => {
+		releaseMutation = resolve;
+	});
+	let mutationStarted!: () => void;
+	const started = new Promise<void>((resolve) => {
+		mutationStarted = resolve;
+	});
+	let patches = 0;
+	await page.route("**/api/v1/account", async (route) => {
+		if (route.request().method() !== "PATCH" || ++patches > 1) {
+			await route.continue();
+			return;
+		}
+		mutationStarted();
+		await release;
+		await route.fulfill({
+			status: 401,
+			contentType: "application/json",
+			body: JSON.stringify({ code: "auth.access_expired", msg: "expired" }),
+		});
+	});
+	const peer = await context.newPage();
+	try {
+		await page.getByLabel("Display name").fill("Old account's pending edit");
+		await page.getByRole("button", { name: "Save changes" }).click();
+		await started;
+		await peer.goto("/");
+		// Queue a real login under the session lock without sending lifecycle notifications.
+		// It must wait for the first write's response, then precede that write's recovery.
+		const login = peer.evaluate(
+			async (secret) =>
+				navigator.locks.request("astergate-session-refresh", async () => {
+					const csrf = document.cookie
+						.split(";")
+						.map((cookie) => cookie.trim())
+						.find((cookie) => cookie.startsWith("ag_csrf="))
+						?.slice("ag_csrf=".length);
+					const response = await fetch("/api/v1/auth/login", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+							"X-AsterGate-Request": "1",
+							"X-AsterGate-CSRF": csrf ?? "",
+						},
+						body: JSON.stringify({
+							identifier: "instance-operator",
+							password: secret,
+						}),
+					});
+					return { status: response.status, ...(await response.json()) };
+				}),
+			password,
+		);
+		await expect
+			.poll(() =>
+				peer.evaluate(async () => {
+					const locks = await navigator.locks.query();
+					return (
+						locks.held?.some((lock) => lock.mode === "shared") &&
+						locks.pending?.some((lock) => lock.mode === "exclusive")
+					);
+				}),
+			)
+			.toBe(true);
+		releaseMutation();
+		const before = await login;
+		expect(before.status).toBe(200);
+		expect(
+			(await context.cookies()).find((cookie) => cookie.name === "ag_csrf")
+				?.value,
+		).not.toBe(originalCsrf);
+		await expect(
+			page.getByRole("heading", { name: "Sign in", exact: true }),
+		).toBeVisible();
+		const after = await (await peer.request.get("/api/v1/account")).json();
+		expect(after.data.id).toBe(before.data.id);
+		expect(after.data.display_name).toBe(before.data.display_name);
+		expect(patches).toBe(1);
+	} finally {
+		releaseMutation();
+		await peer.close();
+	}
+});
+
 test("real registration, SMTP verification, profile, sessions, password change, recovery and deletion", async ({
 	page,
 }, testInfo) => {

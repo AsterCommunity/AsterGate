@@ -1,29 +1,40 @@
+// @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { csrfHeaders, readCsrfToken } from "./csrf";
+import { HttpError } from "./httpClient";
 import {
 	requestWithSession,
 	sessionChanged,
 	transitionSession,
 } from "./sessionRefresh";
 
-vi.mock("./csrf", () => ({
-	csrfHeaders: async () => ({ "X-AsterGate-CSRF": "csrf" }),
-	readCsrfToken: () => "csrf",
-}));
-
+const csrf = "a".repeat(43);
 const success = () =>
 	new Response(JSON.stringify({ code: "success", msg: "", data: true }));
 const failure = (code = "auth.access_expired", status = 401) =>
 	new Response(JSON.stringify({ code, msg: "rejected" }), { status });
 const init = async () => ({ credentials: "same-origin" as const });
 
+function setCsrf(value?: string) {
+	// biome-ignore lint/suspicious/noDocumentCookie: Exercise synchronous shared Cookie changes in jsdom.
+	document.cookie = value
+		? `ag_csrf=${value}; Path=/`
+		: "ag_csrf=; Max-Age=0; Path=/";
+}
+
 describe("bounded browser refresh", () => {
 	beforeEach(() => {
+		setCsrf(csrf);
 		sessionChanged();
 		vi.stubGlobal("navigator", {
-			locks: { request: vi.fn(async (_name, action) => action()) },
+			locks: {
+				request: vi.fn(async (_name, options, action) => (action ?? options)()),
+			},
 		});
 	});
 	afterEach(() => {
+		vi.restoreAllMocks();
+		vi.useRealTimers();
 		vi.unstubAllGlobals();
 	});
 
@@ -91,6 +102,254 @@ describe("bounded browser refresh", () => {
 		expect(preparations).toBe(2);
 		expect(fetch).toHaveBeenCalledTimes(3);
 		expect(locked).toBe(false);
+	});
+
+	it("releases a mutation's shared lock before recovering under the exclusive lock", async () => {
+		let mode: string | undefined;
+		vi.stubGlobal("navigator", {
+			locks: {
+				request: vi.fn(async (_name, options, action) => {
+					expect(mode).toBeUndefined();
+					mode = action ? options.mode : "exclusive";
+					try {
+						return await (action ?? options)();
+					} finally {
+						mode = undefined;
+					}
+				}),
+			},
+		});
+		let requests = 0;
+		let rotated = false;
+		const fetch = vi.fn(async (url: string) => {
+			requests++;
+			expect(mode).toBe(requests === 1 ? "shared" : "exclusive");
+			if (url === "/api/v1/auth/refresh") {
+				rotated = true;
+				return success();
+			}
+			return rotated ? success() : failure();
+		});
+		vi.stubGlobal("fetch", fetch);
+		await requestWithSession("/account/password", async () => ({
+			method: "POST",
+		}));
+		expect(fetch).toHaveBeenCalledTimes(4);
+		expect(mode).toBeUndefined();
+	});
+
+	it.each([
+		"recovery lock",
+		"profile response",
+		"refresh response",
+		"retry lock",
+		"retry preparation",
+	])("rejects a cookie-only identity change during %s without waiting for a notification", async (stage) => {
+		const original = new HttpError(401, {
+			code: "auth.access_expired",
+			msg: "original request rejected",
+		});
+		const changeIdentity = () => {
+			setCsrf("b".repeat(43));
+		};
+		let locks = 0;
+		vi.stubGlobal("navigator", {
+			locks: {
+				request: vi.fn(async (_name, options, callback) => {
+					if (callback) return callback();
+					locks++;
+					if (
+						(stage === "recovery lock" && locks === 1) ||
+						(stage === "retry lock" && locks === 2)
+					)
+						changeIdentity();
+					return options();
+				}),
+			},
+		});
+		let requests = 0;
+		const fetch = vi.fn(async () => {
+			requests++;
+			if (requests === 1) throw original;
+			if (requests === 2) {
+				if (stage === "profile response") changeIdentity();
+				return stage === "refresh response" ? failure() : success();
+			}
+			changeIdentity();
+			return success();
+		});
+		vi.stubGlobal("fetch", fetch);
+		let preparations = 0;
+		await expect(
+			requestWithSession("/account", async () => {
+				preparations++;
+				await Promise.resolve();
+				if (stage === "retry preparation" && preparations === 2)
+					changeIdentity();
+				return {
+					method: "PATCH",
+					headers: await csrfHeaders("PATCH", "/api/v1/account"),
+				};
+			}),
+		).rejects.toBe(original);
+		expect(readCsrfToken()).not.toBe(csrf);
+		expect(fetch).toHaveBeenCalledTimes(
+			stage === "recovery lock" ? 1 : stage === "refresh response" ? 3 : 2,
+		);
+	});
+
+	it.each([
+		undefined,
+		"b".repeat(43),
+	])("preserves the original failure if shared cookies change before it arrives: %s", async (next) => {
+		const original = new HttpError(401, {
+			code: "auth.access_expired",
+			msg: "original request rejected",
+		});
+		const fetch = vi.fn(async () => {
+			setCsrf(next);
+			throw original;
+		});
+		vi.stubGlobal("fetch", fetch);
+		await expect(requestWithSession("/account", init)).rejects.toBe(original);
+		expect(fetch).toHaveBeenCalledTimes(1);
+		expect(navigator.locks.request).not.toHaveBeenCalled();
+	});
+
+	it("does not send a mutation prepared asynchronously under a different identity", async () => {
+		const fetch = vi.fn();
+		vi.stubGlobal("fetch", fetch);
+		await expect(
+			requestWithSession("/account", async () => {
+				await Promise.resolve();
+				setCsrf("b".repeat(43));
+				return {
+					method: "PATCH",
+					headers: await csrfHeaders("PATCH", "/api/v1/account"),
+				};
+			}),
+		).rejects.toMatchObject({ status: 401, code: "auth.session_required" });
+		expect(fetch).not.toHaveBeenCalled();
+	});
+
+	it("checks identity after a first mutation waits for its shared lock", async () => {
+		vi.stubGlobal("navigator", {
+			locks: {
+				request: vi.fn(async (_name, _options, action) => {
+					setCsrf("b".repeat(43));
+					return action();
+				}),
+			},
+		});
+		const fetch = vi.fn();
+		vi.stubGlobal("fetch", fetch);
+		await expect(
+			requestWithSession("/account", async () => ({ method: "PATCH" })),
+		).rejects.toMatchObject({ status: 401, code: "auth.session_required" });
+		expect(fetch).not.toHaveBeenCalled();
+	});
+
+	it("does not adopt a new identity marker bootstrapped while preparing a mutation", async () => {
+		setCsrf();
+		const fetch = vi.fn();
+		vi.stubGlobal("fetch", fetch);
+		await expect(
+			requestWithSession("/account", async () => {
+				setCsrf("b".repeat(43));
+				return { method: "PATCH" };
+			}),
+		).rejects.toMatchObject({ status: 401, code: "auth.session_required" });
+		expect(fetch).not.toHaveBeenCalled();
+	});
+
+	it("does not recover when the request began without a valid identity marker", async () => {
+		setCsrf();
+		const fetch = vi.fn(async () => failure());
+		vi.stubGlobal("fetch", fetch);
+		await expect(requestWithSession("/account", init)).rejects.toMatchObject({
+			status: 401,
+		});
+		expect(fetch).toHaveBeenCalledTimes(1);
+		expect(navigator.locks.request).not.toHaveBeenCalled();
+	});
+
+	it("times out only the profile probe and releases a queued identity transition", async () => {
+		vi.useFakeTimers();
+		const timeout = vi
+			.spyOn(AbortSignal, "timeout")
+			.mockImplementation((milliseconds) => {
+				const controller = new AbortController();
+				setTimeout(
+					() => controller.abort(new DOMException("Timed out", "TimeoutError")),
+					milliseconds,
+				);
+				return controller.signal;
+			});
+		let tail = Promise.resolve<unknown>(undefined);
+		vi.stubGlobal("navigator", {
+			locks: {
+				request: vi.fn((_name, action) => {
+					const result = tail.then(action);
+					tail = result.catch(() => undefined);
+					return result;
+				}),
+			},
+		});
+		let probeStarted!: () => void;
+		const started = new Promise<void>((resolve) => {
+			probeStarted = resolve;
+		});
+		const fetch = vi
+			.fn()
+			.mockResolvedValueOnce(failure())
+			.mockImplementationOnce((_url: string, init: RequestInit) => {
+				probeStarted();
+				return new Promise((_resolve, reject) => {
+					init.signal?.addEventListener("abort", () =>
+						reject(init.signal?.reason),
+					);
+				});
+			});
+		vi.stubGlobal("fetch", fetch);
+		const request = requestWithSession("/account", init).catch(
+			(error: unknown) => error,
+		);
+		await started;
+		const action = vi.fn(async () => {});
+		const transition = transitionSession(action);
+		expect(action).not.toHaveBeenCalled();
+		await vi.advanceTimersByTimeAsync(9_999);
+		expect(action).not.toHaveBeenCalled();
+		await vi.advanceTimersByTimeAsync(1);
+		await transition;
+		expect(await request).toMatchObject({ name: "TimeoutError" });
+		expect(action).toHaveBeenCalledTimes(1);
+		expect(timeout).toHaveBeenCalledExactlyOnceWith(10_000);
+		expect(fetch).toHaveBeenCalledTimes(2);
+	});
+
+	it("does not impose the probe timeout on refresh or replace caller signals on retry", async () => {
+		const caller = new AbortController().signal;
+		let rotated = false;
+		const fetch = vi.fn(async (url: string, init: RequestInit) => {
+			if (url === "/api/v1/auth/refresh") {
+				expect(init.signal).toBeUndefined();
+				rotated = true;
+				return success();
+			}
+			if (url === "/api/v1/account") {
+				expect(init.signal).toBeInstanceOf(AbortSignal);
+				expect(init.signal).not.toBe(caller);
+			} else {
+				expect(init.signal).toBe(caller);
+			}
+			return rotated ? success() : failure();
+		});
+		vi.stubGlobal("fetch", fetch);
+		await requestWithSession("/account/sessions", async () => ({
+			signal: caller,
+		}));
+		expect(fetch).toHaveBeenCalledTimes(4);
 	});
 
 	it.each([
