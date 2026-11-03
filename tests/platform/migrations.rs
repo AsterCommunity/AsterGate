@@ -82,6 +82,7 @@ async fn foundation_migration_applies_and_rolls_back_on_sqlite() {
         .expect("close sqlite migration test database");
 }
 
+/// Creates an epoch-zero Account and verifies grant ownership, uniqueness, value checks and migration idempotence.
 #[tokio::test]
 async fn permission_grants_schema_enforces_owner_unique_key_and_is_restart_idempotent() {
     use aster_gate::db::entities::{
@@ -104,6 +105,7 @@ async fn permission_grants_schema_enforces_owner_unique_key_and_is_restart_idemp
         display_name: Set("Operator".into()),
         status: Set(StoredAccountStatus::Active),
         revision: Set(0),
+        session_version: Set(0),
         created_at: Set(123),
         updated_at: Set(123),
         suspended_from: Set(None),

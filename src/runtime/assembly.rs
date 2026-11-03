@@ -10,6 +10,8 @@ pub async fn prepare_state(config: crate::config::AppConfig) -> Result<crate::ru
     let http_security = std::sync::Arc::new(crate::api::middleware::HttpSecurity::new(
         &config.http_security,
     )?);
+    let account_security =
+        std::sync::Arc::new(crate::services::account::AccountSecurity::new(&config).await?);
     let metrics = crate::runtime::metrics::create_metrics_recorder()?;
     let db_handles =
         crate::db::runtime::prepare_database_handles(&config.database, metrics.clone()).await?;
@@ -20,8 +22,6 @@ pub async fn prepare_state(config: crate::config::AppConfig) -> Result<crate::ru
     .await?;
     let config_sync =
         aster_forge_config::build_config_sync_runtime(&config.config_sync, env!("CARGO_PKG_NAME"))?;
-    let account_security =
-        std::sync::Arc::new(crate::services::account::AccountSecurity::new(&config).await?);
     crate::db::repository::system_config_repo::seed(db_handles.writer())
         .await
         .map_err(|_| {

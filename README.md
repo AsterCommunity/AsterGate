@@ -10,10 +10,11 @@ browser-session management, operator provisioning/suspension/restoration, and pe
 erasure. OAuth/OIDC, Organizations, group admission, RBAC, MFA, passkeys and federation are proposed
 capabilities and are **not implemented**.
 
-The accepted next authentication design is AD-style access/refresh JWTs with durable sessions,
-refresh rotation and immediate revocation. [RFC 0009](docs/rfcs/0009-first-party-jwt-sessions.md)
-defines the contract and [AF #42](https://github.com/AsterCommunity/AsterForge/issues/42) tracks shared
-mechanisms. JWT integration is pending; the current Account runtime still uses opaque session cookies.
+First-party authentication uses Forge access/refresh JWTs with durable browser sessions, Strict
+refresh rotation and immediate single/global revocation. [Session operations](docs/first-party-sessions.md)
+describes signing configuration, browser coordination, failure semantics and deployment changes;
+[RFC 0009](docs/rfcs/0009-first-party-jwt-sessions.md) defines the architecture. These credentials
+are separate from the proposed downstream OAuth/OIDC provider.
 
 See [system authorization](docs/system-authorization.md), [implementation evidence](docs/rfcs/IMPLEMENTATION-MATRIX.md),
 [Account contract](docs/account-lifecycle.md), [runtime configuration](docs/runtime-configuration.md), and [architecture RFCs](docs/rfcs/README.md).
@@ -53,19 +54,25 @@ Debug builds can use an isolated fallback when the frontend bundle is absent. Re
 the real bundle. The existing Dockerfile and Compose configuration build and embed this frontend.
 
 Static configuration defaults to `data/config.toml`; use `ASTER_CONFIG` to select another path.
-First startup backfills a deployment master key into that file with restrictive permissions.
+First startup backfills independent deployment master and session signing keys into that file with
+restrictive permissions.
 The key is 64 hexadecimal characters, generated with `openssl rand -hex 32`; deployments can
 inject it through `ASTER__SECURITY__MASTER_KEY`. Only 64-character hex keys are accepted.
-Back up this key with the database.
+Back up both keys with the database. The signing key uses `ASTER__SESSION__SIGNING_KEY`;
+set a stable HTTPS `ASTER__SESSION__ISSUER` for production and share both session values across replicas.
+Replacing the signing key or issuer invalidates existing JWTs; this is not a rolling keyring.
 Environment overrides use `ASTER__...`; setup stores product settings and the initial Account in the database.
 Relative SQLite/temp/log paths are resolved against the configuration directory. Product migrations
-run at startup after Forge's infrastructure migration.
+run at startup after Forge's infrastructure migration. This unreleased JWT change updates the initial
+Account migration; pre-JWT development databases need an explicit manual migration or a separate fresh
+database. Startup never resets existing data. See the [session schema notes](docs/first-party-sessions.md#development-schema).
 
 Before enabling registrations, configure:
 
 - Complete `/setup` with an ordered public site URL list, initial Account, registration and verification policies.
   SMTP can be skipped and added later from Instance settings.
-- Production sessions use Secure, HttpOnly, SameSite=Lax host-only `__Host-ag_session` cookies.
+- Production sessions use Secure, HttpOnly, SameSite=Lax host-only `__Host-ag_access` (Path `/`)
+  and `__Secure-ag_refresh` (Path `/api/v1/auth`) cookies.
 - Account management uses the setup-created Account session plus exact `astergate.system.*` operation permissions;
   there is no separate management token.
 

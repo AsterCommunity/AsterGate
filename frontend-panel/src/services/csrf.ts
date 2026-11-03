@@ -2,7 +2,8 @@
 const tokenPattern = /^[A-Za-z0-9_-]{32,128}$/;
 let bootstrap: Promise<void> | undefined;
 
-function readToken(): string | undefined {
+/** Login/setup rotate this shared cookie; refresh preserves it for the current browser identity. */
+export function readCsrfToken(): string | undefined {
 	const name = location.protocol === "https:" ? "__Host-ag_csrf" : "ag_csrf";
 	const values = document.cookie
 		.split(";")
@@ -22,7 +23,7 @@ export async function csrfHeaders(
 	const url = new URL(input, location.href);
 	if (url.origin !== location.origin || !url.pathname.startsWith("/api/v1/"))
 		return {};
-	let token = readToken();
+	let token = readCsrfToken();
 	if (!token) {
 		bootstrap ??= fetch("/api/v1/setup/status", {
 			credentials: "same-origin",
@@ -38,7 +39,7 @@ export async function csrfHeaders(
 				bootstrap = undefined;
 			});
 		await bootstrap;
-		token = readToken();
+		token = readCsrfToken();
 	}
 	if (!token) throw new Error("CSRF token unavailable");
 	return { "X-AsterGate-CSRF": token };

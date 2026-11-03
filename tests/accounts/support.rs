@@ -34,6 +34,8 @@ impl Fixture {
         )
         .await
     }
+    /// Creates an isolated SQLite or opt-in container backend with the requested HTTP policy.
+    /// Optional setup uses the product transaction and retains its access Cookie for management requests.
     pub(super) async fn with_http_security(
         initialized: bool,
         security: aster_gate::config::transport::HttpSecurityConfig,
@@ -108,7 +110,7 @@ impl Fixture {
             .unwrap();
             (
                 result.account.id.as_str().to_string(),
-                format!("ag_session={}", result.session_token),
+                format!("ag_access={}", result.tokens.access_token),
             )
         } else {
             (String::new(), String::new())

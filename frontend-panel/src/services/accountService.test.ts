@@ -5,6 +5,7 @@ import type { systemService } from "./systemService";
 
 vi.mock("./csrf", () => ({
 	csrfHeaders: async () => ({ "X-AsterGate-CSRF": "test-token" }),
+	readCsrfToken: () => "test-token",
 }));
 
 describe("product response consumption", () => {

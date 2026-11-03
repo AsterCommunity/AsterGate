@@ -121,9 +121,12 @@ struct EnvGuard {
     config_path: Option<std::ffi::OsString>,
     server_host: Option<std::ffi::OsString>,
     master_key: Option<std::ffi::OsString>,
+    session_key: Option<std::ffi::OsString>,
+    session_issuer: Option<std::ffi::OsString>,
 }
 
 impl EnvGuard {
+    /// Serializes environment-mutating loader tests and captures every override they may change.
     fn capture() -> Self {
         let lock = ENV_LOCK.lock().expect("env lock poisoned");
         Self {
@@ -131,16 +134,21 @@ impl EnvGuard {
             config_path: std::env::var_os(aster_gate::config::CONFIG_ENV_VAR),
             server_host: std::env::var_os("ASTER__SERVER__HOST"),
             master_key: std::env::var_os("ASTER__SECURITY__MASTER_KEY"),
+            session_key: std::env::var_os("ASTER__SESSION__SIGNING_KEY"),
+            session_issuer: std::env::var_os("ASTER__SESSION__ISSUER"),
         }
     }
 }
 
 impl Drop for EnvGuard {
+    /// Restores captured overrides after each loader test, including signing key and issuer.
     fn drop(&mut self) {
         unsafe {
             restore_env_var(aster_gate::config::CONFIG_ENV_VAR, self.config_path.clone());
             restore_env_var("ASTER__SERVER__HOST", self.server_host.clone());
             restore_env_var("ASTER__SECURITY__MASTER_KEY", self.master_key.clone());
+            restore_env_var("ASTER__SESSION__SIGNING_KEY", self.session_key.clone());
+            restore_env_var("ASTER__SESSION__ISSUER", self.session_issuer.clone());
         }
     }
 }
@@ -159,6 +167,73 @@ fn numeric_hex_environment_key_is_preserved_exactly_and_not_written_to_file() {
     assert_eq!(loaded.security.master_key, key);
     assert!(aster_gate::config::security::prepare(&loaded.security).is_ok());
     assert!(!fs::read_to_string(path).unwrap().contains(&key));
+}
+
+/// Loads a legacy config twice to prove key backfill is durable, private and independent of the master key.
+#[test]
+fn session_key_survives_reload_preserves_comments_and_stays_out_of_exports() {
+    let _guard = EnvGuard::capture();
+    let directory = unique_project_temp_dir();
+    let path = directory.join("config.toml");
+    fs::write(&path, "# keep deployment notes\n[server]\nport = 3210\n").unwrap();
+    unsafe {
+        std::env::set_var(aster_gate::config::CONFIG_ENV_VAR, &path);
+        std::env::remove_var("ASTER__SESSION__SIGNING_KEY");
+        std::env::remove_var("ASTER__SESSION__ISSUER");
+    }
+    let first = aster_gate::config::load().unwrap();
+    let content = fs::read_to_string(&path).unwrap();
+    let second = aster_gate::config::load().unwrap();
+    assert_eq!(content, fs::read_to_string(&path).unwrap());
+    assert!(content.starts_with("# keep deployment notes"));
+    assert_eq!(first.session.signing_key, second.session.signing_key);
+    assert_ne!(first.session.signing_key, first.security.master_key);
+    assert_eq!(first.session.signing_key.len(), 64);
+    assert_eq!(first.session.issuer, second.session.issuer);
+    assert_eq!(first.server.port, 3210);
+    assert!(!format!("{first:?}").contains(&first.session.signing_key));
+    assert!(
+        !toml::to_string(&first)
+            .unwrap()
+            .contains(&first.session.signing_key)
+    );
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        assert_eq!(
+            fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+            0o600
+        );
+    }
+}
+
+/// Checks numeric hex stays a string, injected keys stay out of files and invalid persisted keys fail unchanged.
+#[test]
+fn session_environment_key_preserves_numeric_hex_and_invalid_file_is_not_replaced() {
+    let _guard = EnvGuard::capture();
+    let directory = unique_project_temp_dir();
+    let path = directory.join("config.toml");
+    let key = "08".repeat(32);
+    unsafe {
+        std::env::set_var(aster_gate::config::CONFIG_ENV_VAR, &path);
+        std::env::set_var("ASTER__SESSION__SIGNING_KEY", &key);
+        std::env::set_var("ASTER__SESSION__ISSUER", "https://identity.example.test");
+    }
+    let loaded = aster_gate::config::load().unwrap();
+    assert_eq!(loaded.session.signing_key, key);
+    assert_eq!(loaded.session.issuer, "https://identity.example.test");
+    assert!(!fs::read_to_string(&path).unwrap().contains(&key));
+    unsafe {
+        std::env::remove_var("ASTER__SESSION__SIGNING_KEY");
+    }
+    let invalid = "[session]\nsigning_key = 'broken'\n";
+    fs::write(&path, invalid).unwrap();
+    // The deployment key backfill is unrelated; isolate the session file preservation contract.
+    unsafe {
+        std::env::set_var("ASTER__SECURITY__MASTER_KEY", "07".repeat(32));
+    }
+    assert!(aster_gate::config::load().is_err());
+    assert_eq!(fs::read_to_string(&path).unwrap(), invalid);
 }
 
 unsafe fn restore_env_var(key: &str, value: Option<std::ffi::OsString>) {

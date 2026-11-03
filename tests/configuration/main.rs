@@ -39,12 +39,13 @@ async fn replica(state: &AppState) -> AppState {
     replica
 }
 
+/// Obtains a fresh JWT principal for configuration mutations rather than bypassing session authority.
 async fn operator(state: &AppState) -> aster_gate::services::account::models::Principal {
     let login =
         aster_gate::services::account::login(state, "operator", PASSWORD.into(), "config test")
             .await
             .unwrap();
-    aster_gate::services::account::authenticate(state, &login.session_token)
+    aster_gate::services::account::sessions::authenticate(state, &login.tokens.access_token)
         .await
         .unwrap()
 }

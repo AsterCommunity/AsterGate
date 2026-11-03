@@ -2,13 +2,13 @@ pub(crate) mod challenges;
 mod lifecycle;
 pub mod models;
 mod security;
+pub mod sessions;
 pub use challenges::*;
 pub use lifecycle::*;
 pub(crate) use lifecycle::{
     audit as write_audit, project as project_account, prove_password as verify_current_password,
 };
 pub use security::AccountSecurity;
-pub(crate) use security::{digest as token_digest, random_token as new_token};
 
 pub type Result<T> = std::result::Result<T, AccountError>;
 
@@ -20,6 +20,12 @@ pub enum AccountError {
     InvalidCredentials,
     #[error("authentication required")]
     Unauthenticated,
+    #[error("access token expired")]
+    AccessExpired,
+    #[error("refresh token is stale")]
+    RefreshStale,
+    #[error("refresh reuse detected")]
+    RefreshReused,
     #[error("access denied")]
     Forbidden,
     #[error("account or identifier conflict")]

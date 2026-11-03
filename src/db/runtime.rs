@@ -3,6 +3,7 @@
 use crate::errors::Result;
 
 const DATABASE_SHUTDOWN_DEPENDENCIES: &[&str] = &[
+    "http",
     aster_forge_tasks::BACKGROUND_TASKS_COMPONENT,
     aster_forge_mail::MAIL_OUTBOX_COMPONENT,
     aster_forge_audit::AUDIT_MANAGER_COMPONENT,
@@ -29,6 +30,11 @@ pub async fn prepare_database_handles(
     let writer = aster_forge_db::connect_with_metrics(&config, metrics.clone()).await?;
 
     aster_gate_migration::Migrator::up(&writer, None).await?;
+    super::repository::session_repo::validate_schema(&writer)
+        .await
+        .map_err(|_| crate::errors::AppError::Config(
+            "cannot read first-party JWT session schema; pre-JWT development databases require an explicit migration or a separate fresh database (existing data was not reset)".into(),
+        ))?;
 
     aster_forge_db::connect_reader_for_writer_with_metrics(&config, writer, metrics)
         .await

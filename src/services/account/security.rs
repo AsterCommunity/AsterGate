@@ -4,15 +4,19 @@ use crate::runtime::AppState;
 use std::sync::Arc;
 use tokio::sync::Semaphore;
 
+#[derive(Clone)]
 pub struct AccountSecurity {
     hashing_slots: Arc<Semaphore>,
     dummy_hash: String,
     pub(crate) master_key: [u8; 32],
+    pub sessions: super::sessions::SessionRuntime,
 }
 
 impl AccountSecurity {
+    /// Validates independent deployment/session secrets before starting bounded password-hashing support.
     pub async fn new(config: &crate::config::AppConfig) -> crate::errors::Result<Self> {
         let secrets = crate::config::security::prepare(&config.security)?;
+        let sessions = super::sessions::SessionRuntime::new(config)?;
         let dummy_hash =
             tokio::task::spawn_blocking(|| aster_forge_crypto::hash_password(&random_token()))
                 .await
@@ -22,6 +26,7 @@ impl AccountSecurity {
             hashing_slots: Arc::new(Semaphore::new(4)),
             dummy_hash,
             master_key: secrets.master_key,
+            sessions,
         })
     }
 
@@ -134,18 +139,14 @@ pub(crate) async fn reserve_attempt(
     }
 }
 
+/// Claims the captured Account revision before rechecking the live session under the writer lock.
+/// A conflict or revoked session aborts the caller's mutation when the transaction is dropped.
 pub(crate) async fn principal_transaction(
     state: &AppState,
     principal: &Principal,
 ) -> Result<sea_orm::DatabaseTransaction> {
     use sea_orm::TransactionTrait;
     let txn = state.db_handles.writer().begin().await?;
-    let session =
-        crate::db::repository::account_repo::session_by_token(&txn, &principal.token_hash, now())
-            .await?;
-    if session.is_none() {
-        return Err(AccountError::Unauthenticated);
-    }
     if !crate::db::repository::account_repo::claim_revision(
         &txn,
         &principal.account_id,
@@ -156,5 +157,6 @@ pub(crate) async fn principal_transaction(
     {
         return Err(AccountError::Conflict);
     }
+    super::sessions::validate_principal(&txn, principal, now()).await?;
     Ok(txn)
 }

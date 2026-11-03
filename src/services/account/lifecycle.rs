@@ -107,6 +107,8 @@ async fn provision_inner(
     Ok(result)
 }
 
+/// Reserves durable attempt budgets and checks the password before claiming the Account revision.
+/// Rechecks the locked security epoch and status, then commits a bounded session before returning tokens.
 pub async fn login(
     state: &AppState,
     input: &str,
@@ -148,49 +150,28 @@ pub async fn login(
     if !repo::claim_revision(&txn, &AccountId(row.id.clone()), row.revision, now()).await? {
         return Err(AccountError::InvalidCredentials);
     }
+    let locked = repo::find(&txn, &AccountId(row.id.clone()))
+        .await?
+        .ok_or(AccountError::InvalidCredentials)?;
+    if locked.session_version != row.session_version
+        || AccountStatus::from(locked.status) != AccountStatus::Active
+    {
+        return Err(AccountError::InvalidCredentials);
+    }
+    let row = locked;
     let id = AccountId(row.id.clone());
     if repo::sessions(&txn, &id, now()).await?.len() >= 20 {
         return Err(AccountError::RateLimited);
     }
-    let token = security::random_token();
-    writes::create_session(
-        &txn,
-        &id,
-        security::digest(&token),
-        user_agent.chars().take(128).collect(),
-        now(),
-        now() + session_lifetime,
-    )
-    .await?;
+    let clock = now();
+    let expires_at = clock
+        .checked_add(session_lifetime)
+        .ok_or(AccountError::Security)?;
+    let tokens = super::sessions::create(state, &txn, &row, user_agent, clock, expires_at).await?;
     audit(&txn, &id, AuditAction::SignedIn, "self").await?;
     let account = project(&txn, &row).await?;
     txn.commit().await?;
-    Ok(LoginResult {
-        account,
-        session_token: token,
-    })
-}
-
-pub async fn authenticate(state: &AppState, token: &str) -> Result<Principal> {
-    if token.len() != 64 || !token.bytes().all(|c| c.is_ascii_hexdigit()) {
-        return Err(AccountError::Unauthenticated);
-    }
-    let db = state.db_handles.writer();
-    let session = repo::session_by_token(db, &security::digest(token), now())
-        .await?
-        .ok_or(AccountError::Unauthenticated)?;
-    let account = repo::find(db, &AccountId(session.account_id.clone()))
-        .await?
-        .ok_or(AccountError::Unauthenticated)?;
-    if AccountStatus::from(account.status) != AccountStatus::Active {
-        return Err(AccountError::Unauthenticated);
-    }
-    Ok(Principal {
-        account_id: AccountId(account.id),
-        revision: account.revision,
-        session_id: SessionId(session.id),
-        token_hash: session.token_hash,
-    })
+    Ok(LoginResult { account, tokens })
 }
 
 pub async fn profile(state: &AppState, principal: &Principal) -> Result<Account> {
@@ -316,18 +297,17 @@ pub async fn change_password(
     Ok(())
 }
 
+/// Requires current password proof and protects the last critical operator under the system lock.
+/// Rechecks revision and live session before atomically erasing Account data and recording the tombstone.
 pub async fn delete_self(state: &AppState, principal: &Principal, password: String) -> Result<()> {
     prove_password(state, principal, password).await?;
     let txn = state.db_handles.writer().begin().await?;
     crate::db::repository::system_config_repo::lock(&txn).await?;
     authorization::protect_last_operator(&txn, &principal.account_id).await?;
-    if repo::session_by_token(&txn, &principal.token_hash, now())
-        .await?
-        .is_none()
-        || !repo::claim_revision(&txn, &principal.account_id, principal.revision, now()).await?
-    {
-        return Err(AccountError::Unauthenticated);
+    if !repo::claim_revision(&txn, &principal.account_id, principal.revision, now()).await? {
+        return Err(AccountError::Conflict);
     }
+    super::sessions::validate_principal(&txn, principal, now()).await?;
     erase(&txn, &AccountId(principal.account_id.0.clone()), "self").await?;
     txn.commit().await?;
     Ok(())
@@ -446,8 +426,11 @@ pub(crate) async fn set_password(
     Ok(())
 }
 
+/// Cancels challenges, invalidates the security epoch and erases owned records in one transaction.
+/// Audit failure propagates so callers cannot commit a partially erased Account.
 async fn erase(txn: &sea_orm::DatabaseTransaction, id: &AccountId, actor: &str) -> Result<()> {
     super::challenges::cancel(txn, id, None).await?;
+    repo::revoke_sessions(txn, id, now()).await?;
     writes::erase_records(txn, id).await?;
     audit(txn, id, AuditAction::Deleted, actor).await?;
     Ok(())

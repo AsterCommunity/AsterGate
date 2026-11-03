@@ -81,19 +81,6 @@ pub async fn claim_revision<C: ConnectionTrait>(
         == 1)
 }
 
-pub async fn session_by_token<C: ConnectionTrait>(
-    db: &C,
-    hash: &str,
-    now: i64,
-) -> Result<Option<session::Model>, DbErr> {
-    session::Entity::find()
-        .filter(session::Column::TokenHash.eq(hash))
-        .filter(session::Column::RevokedAt.is_null())
-        .filter(session::Column::ExpiresAt.gt(now))
-        .one(db)
-        .await
-}
-
 pub async fn sessions<C: ConnectionTrait>(
     db: &C,
     id: &AccountId,
@@ -127,11 +114,14 @@ pub async fn revoke_session<C: ConnectionTrait>(
         == 1)
 }
 
+/// Advances the security epoch and marks every owned session revoked on the supplied connection.
+/// Call within a writer transaction to keep epoch and session changes atomic.
 pub async fn revoke_sessions<C: ConnectionTrait>(
     db: &C,
     id: &AccountId,
     now: i64,
 ) -> Result<(), DbErr> {
+    super::session_repo::bump_version(db, id).await?;
     session::Entity::update_many()
         .col_expr(session::Column::RevokedAt, Expr::value(now))
         .filter(session::Column::AccountId.eq(id.as_str()))

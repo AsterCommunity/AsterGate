@@ -129,6 +129,7 @@ async fn identifier_uniqueness_invalid_input_and_unknown_fields() {
     );
 }
 
+/// Closes public registration while checking an authenticated operator retains its exact provisioning grant.
 #[tokio::test]
 async fn closed_registration_does_not_prevent_scoped_operator_provisioning() {
     let f = Fixture::new().await;
@@ -143,7 +144,7 @@ async fn closed_registration_does_not_prevent_scoped_operator_provisioning() {
         .nth(1)
         .unwrap()
         .to_string();
-    let principal = aster_gate::services::account::authenticate(&f.state, &token)
+    let principal = aster_gate::services::account::sessions::authenticate(&f.state, &token)
         .await
         .unwrap();
     aster_gate::services::system_setup::update_settings(

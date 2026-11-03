@@ -26,6 +26,8 @@ pub fn http_component(
     })
 }
 
+/// Binds the HTTP listener and closes refresh admission when graceful shutdown begins.
+/// The runtime database dependency keeps storage open until in-flight HTTP requests drain.
 fn build_http_service_component(
     config: HttpRuntimeConfig<'_>,
     state: Arc<crate::runtime::AppState>,
@@ -38,6 +40,7 @@ fn build_http_service_component(
     listener.set_nonblocking(true)?;
     let listener = TcpListener::from_std(listener)?;
     tracing::info!(address = %listener.local_addr()?, "HTTP listener bound");
+    let refresh_coordinator = state.account_security.sessions.coordinator.clone();
     let router = crate::api::router(state);
     let stop = shutdown.clone();
     let service: HttpFuture = Box::pin(async move {
@@ -45,7 +48,10 @@ fn build_http_service_component(
             listener,
             router.into_make_service_with_connect_info::<SocketAddr>(),
         )
-        .with_graceful_shutdown(async move { stop.cancelled().await })
+        .with_graceful_shutdown(async move {
+            stop.cancelled().await;
+            refresh_coordinator.close();
+        })
         .await
     });
     Ok(RuntimeServiceComponent::new(

@@ -30,8 +30,17 @@ export class HttpError extends Error {
 		this.retryAfterSeconds = parseRetryAfter(retryAfter);
 	}
 
+	/** Identifies terminal session failures after the caller's bounded refresh opportunity. */
 	get requiresSignIn() {
-		return this.status === 401 && this.code === ApiErrorCode.SessionRequired;
+		return (
+			this.status === 401 &&
+			[
+				ApiErrorCode.SessionRequired,
+				ApiErrorCode.AccessExpired,
+				ApiErrorCode.RefreshStale,
+				ApiErrorCode.RefreshReused,
+			].some((code) => code === this.code)
+		);
 	}
 }
 

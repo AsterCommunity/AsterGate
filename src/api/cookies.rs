@@ -122,11 +122,12 @@ impl SessionCookiePolicy {
             self.authority
         )
     }
-    pub(crate) fn name(&self) -> &'static str {
+    /// Selects the host-prefixed access name only when the trusted site requires Secure cookies.
+    pub(crate) fn access_name(&self) -> &'static str {
         if self.secure {
-            "__Host-ag_session"
+            "__Host-ag_access"
         } else {
-            "ag_session"
+            "ag_access"
         }
     }
 }
@@ -148,10 +149,24 @@ fn csrf_cookie(policy: &SessionCookiePolicy, value: &str) -> Result<axum::http::
         .map_err(|_| AccountError::Security)
 }
 
-fn session_cookie(policy: &SessionCookiePolicy, value: &str) -> Result<axum::http::HeaderValue> {
-    let max_age = if value.is_empty() { 0 } else { policy.lifetime };
-    cookie::Cookie::build((policy.name(), value.to_string()))
-        .path("/")
+/// Builds a host-only HttpOnly credential Cookie with its original path and signed deadline.
+/// Empty values expire immediately, allowing clearing to match the issuance attributes.
+fn credential_cookie(
+    policy: &SessionCookiePolicy,
+    name: &str,
+    path: &'static str,
+    value: &str,
+    expires_at: i64,
+) -> Result<axum::http::HeaderValue> {
+    let max_age = if value.is_empty() {
+        0
+    } else {
+        expires_at
+            .saturating_sub(chrono::Utc::now().timestamp())
+            .max(0)
+    };
+    cookie::Cookie::build((name.to_string(), value.to_string()))
+        .path(path)
         .http_only(true)
         .secure(policy.secure)
         .same_site(cookie::SameSite::Lax)
@@ -162,29 +177,86 @@ fn session_cookie(policy: &SessionCookiePolicy, value: &str) -> Result<axum::htt
         .map_err(|_| AccountError::Security)
 }
 
-/// Issue both cookies only after the caller's session transaction has committed.
+impl SessionCookiePolicy {
+    /// Uses the Secure prefix for HTTPS refresh because its restricted path forbids the Host prefix.
+    pub(crate) fn refresh_name(&self) -> &'static str {
+        if self.secure {
+            "__Secure-ag_refresh"
+        } else {
+            "ag_refresh"
+        }
+    }
+}
+
+/// Pair construction completes before appending headers; callers deliver only committed pairs.
+pub fn issue_refresh(
+    response: &mut Response,
+    policy: &SessionCookiePolicy,
+    pair: &aster_forge_auth::AuthTokenPair,
+) -> Result<()> {
+    let access = credential_cookie(
+        policy,
+        policy.access_name(),
+        "/",
+        &pair.access_token,
+        pair.access_expires_at,
+    )?;
+    let refresh = credential_cookie(
+        policy,
+        policy.refresh_name(),
+        "/api/v1/auth",
+        &pair.refresh_token,
+        pair.refresh_expires_at,
+    )?;
+    response.headers_mut().append(header::SET_COOKIE, access);
+    response.headers_mut().append(header::SET_COOKIE, refresh);
+    Ok(())
+}
+
+/// Login/setup rotate CSRF after commit. Refresh preserves it so in-flight browser writes do not race.
 pub fn issue_session(
     response: &mut Response,
     policy: &SessionCookiePolicy,
-    token: &str,
+    pair: &aster_forge_auth::AuthTokenPair,
 ) -> Result<()> {
-    let session = session_cookie(policy, token)?;
     let csrf = csrf_cookie(
         policy,
         &aster_forge_middleware::shared::csrf::build_csrf_token(),
     )?;
-    response.headers_mut().append(header::SET_COOKIE, session);
+    issue_refresh(response, policy, pair)?;
     response.headers_mut().append(header::SET_COOKIE, csrf);
     Ok(())
 }
 
-/// Clear both host cookies after a successful operation invalidates this browser session.
+/// Clear exact names and paths only after committed revocation. Refresh failures never clear
+/// shared browser cookies, which may already contain another request's successful rotation.
 pub fn clear_session(response: &mut Response, policy: &SessionCookiePolicy) -> Result<()> {
-    let session = session_cookie(policy, "")?;
+    let access = credential_cookie(policy, policy.access_name(), "/", "", 0)?;
+    let refresh = credential_cookie(policy, policy.refresh_name(), "/api/v1/auth", "", 0)?;
     let csrf = csrf_cookie(policy, "")?;
-    response.headers_mut().append(header::SET_COOKIE, session);
+    response.headers_mut().append(header::SET_COOKIE, access);
+    response.headers_mut().append(header::SET_COOKIE, refresh);
     response.headers_mut().append(header::SET_COOKIE, csrf);
     Ok(())
+}
+
+/// Reject duplicate credentials rather than guessing a browser identity.
+pub(crate) fn credential(headers: &HeaderMap, name: &str) -> Result<Option<String>> {
+    let mut token = None;
+    for header in headers.get_all(header::COOKIE) {
+        for parsed in
+            cookie::Cookie::split_parse(header.to_str().map_err(|_| AccountError::Unauthenticated)?)
+        {
+            let parsed = parsed.map_err(|_| AccountError::Unauthenticated)?;
+            if parsed.name() == name {
+                if token.is_some() {
+                    return Err(AccountError::Unauthenticated);
+                }
+                token = Some(parsed.value().to_string());
+            }
+        }
+    }
+    Ok(token)
 }
 
 /// Anonymous bootstrap preserves existing valid tokens; only its caller decides eligibility.

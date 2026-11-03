@@ -7,7 +7,7 @@ use crate::{
 use axum::{
     Json,
     extract::{FromRequest, FromRequestParts, Request},
-    http::{header, request::Parts},
+    http::request::Parts,
 };
 use serde::de::DeserializeOwned;
 use std::sync::Arc;
@@ -29,6 +29,8 @@ impl<T: DeserializeOwned + Send> FromRequest<Arc<AppState>> for JsonInput<T> {
 pub struct Authenticated(pub Principal);
 impl FromRequestParts<Arc<AppState>> for Authenticated {
     type Rejection = AccountError;
+    /// Requires one access Cookie selected by the trusted request policy, then checks writer authority.
+    /// Refresh credentials are never accepted as ordinary API authentication.
     async fn from_request_parts(
         parts: &mut Parts,
         state: &Arc<AppState>,
@@ -37,19 +39,10 @@ impl FromRequestParts<Arc<AppState>> for Authenticated {
             .extensions
             .get::<SessionCookiePolicy>()
             .ok_or(AccountError::Unauthenticated)?;
-        let mut values = Vec::new();
-        for value in parts.headers.get_all(header::COOKIE) {
-            let value = value.to_str().map_err(|_| AccountError::Unauthenticated)?;
-            for cookie in cookie::Cookie::split_parse(value) {
-                let cookie = cookie.map_err(|_| AccountError::Unauthenticated)?;
-                if cookie.name() == policy.name() {
-                    values.push(cookie.value().to_string());
-                }
-            }
-        }
-        if values.len() != 1 {
-            return Err(AccountError::Unauthenticated);
-        }
-        account::authenticate(state, &values[0]).await.map(Self)
+        let token = super::cookies::credential(&parts.headers, policy.access_name())?
+            .ok_or(AccountError::Unauthenticated)?;
+        account::sessions::authenticate(state, &token)
+            .await
+            .map(Self)
     }
 }

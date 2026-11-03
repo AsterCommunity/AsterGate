@@ -37,6 +37,8 @@ pub async fn require_ready(state: &AppState) -> Result<()> {
     }
 }
 
+/// Claims one-time setup and atomically creates settings, initial grants, Account and JWT session.
+/// Returns credentials only after commit; configuration publication follows the durable write.
 pub async fn initialize(
     state: &AppState,
     command: SetupCommand,
@@ -84,14 +86,17 @@ pub async fn initialize(
         grants::grant(&txn, &id, permission, now).await?;
     }
     settings_repo::complete(&txn).await?;
-    let token = account::new_token();
-    account_writes::create_session(
+    let row = account_repo::find(&txn, &id)
+        .await?
+        .ok_or(AccountError::Storage)?;
+    let tokens = account::sessions::create(
+        state,
         &txn,
-        &id,
-        account::token_digest(&token),
-        user_agent.chars().take(128).collect(),
+        &row,
+        user_agent,
         now,
-        now + settings.session_lifetime.seconds(),
+        now.checked_add(settings.session_lifetime.seconds())
+            .ok_or(AccountError::Security)?,
     )
     .await?;
     account::write_audit(&txn, &id, AuditAction::Initialized, "initial_setup").await?;
@@ -104,7 +109,7 @@ pub async fn initialize(
     super::system_settings::synchronization::after_commit(state, snapshot).await;
     Ok(LoginResult {
         account: result,
-        session_token: token,
+        tokens,
     })
 }
 

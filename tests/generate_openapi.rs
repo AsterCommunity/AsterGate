@@ -40,9 +40,24 @@ fn generated_openapi_contains_health_route() {
     );
 }
 
+/// Checks generated access/refresh/CSRF schemes, logout alternatives and exact permission/error contracts.
 #[test]
 fn account_contract_documents_management_and_session_security_without_exposing_passwords() {
     let doc = serde_json::to_value(ApiDoc::openapi()).unwrap();
+    assert_eq!(
+        doc["paths"]["/api/v1/auth/refresh"]["post"]["security"][0],
+        serde_json::json!({"RefreshCookie":[], "CsrfCookie":[]})
+    );
+    assert_eq!(
+        doc["paths"]["/api/v1/auth/logout"]["post"]["security"][2],
+        serde_json::json!({"SessionCookie":[], "CsrfCookie":[]})
+    );
+    for (scheme, name) in [
+        ("SessionCookie", "__Host-ag_access"),
+        ("RefreshCookie", "__Secure-ag_refresh"),
+    ] {
+        assert_eq!(doc["components"]["securitySchemes"][scheme]["name"], name);
+    }
     assert_eq!(
         doc["paths"]["/api/v1/account"]["get"]["security"][0],
         serde_json::json!({"SessionCookie":[]})

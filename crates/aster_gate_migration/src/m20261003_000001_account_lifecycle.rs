@@ -24,6 +24,8 @@ fn time(value: &str) -> ColumnDef {
 
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
+    /// Creates the unreleased Account schema, including security epochs and refresh-generation authority.
+    /// Already-recorded development migrations require explicit migration rather than implicit data resets.
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
             .create_table(
@@ -33,6 +35,7 @@ impl MigrationTrait for Migration {
                     .col(text("display_name", 128))
                     .col(text("status", 24))
                     .col(time("revision"))
+                    .col(time("session_version").default(0))
                     .col(time("created_at"))
                     .col(time("updated_at"))
                     .col(ColumnDef::new(name("suspended_from")).string_len(24))
@@ -93,7 +96,10 @@ impl MigrationTrait for Migration {
             .table(name("browser_sessions"))
             .col(id("id").primary_key())
             .col(id("account_id"))
-            .col(text("token_hash", 64).unique_key())
+            .col(time("session_version"))
+            .col(text("current_refresh_jti", 256).unique_key())
+            .col(ColumnDef::new(name("previous_refresh_jti")).string_len(256))
+            .col(time("last_rotated_at"))
             .col(text("user_agent", 512))
             .col(time("created_at"))
             .col(time("expires_at"))

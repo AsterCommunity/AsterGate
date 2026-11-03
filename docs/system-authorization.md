@@ -59,7 +59,8 @@ permission keys fail closed.
 The accepted JWT session design in [RFC 0009](rfcs/0009-first-party-jwt-sessions.md) preserves these
 checks: an access JWT identifies a live Account/`sid`, while services still read current exact grants.
 `system_permissions` remains a frontend query projection. JWT claims never replace transaction-time
-permission/session revalidation. Current authentication is still opaque; JWT integration is pending.
+permission/session revalidation. Authentication uses first-party access JWTs and writer-authoritative Account/sid checks;
+[session operations](first-party-sessions.md) records refresh and revocation behavior.
 
 Writes check permission and the registry's authentication requirement, obtain an internal
 single-use `SystemActionPermit`, acquire the shared system mutation lock, recheck Account/session/

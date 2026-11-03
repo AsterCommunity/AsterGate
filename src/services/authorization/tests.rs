@@ -3,6 +3,7 @@ use aster_forge_test::temp::SqliteTestDatabase;
 
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, TransactionTrait, sea_query::Expr};
 
+/// Creates a real SQLite setup operator and authenticates its access JWT for permit recheck tests.
 async fn fixture() -> (AppState, Principal, SqliteTestDatabase) {
     let database = SqliteTestDatabase::new("authorization-permit");
     let mut config = crate::config::AppConfig::default();
@@ -20,9 +21,10 @@ async fn fixture() -> (AppState, Principal, SqliteTestDatabase) {
         crate::services::system_setup::initialize(&state, input.command().unwrap(), "unit test")
             .await
             .unwrap();
-    let principal = crate::services::account::authenticate(&state, &result.session_token)
-        .await
-        .unwrap();
+    let principal =
+        crate::services::account::sessions::authenticate(&state, &result.tokens.access_token)
+            .await
+            .unwrap();
     (state, principal, database)
 }
 
