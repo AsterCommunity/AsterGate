@@ -28,6 +28,9 @@ pub async fn status(
         system_setup::status(&state).await?.into(),
     )?))
 }
+/// Completes setup and issues the initial credential pair only after the setup transaction commits.
+///
+/// Cookie security is selected from the validated setup sites and request authority.
 #[aster_forge_api_docs_macros::path(post, path = "/api/v1/setup", tag = "setup", request_body = SetupRequest, responses((status = 201, body = ApiResponse<AccountDto, ApiErrorCode, NoData>), (status = 409, body = ApiResponse<NoData, ApiErrorCode, NoData>)))]
 pub async fn initialize(
     State(state): State<Arc<AppState>>,

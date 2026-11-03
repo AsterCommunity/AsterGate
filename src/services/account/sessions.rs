@@ -31,6 +31,8 @@ pub struct SessionRuntime {
 }
 
 impl SessionRuntime {
+    /// Validates the deployment signing namespace and creates an instance-owned refresh coordinator.
+    /// Only Forge crypto-provider installation is process-wide; invalid keys fail before database startup.
     pub(crate) fn new(config: &crate::config::AppConfig) -> crate::errors::Result<Self> {
         // Forge's provider is explicitly process-scoped; product state/coordinators remain isolated.
         static PROVIDER: OnceLock<aster_forge_auth::Result<()>> = OnceLock::new();
@@ -60,7 +62,8 @@ impl SessionRuntime {
         })
     }
 
-    /// Inject time without sharing account/session state or replacing the instance coordinator.
+    /// Clones this runtime with an injected clock while retaining its signing policy and coordinator.
+    /// Account/session authority stays in the database; no security snapshot is cached here.
     pub fn with_clock(&self, clock: Arc<dyn Clock>) -> Self {
         Self {
             clock,
@@ -68,12 +71,15 @@ impl SessionRuntime {
         }
     }
 
+    /// Reads the injected trusted clock, reporting clock failures as security infrastructure errors.
     fn now(&self) -> Result<i64> {
         self.clock
             .now_unix_seconds()
             .map_err(|_| AccountError::Security)
     }
 
+    /// Selects the exact credential audience with zero leeway and access capped at five minutes.
+    /// Issuance passes the remaining absolute session lifetime; verification uses the configured bounds.
     fn policy(&self, purpose: AuthTokenType, ttl: u64) -> Result<JwtPolicy> {
         JwtPolicy::new(
             &self.issuer,
@@ -88,6 +94,7 @@ impl SessionRuntime {
         .map_err(|_| AccountError::Security)
     }
 
+    /// Builds a purpose-specific verifier using the instance key and live clock.
     fn verifier(&self, purpose: AuthTokenType) -> Result<JwtVerifier> {
         Ok(JwtVerifier::new(
             self.key.clone(),
@@ -96,6 +103,8 @@ impl SessionRuntime {
         ))
     }
 
+    /// Pins issuance to a clock snapshot and caps both credentials at the absolute session deadline.
+    /// An exhausted or overflowing lifetime rejects issuance before session insertion or rotation.
     fn signer(&self, purpose: AuthTokenType, now: i64, deadline: i64) -> Result<JwtSigner> {
         let remaining = deadline
             .checked_sub(now)
@@ -112,6 +121,8 @@ impl SessionRuntime {
         ))
     }
 
+    /// Combines credentials from distinct audience policies into one candidate pair.
+    /// The caller must persist the refresh generation and commit before exposing either credential.
     fn issue(
         &self,
         subject: Subject,
@@ -134,6 +145,8 @@ impl SessionRuntime {
         Ok(pair)
     }
 
+    /// Verifies Forge claims before converting UUID and epoch values to Gate storage boundaries.
+    /// Expired access is refresh-eligible; invalid credentials and infrastructure failures remain distinct.
     fn verify(&self, token: &str, purpose: AuthTokenType) -> Result<TokenClaims> {
         let claims = self
             .verifier(purpose)?
@@ -157,6 +170,7 @@ impl SessionRuntime {
     }
 }
 
+/// Requires a canonical Account UUID so alternate spellings cannot select a different identity key.
 fn account_id(subject: &Subject) -> Result<AccountId> {
     let id = AccountId::parse(subject.as_str()).map_err(|_| AccountError::Unauthenticated)?;
     if id.as_str() != subject.as_str() {
@@ -165,10 +179,12 @@ fn account_id(subject: &Subject) -> Result<AccountId> {
     Ok(id)
 }
 
+/// Rejects signed epochs outside the database integer range before querying security state.
 fn stored_version(version: SessionVersion) -> Result<i64> {
     i64::try_from(version.value()).map_err(|_| AccountError::Unauthenticated)
 }
 
+/// Converts a stored epoch to Forge claims; a negative stored value is a storage failure.
 fn version(value: i64) -> Result<SessionVersion> {
     Ok(SessionVersion::new(
         u64::try_from(value).map_err(|_| AccountError::Storage)?,
@@ -236,6 +252,8 @@ pub(crate) async fn validate_principal<C: ConnectionTrait>(
     Ok(account)
 }
 
+/// Authenticates access against writer-authoritative Account and owned session state.
+/// Returns the current mutation revision for later transaction fencing; claims do not grant permissions.
 pub async fn authenticate(state: &AppState, token: &str) -> Result<Principal> {
     let runtime = &state.account_security.sessions;
     let claims = runtime.verify(token, AuthTokenType::Access)?;
@@ -297,6 +315,7 @@ pub async fn refresh(
     }
 }
 
+/// Preserves typed stale/reuse results while mapping other refresh denials to session-required.
 fn rejection(reason: RefreshRejection) -> AccountError {
     match reason {
         RefreshRejection::Stale => AccountError::RefreshStale,
@@ -349,6 +368,8 @@ struct GateRefreshStore {
 }
 
 impl GateRefreshStore {
+    /// Locks the Account in the caller transaction, then refreshes time before checking expiry.
+    /// Checks Account epoch/restriction, then lets Forge classify the owned session's liveness and JTI.
     async fn decide(
         &self,
         txn: &DatabaseTransaction,
@@ -416,6 +437,8 @@ impl GateRefreshStore {
         Ok((classify_refresh(&request, snapshot.as_ref()), request))
     }
 
+    /// Persists confirmed reuse revocation, epoch advancement and audit in the caller transaction.
+    /// Returning a rejection does not commit it: the store must commit before delivering the denial.
     async fn reject(
         &self,
         txn: &DatabaseTransaction,
@@ -436,6 +459,8 @@ impl GateRefreshStore {
 impl RefreshSessionStore for GateRefreshStore {
     type Error = AccountError;
 
+    /// Commits either a fenced JTI successor or the security effects of a classified rejection.
+    /// CAS failure returns Conflict for a fresh transaction; storage or commit failure returns no credentials.
     async fn rotate_refresh(
         &self,
         request: &RefreshRotationRequest,
@@ -458,6 +483,8 @@ impl RefreshSessionStore for GateRefreshStore {
         Ok(outcome)
     }
 
+    /// Rereads a CAS loser in a new writer transaction and commits any confirmed reuse effects.
+    /// A snapshot that still permits rotation is a storage conflict, never permission to rotate twice.
     async fn resolve_conflict(&self, request: &RefreshRotationRequest) -> Result<RefreshRejection> {
         let txn = self.state.db_handles.writer().begin().await?;
         let (decision, request) = self.decide(&txn, request).await?;

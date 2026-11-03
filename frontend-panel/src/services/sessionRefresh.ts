@@ -36,6 +36,7 @@ export async function transitionSession<T>(
 		: transition();
 }
 
+/** Only missing/expired access permits recovery; permission, password and transport failures do not. */
 function canRefresh(error: unknown): error is HttpError {
 	return (
 		error instanceof HttpError &&
@@ -45,6 +46,10 @@ function canRefresh(error: unknown): error is HttpError {
 	);
 }
 
+/**
+ * Under the cross-tab lock, reuse an already refreshed access Cookie or rotate once.
+ * Identity changes abort recovery; browsers without Web Locks require sign-in under Strict policy.
+ */
 async function refreshSession(expectedGeneration: number, original: HttpError) {
 	if (generation !== expectedGeneration) throw original;
 	// Strict reuse policy needs an actual cross-tab mutex. A localStorage lease is not atomic.

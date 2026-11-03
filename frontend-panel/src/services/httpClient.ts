@@ -30,6 +30,7 @@ export class HttpError extends Error {
 		this.retryAfterSeconds = parseRetryAfter(retryAfter);
 	}
 
+	/** Identifies terminal session failures after the caller's bounded refresh opportunity. */
 	get requiresSignIn() {
 		return (
 			this.status === 401 &&

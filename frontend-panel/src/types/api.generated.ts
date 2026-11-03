@@ -125,6 +125,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * Returns the Account projection and writes access, refresh and CSRF Cookies after login commits.
+         * @description Credentials are transported only in Set-Cookie, never in the JSON response.
+         */
         post: operations["login"];
         delete?: never;
         options?: never;
@@ -141,6 +145,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * Revokes via current refresh, or valid access when refresh is absent, before clearing all Cookies.
+         * @description An invalid or stale refresh does not fall back to access or clear a concurrent winner's credentials.
+         */
         post: operations["logout"];
         delete?: never;
         options?: never;
@@ -173,6 +181,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * Requires the refresh Cookie and returns a boolean acknowledgement after committed rotation.
+         * @description The enclosing route layers enforce CSRF/source policy; refresh preserves the existing CSRF Cookie.
+         */
         post: operations["refresh"];
         delete?: never;
         options?: never;
@@ -317,6 +329,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * Completes setup and issues the initial credential pair only after the setup transaction commits.
+         * @description Cookie security is selected from the validated setup sites and request authority.
+         */
         post: operations["initialize"];
         delete?: never;
         options?: never;

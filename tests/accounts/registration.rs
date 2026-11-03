@@ -129,6 +129,7 @@ async fn identifier_uniqueness_invalid_input_and_unknown_fields() {
     );
 }
 
+/// Closes public registration while checking an authenticated operator retains its exact provisioning grant.
 #[tokio::test]
 async fn closed_registration_does_not_prevent_scoped_operator_provisioning() {
     let f = Fixture::new().await;

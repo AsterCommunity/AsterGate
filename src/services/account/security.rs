@@ -13,6 +13,7 @@ pub struct AccountSecurity {
 }
 
 impl AccountSecurity {
+    /// Validates independent deployment/session secrets before starting bounded password-hashing support.
     pub async fn new(config: &crate::config::AppConfig) -> crate::errors::Result<Self> {
         let secrets = crate::config::security::prepare(&config.security)?;
         let sessions = super::sessions::SessionRuntime::new(config)?;
@@ -138,6 +139,8 @@ pub(crate) async fn reserve_attempt(
     }
 }
 
+/// Claims the captured Account revision before rechecking the live session under the writer lock.
+/// A conflict or revoked session aborts the caller's mutation when the transaction is dropped.
 pub(crate) async fn principal_transaction(
     state: &AppState,
     principal: &Principal,

@@ -29,6 +29,7 @@ async fn assign(f: &Fixture, id: &str, permissions: &[SystemPermission]) {
     txn.commit().await.unwrap();
 }
 
+/// Authenticates the fixture's access Cookie through the same writer checks used by request extractors.
 async fn principal(f: &Fixture, cookie: &str) -> account_service::models::Principal {
     account_service::sessions::authenticate(&f.state, cookie.split('=').nth(1).unwrap())
         .await

@@ -37,6 +37,8 @@ pub async fn require_ready(state: &AppState) -> Result<()> {
     }
 }
 
+/// Claims one-time setup and atomically creates settings, initial grants, Account and JWT session.
+/// Returns credentials only after commit; configuration publication follows the durable write.
 pub async fn initialize(
     state: &AppState,
     command: SetupCommand,

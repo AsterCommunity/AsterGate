@@ -114,6 +114,8 @@ pub async fn revoke_session<C: ConnectionTrait>(
         == 1)
 }
 
+/// Advances the security epoch and marks every owned session revoked on the supplied connection.
+/// Call within a writer transaction to keep epoch and session changes atomic.
 pub async fn revoke_sessions<C: ConnectionTrait>(
     db: &C,
     id: &AccountId,

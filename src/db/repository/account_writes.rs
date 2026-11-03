@@ -15,6 +15,8 @@ pub struct NewAccountRecord {
     pub password_hash: String,
 }
 
+/// Creates a pending global Account, normalized identifiers and credential with security epoch zero.
+/// The caller owns the transaction and any later activation or setup grants.
 pub async fn create_pending<C: ConnectionTrait>(
     db: &C,
     id: &AccountId,

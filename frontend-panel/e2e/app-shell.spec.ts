@@ -51,6 +51,7 @@ async function signIn(page: Page, username: string, secret = password) {
 	).toBeVisible();
 }
 
+/** Waits for committed logout and credential clearing before any full-page navigation can cancel it. */
 async function signOut(page: Page) {
 	await page.getByRole("button", { name: "Sign out", exact: true }).click();
 	// A full-page navigation can cancel a queued Web Lock before logout reaches the server.

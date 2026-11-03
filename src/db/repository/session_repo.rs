@@ -30,6 +30,7 @@ pub async fn lock_account<C: ConnectionTrait>(
     super::account_repo::find(db, id).await
 }
 
+/// Looks up a session within its Account owner scope; missing and foreign IDs both return None.
 pub async fn find<C: ConnectionTrait>(
     db: &C,
     account: &AccountId,
@@ -42,6 +43,7 @@ pub async fn find<C: ConnectionTrait>(
         .await
 }
 
+/// Inserts a session using the supplied connection; transaction commit remains the caller's responsibility.
 pub async fn create<C: ConnectionTrait>(db: &C, row: session::Model) -> Result<(), DbErr> {
     use sea_orm::IntoActiveModel;
     row.into_active_model().insert(db).await?;
@@ -78,6 +80,8 @@ pub async fn rotate<C: ConnectionTrait>(
         == 1)
 }
 
+/// Advances one Account security epoch with a nonnegative, non-overflowing conditional update.
+/// Call inside the revocation transaction so an exhausted epoch rolls back all security effects.
 pub async fn bump_version<C: ConnectionTrait>(db: &C, id: &AccountId) -> Result<(), DbErr> {
     let result = account::Entity::update_many()
         .col_expr(

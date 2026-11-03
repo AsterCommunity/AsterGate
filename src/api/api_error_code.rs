@@ -38,6 +38,7 @@ codes! {
 }
 
 impl From<&crate::services::account::AccountError> for ApiErrorCode {
+    /// Maps domain failures to stable public codes without exposing storage or cryptographic details.
     fn from(value: &crate::services::account::AccountError) -> Self {
         use crate::services::account::AccountError;
         match value {
@@ -64,6 +65,7 @@ impl From<&crate::services::account::AccountError> for ApiErrorCode {
 }
 
 impl ApiErrorCode {
+    /// Keeps authentication denials at 401, admission limits at 429 and infrastructure failures at 503.
     pub fn status(self) -> axum::http::StatusCode {
         use axum::http::StatusCode;
         match self {

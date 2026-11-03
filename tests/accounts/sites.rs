@@ -76,6 +76,7 @@ fn branding_is_trimmed_byte_bounded_and_resets_to_defaults() {
     }
 }
 
+/// Checks per-host credential security, primary-site mail links and immediate removal of a trusted site.
 #[tokio::test]
 async fn multiple_sites_use_request_cookies_primary_mail_and_immediate_removal() {
     let f = Fixture::fresh().await;
@@ -269,6 +270,7 @@ async fn multiple_sites_use_request_cookies_primary_mail_and_immediate_removal()
     );
 }
 
+/// Exercises allowed and conflicting Host/Origin pairs so untrusted authorities cannot select credentials.
 #[tokio::test]
 async fn host_and_origin_spoofing_do_not_select_cookie_policy() {
     let f = Fixture::fresh().await;
@@ -586,6 +588,7 @@ async fn settings_transaction_rolls_back_all_site_values_and_revision_on_audit_f
     assert_eq!(f.state.management_settings().unwrap(), before);
 }
 
+/// Uses separately authenticated operators to prove settings revision fencing is shared across Accounts.
 #[tokio::test]
 async fn concurrent_settings_writers_on_different_accounts_have_one_revision_winner() {
     use aster_gate::{

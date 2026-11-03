@@ -24,6 +24,8 @@ fn time(value: &str) -> ColumnDef {
 
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
+    /// Creates the unreleased Account schema, including security epochs and refresh-generation authority.
+    /// Already-recorded development migrations require explicit migration rather than implicit data resets.
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
             .create_table(

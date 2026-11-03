@@ -29,6 +29,8 @@ impl<T: DeserializeOwned + Send> FromRequest<Arc<AppState>> for JsonInput<T> {
 pub struct Authenticated(pub Principal);
 impl FromRequestParts<Arc<AppState>> for Authenticated {
     type Rejection = AccountError;
+    /// Requires one access Cookie selected by the trusted request policy, then checks writer authority.
+    /// Refresh credentials are never accepted as ordinary API authentication.
     async fn from_request_parts(
         parts: &mut Parts,
         state: &Arc<AppState>,

@@ -126,6 +126,7 @@ struct EnvGuard {
 }
 
 impl EnvGuard {
+    /// Serializes environment-mutating loader tests and captures every override they may change.
     fn capture() -> Self {
         let lock = ENV_LOCK.lock().expect("env lock poisoned");
         Self {
@@ -140,6 +141,7 @@ impl EnvGuard {
 }
 
 impl Drop for EnvGuard {
+    /// Restores captured overrides after each loader test, including signing key and issuer.
     fn drop(&mut self) {
         unsafe {
             restore_env_var(aster_gate::config::CONFIG_ENV_VAR, self.config_path.clone());
@@ -167,6 +169,7 @@ fn numeric_hex_environment_key_is_preserved_exactly_and_not_written_to_file() {
     assert!(!fs::read_to_string(path).unwrap().contains(&key));
 }
 
+/// Loads a legacy config twice to prove key backfill is durable, private and independent of the master key.
 #[test]
 fn session_key_survives_reload_preserves_comments_and_stays_out_of_exports() {
     let _guard = EnvGuard::capture();
@@ -204,6 +207,7 @@ fn session_key_survives_reload_preserves_comments_and_stays_out_of_exports() {
     }
 }
 
+/// Checks numeric hex stays a string, injected keys stay out of files and invalid persisted keys fail unchanged.
 #[test]
 fn session_environment_key_preserves_numeric_hex_and_invalid_file_is_not_replaced() {
     let _guard = EnvGuard::capture();

@@ -107,6 +107,8 @@ async fn provision_inner(
     Ok(result)
 }
 
+/// Reserves durable attempt budgets and checks the password before claiming the Account revision.
+/// Rechecks the locked security epoch and status, then commits a bounded session before returning tokens.
 pub async fn login(
     state: &AppState,
     input: &str,
@@ -295,6 +297,8 @@ pub async fn change_password(
     Ok(())
 }
 
+/// Requires current password proof and protects the last critical operator under the system lock.
+/// Rechecks revision and live session before atomically erasing Account data and recording the tombstone.
 pub async fn delete_self(state: &AppState, principal: &Principal, password: String) -> Result<()> {
     prove_password(state, principal, password).await?;
     let txn = state.db_handles.writer().begin().await?;
@@ -422,6 +426,8 @@ pub(crate) async fn set_password(
     Ok(())
 }
 
+/// Cancels challenges, invalidates the security epoch and erases owned records in one transaction.
+/// Audit failure propagates so callers cannot commit a partially erased Account.
 async fn erase(txn: &sea_orm::DatabaseTransaction, id: &AccountId, actor: &str) -> Result<()> {
     super::challenges::cancel(txn, id, None).await?;
     repo::revoke_sessions(txn, id, now()).await?;

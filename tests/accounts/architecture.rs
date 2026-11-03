@@ -29,6 +29,7 @@ fn system_authorization_has_no_transport_or_orm_dependencies_in_its_models() {
     );
 }
 
+/// Guards the service/repository boundary, including refresh orchestration, against embedded ORM writes.
 #[test]
 fn account_services_delegate_queries_and_conditional_writes_to_repositories() {
     for source in [

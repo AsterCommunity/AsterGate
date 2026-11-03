@@ -40,6 +40,7 @@ fn generated_openapi_contains_health_route() {
     );
 }
 
+/// Checks generated access/refresh/CSRF schemes, logout alternatives and exact permission/error contracts.
 #[test]
 fn account_contract_documents_management_and_session_security_without_exposing_passwords() {
     let doc = serde_json::to_value(ApiDoc::openapi()).unwrap();

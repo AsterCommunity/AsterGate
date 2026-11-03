@@ -34,6 +34,8 @@ impl Fixture {
         )
         .await
     }
+    /// Creates an isolated SQLite or opt-in container backend with the requested HTTP policy.
+    /// Optional setup uses the product transaction and retains its access Cookie for management requests.
     pub(super) async fn with_http_security(
         initialized: bool,
         security: aster_gate::config::transport::HttpSecurityConfig,

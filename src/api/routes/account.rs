@@ -18,6 +18,7 @@ use axum::{
 };
 use std::sync::Arc;
 
+/// Registers Account/auth handlers; the parent API router owns readiness and CSRF route layers.
 pub fn router() -> Router<Arc<AppState>> {
     Router::new()
         .route("/auth/register", post(register))
@@ -67,6 +68,9 @@ pub async fn register(
     ))
 }
 
+/// Returns the Account projection and writes access, refresh and CSRF Cookies after login commits.
+///
+/// Credentials are transported only in Set-Cookie, never in the JSON response.
 #[aster_forge_api_docs_macros::path(post, path = "/api/v1/auth/login", tag = "account", request_body = LoginRequest, responses((status = 200, body = ApiResponse<AccountDto, ApiErrorCode, NoData>), (status = 401, body = ApiResponse<NoData, ApiErrorCode, NoData>)))]
 pub async fn login(
     State(state): State<Arc<AppState>>,
@@ -87,6 +91,9 @@ pub async fn login(
     Ok(response)
 }
 
+/// Revokes via current refresh, or valid access when refresh is absent, before clearing all Cookies.
+///
+/// An invalid or stale refresh does not fall back to access or clear a concurrent winner's credentials.
 #[aster_forge_api_docs_macros::path(post, path = "/api/v1/auth/logout", tag = "account", responses((status = 200, body = ApiResponse<bool, ApiErrorCode, NoData>)))]
 pub async fn logout(
     State(state): State<Arc<AppState>>,
@@ -105,6 +112,9 @@ pub async fn logout(
     clear(&cookie_policy)
 }
 
+/// Requires the refresh Cookie and returns a boolean acknowledgement after committed rotation.
+///
+/// The enclosing route layers enforce CSRF/source policy; refresh preserves the existing CSRF Cookie.
 #[aster_forge_api_docs_macros::path(post, path = "/api/v1/auth/refresh", tag = "account", responses((status = 200, body = ApiResponse<bool, ApiErrorCode, NoData>)))]
 pub async fn refresh(
     State(state): State<Arc<AppState>>,

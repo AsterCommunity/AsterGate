@@ -259,6 +259,7 @@ impl From<ChallengePurpose> for AuthenticationOperation {
 }
 
 impl AuditAction {
+    /// Returns the stable audit action identifier persisted with redacted product details.
     pub(crate) fn as_str(self) -> &'static str {
         match self {
             Self::Initialized => "instance.initialized",

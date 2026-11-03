@@ -59,6 +59,8 @@ pub struct ApiDoc;
 struct AccountApiContract;
 
 impl utoipa::Modify for AccountApiContract {
+    /// Applies the shared REST error, Cookie and CSRF contract to the generated Account operations.
+    /// Refresh requires its own credential scheme; logout also documents valid access-only revocation.
     fn modify(&self, doc: &mut utoipa::openapi::OpenApi) {
         use utoipa::openapi::{
             RefOr, Required,

@@ -9,12 +9,14 @@ use std::sync::atomic::{AtomicI64, AtomicUsize, Ordering};
 
 struct TestClock(AtomicI64, AtomicUsize);
 impl Clock for TestClock {
+    /// Counts clock reads so tests can observe entry into writer waits without timing-based sleeps.
     fn now_unix_seconds(&self) -> aster_forge_auth::Result<i64> {
         self.1.fetch_add(1, Ordering::SeqCst);
         Ok(self.0.load(Ordering::SeqCst))
     }
 }
 
+/// Installs one deterministic clock on the fixture runtime and rebuilds its real router.
 fn clock(f: &mut Fixture, now: i64) -> Arc<TestClock> {
     let clock = Arc::new(TestClock(AtomicI64::new(now), AtomicUsize::new(0)));
     let mut state = (*f.state).clone();
@@ -26,6 +28,7 @@ fn clock(f: &mut Fixture, now: i64) -> Arc<TestClock> {
     clock
 }
 
+/// Signs in through the product service to obtain a persisted, committed session credential pair.
 async fn pair(f: &Fixture) -> aster_forge_auth::AuthTokenPair {
     service::login(&f.state, "instance-operator", PASSWORD.into(), "browser")
         .await
@@ -33,6 +36,7 @@ async fn pair(f: &Fixture) -> aster_forge_auth::AuthTokenPair {
         .tokens
 }
 
+/// Verifies a fixture credential against its explicit purpose/audience before inspecting claims.
 fn claims(f: &Fixture, token: &str, kind: AuthTokenType) -> aster_forge_auth::TokenClaims {
     let audience = match kind {
         AuthTokenType::Access => "aster-gate-web-access",
@@ -47,6 +51,7 @@ fn claims(f: &Fixture, token: &str, kind: AuthTokenType) -> aster_forge_auth::To
     .into_claims()
 }
 
+/// Calls the product refresh adapter with fixed browser metadata so tests exercise Strict policy.
 async fn refresh(f: &Fixture, token: &str) -> service::Result<aster_forge_auth::AuthTokenPair> {
     service::sessions::refresh(
         &f.state,
@@ -59,6 +64,7 @@ async fn refresh(f: &Fixture, token: &str) -> service::Result<aster_forge_auth::
     .await
 }
 
+/// Sends a real refresh/logout router request with matching CSRF and trusted loopback Host headers.
 async fn request(f: &Fixture, path: &str, cookies: &str) -> axum::response::Response {
     f.app
         .clone()
@@ -77,6 +83,7 @@ async fn request(f: &Fixture, path: &str, cookies: &str) -> axum::response::Resp
         .unwrap()
 }
 
+/// Extracts one issued Cookie value for protocol assertions without relying on header ordering.
 fn cookie(response: &axum::response::Response, name: &str) -> String {
     response
         .headers()
@@ -89,6 +96,7 @@ fn cookie(response: &axum::response::Response, name: &str) -> String {
         .unwrap()
 }
 
+/// Checks credential-purpose substitution, required claim shapes and Model/ActiveModel/token-pair redaction.
 #[tokio::test]
 async fn pair_has_distinct_namespaces_typed_claims_and_no_plaintext_api_tokens() {
     let f = Fixture::new().await;
@@ -122,6 +130,7 @@ async fn pair_has_distinct_namespaces_typed_claims_and_no_plaintext_api_tokens()
     assert!(!debug.contains(row.current_refresh_jti.as_str()));
 }
 
+/// Checks through the router that a refresh JWT cannot authenticate the Account endpoint.
 async fn refresh_token_as_access(f: &Fixture, token: &str) -> bool {
     f.request(
         "GET",
@@ -134,6 +143,8 @@ async fn refresh_token_as_access(f: &Fixture, token: &str) -> bool {
     .0 == StatusCode::UNAUTHORIZED
 }
 
+/// Advances trusted time through access and refresh expiry to prove rotation cannot extend the deadline.
+/// Also checks unchanged business revision, security epoch and CSRF Cookie.
 #[tokio::test]
 async fn rotation_preserves_absolute_deadline_revision_epoch_and_csrf() {
     let mut f = Fixture::new().await;
@@ -202,6 +213,8 @@ async fn rotation_preserves_absolute_deadline_revision_epoch_and_csrf() {
     );
 }
 
+/// Replays a rotated credential through the router and verifies committed epoch/revocation/audit effects.
+/// The rejection must not issue Cookies or invalidate an unrelated Account.
 #[tokio::test]
 async fn strict_reuse_commits_global_revocation_but_does_not_touch_other_accounts() {
     let f = Fixture::new().await;
@@ -259,6 +272,7 @@ async fn strict_reuse_commits_global_revocation_but_does_not_touch_other_account
     );
 }
 
+/// Keeps JWTs unexpired while proving profile edits preserve sessions and one sid revoke denies both types.
 #[tokio::test]
 async fn single_revocation_is_immediate_and_profile_edits_preserve_other_sessions() {
     let f = Fixture::new().await;
@@ -299,6 +313,8 @@ async fn single_revocation_is_immediate_and_profile_edits_preserve_other_session
     );
 }
 
+/// Starts two runtimes against one database and releases concurrent refreshes through a barrier.
+/// Exactly one rotation succeeds; the Strict loser commits compromise revocation.
 #[tokio::test]
 async fn independent_instance_coordinators_have_one_committed_database_winner() {
     let f = Fixture::new().await;
@@ -341,6 +357,8 @@ async fn independent_instance_coordinators_have_one_committed_database_winner() 
     );
 }
 
+/// Holds an Account writer lock to deterministically exhaust a one-request coordinator and cancel its waiter.
+/// Checks permit/lock reclamation, then same-instance contention with the production budget.
 #[tokio::test]
 async fn same_instance_contention_and_budget_are_bounded_and_reclaimable() {
     use sea_orm::TransactionTrait;
@@ -415,6 +433,8 @@ async fn same_instance_contention_and_budget_are_bounded_and_reclaimable() {
     );
 }
 
+/// Recreates runtime state after two rotations to test durable old-generation replay detection.
+/// Changed key/issuer reject without compromise side effects; the original runtime observes committed reuse.
 #[tokio::test]
 async fn restart_rejects_older_generation_and_key_or_issuer_changes_invalidate_old_tokens() {
     let f = Fixture::new().await;
@@ -460,6 +480,7 @@ async fn restart_rejects_older_generation_and_key_or_issuer_changes_invalidate_o
     );
 }
 
+/// Uses an invalid database URL to prove signing policy and key-separation validation happen first.
 #[tokio::test]
 async fn invalid_signing_configuration_fails_before_database_startup() {
     for (issuer, key) in [
@@ -486,6 +507,7 @@ async fn invalid_signing_configuration_fails_before_database_startup() {
     }
 }
 
+/// Injects audit insertion failure during reuse and checks that epoch and session authority remain unchanged.
 #[tokio::test]
 async fn audit_failure_rolls_back_reuse_epoch_and_revocation() {
     let f = Fixture::new().await;
@@ -508,6 +530,7 @@ async fn audit_failure_rolls_back_reuse_epoch_and_revocation() {
     assert!(refresh(&f, &next.refresh_token).await.is_ok());
 }
 
+/// Advances past access expiry and verifies current-refresh logout works while a predecessor cannot revoke it.
 #[tokio::test]
 async fn logout_uses_current_refresh_after_access_expiry_and_rejects_predecessor() {
     let mut f = Fixture::new().await;
@@ -545,6 +568,7 @@ async fn logout_uses_current_refresh_after_access_expiry_and_rejects_predecessor
     assert!(refresh(&f, &next.refresh_token).await.is_err());
 }
 
+/// Exercises missing CSRF, duplicate credentials and access-as-refresh through the assembled router.
 #[tokio::test]
 async fn refresh_router_requires_csrf_and_rejects_cookie_ambiguity_and_wrong_purpose() {
     let f = Fixture::new().await;
@@ -576,6 +600,8 @@ async fn refresh_router_requires_csrf_and_rejects_cookie_ambiguity_and_wrong_pur
     assert!(refresh(&f, &pair.refresh_token).await.is_ok());
 }
 
+/// Signs mismatched owner/sid, epoch, restriction and namespace claims with the trusted test key.
+/// Each must reject without revoking legitimate sessions, including another existing Account.
 #[tokio::test]
 async fn signed_foreign_session_restriction_version_and_namespace_fail_without_reuse_effects() {
     let f = Fixture::new().await;
@@ -667,6 +693,8 @@ async fn signed_foreign_session_restriction_version_and_namespace_fail_without_r
     );
 }
 
+/// Seeds the maximum stored epoch to verify overflow rejection rolls back revocation.
+/// Then shortens the server deadline to prove signed expiry cannot override writer authority.
 #[tokio::test]
 async fn writer_session_deadline_and_security_epoch_exhaustion_fail_closed() {
     use sea_orm::{ActiveModelTrait, IntoActiveModel, Set};
@@ -713,6 +741,7 @@ async fn writer_session_deadline_and_security_epoch_exhaustion_fail_closed() {
     ));
 }
 
+/// Removes a JWT column from SQLite and checks startup reports incompatibility while preserving Account IDs.
 #[tokio::test]
 async fn incompatible_development_schema_fails_startup_without_resetting_data() {
     use sea_orm::QuerySelect;
@@ -742,6 +771,8 @@ async fn incompatible_development_schema_fails_startup_without_resetting_data() 
     );
 }
 
+/// Uses SQLite triggers to force a lost CAS and deferred commit failure through the real refresh router.
+/// Both must withhold candidate Cookies and leave the previous credential recoverable.
 #[tokio::test]
 async fn sqlite_cas_and_commit_failure_never_release_candidate_cookies() {
     let f = Fixture::new().await;
@@ -778,6 +809,7 @@ async fn sqlite_cas_and_commit_failure_never_release_candidate_cookies() {
     assert!(refresh(&f, &pair.refresh_token).await.is_ok());
 }
 
+/// Closes one coordinator and proves refresh admission stops without revoking sessions or closing another instance.
 #[tokio::test]
 async fn coordinator_shutdown_is_instance_local_and_does_not_revoke_sessions() {
     let f = Fixture::new().await;
@@ -800,6 +832,8 @@ async fn coordinator_shutdown_is_instance_local_and_does_not_revoke_sessions() {
     );
 }
 
+/// Signs malformed claims with raw JWT encoding to test Gate validation independently of Forge issuance.
+/// Covers required fields, purpose/JTI rules, time/numeric bounds, wrong keys/algorithms and token size.
 #[tokio::test]
 async fn gate_pins_jwt_claims_algorithm_key_size_purpose_and_time_boundaries() {
     let mut f = Fixture::new().await;
@@ -911,6 +945,8 @@ async fn gate_pins_jwt_claims_algorithm_key_size_purpose_and_time_boundaries() {
     );
 }
 
+/// Occupies SQLite's writer, waits for observable refresh progress, then advances time past expiry.
+/// Also cancels a blocked refresh and checks coordinator guards are reclaimed before a later success.
 #[tokio::test]
 async fn writer_wait_rechecks_expiry_and_cancelled_wait_releases_instance_budget() {
     use sea_orm::TransactionTrait;

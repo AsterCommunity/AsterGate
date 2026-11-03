@@ -67,6 +67,7 @@ async fn failure(response: Response, status: StatusCode, code: &str) {
     assert!(body["error"]["retryable"].is_boolean());
 }
 
+/// Verifies bootstrap preservation, committed setup rotation and exact three-Cookie logout clearing.
 #[tokio::test]
 async fn csrf_bootstrap_setup_rotation_and_logout_clear_are_one_cookie_lifecycle() {
     let f = Fixture::fresh().await;
@@ -151,6 +152,7 @@ async fn csrf_bootstrap_setup_rotation_and_logout_clear_are_one_cookie_lifecycle
     );
 }
 
+/// Exercises HTTP and HTTPS loopback bootstrap so browser source selects Secure attributes only for its Host.
 #[tokio::test]
 async fn bootstrap_cookie_scheme_tracks_same_host_browser_source_before_and_after_setup() {
     for origin in [
@@ -478,6 +480,7 @@ async fn csrf_missing_duplicate_mismatch_and_source_ambiguity_are_typed_rejectio
     assert_eq!(accepted.status(), StatusCode::BAD_REQUEST);
 }
 
+/// Proves HTTPS login rotates host-only credentials/CSRF and forwarded headers cannot select Cookie policy.
 #[tokio::test]
 async fn https_host_only_csrf_cookie_rotates_with_login_and_never_uses_forwarded_host() {
     let f = Fixture::fresh().await;
@@ -1151,6 +1154,8 @@ async fn route_groups_keep_bootstrap_public_setup_protected_and_accounts_not_rea
     }
 }
 
+/// Runs security mutations with and without audit failure to verify clearing follows committed revocation.
+/// Revoking another session and failed transactions must leave the caller's credential Cookies intact.
 #[tokio::test]
 async fn session_cookie_pairs_follow_committed_revocation_and_audit_rollback() {
     for operation in [

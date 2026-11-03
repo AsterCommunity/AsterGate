@@ -122,6 +122,7 @@ impl SessionCookiePolicy {
             self.authority
         )
     }
+    /// Selects the host-prefixed access name only when the trusted site requires Secure cookies.
     pub(crate) fn access_name(&self) -> &'static str {
         if self.secure {
             "__Host-ag_access"
@@ -148,6 +149,8 @@ fn csrf_cookie(policy: &SessionCookiePolicy, value: &str) -> Result<axum::http::
         .map_err(|_| AccountError::Security)
 }
 
+/// Builds a host-only HttpOnly credential Cookie with its original path and signed deadline.
+/// Empty values expire immediately, allowing clearing to match the issuance attributes.
 fn credential_cookie(
     policy: &SessionCookiePolicy,
     name: &str,
@@ -175,6 +178,7 @@ fn credential_cookie(
 }
 
 impl SessionCookiePolicy {
+    /// Uses the Secure prefix for HTTPS refresh because its restricted path forbids the Host prefix.
     pub(crate) fn refresh_name(&self) -> &'static str {
         if self.secure {
             "__Secure-ag_refresh"

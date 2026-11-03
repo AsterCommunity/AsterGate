@@ -10,6 +10,8 @@ pub struct SessionConfig {
 }
 
 impl Default for SessionConfig {
+    /// Generates an independent random signing key and a loopback development issuer.
+    /// The configuration loader persists the key; production deployments must set a stable issuer.
     fn default() -> Self {
         Self {
             issuer: "http://localhost:3000".into(),
@@ -28,6 +30,8 @@ impl std::fmt::Debug for SessionConfig {
 }
 
 impl SessionConfig {
+    /// Validates an explicit HTTPS or loopback issuer and decodes exactly 32 bytes of signing material.
+    /// Malformed configuration fails closed without echoing the key in errors.
     pub(crate) fn key(&self) -> Result<aster_forge_auth::JwtKey> {
         // Issuer is explicit deployment identity, never inferred from request/site headers.
         let url = url::Url::parse(&self.issuer).map_err(|_| {

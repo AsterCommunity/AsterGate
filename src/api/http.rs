@@ -26,6 +26,8 @@ pub fn http_component(
     })
 }
 
+/// Binds the HTTP listener and closes refresh admission when graceful shutdown begins.
+/// The runtime database dependency keeps storage open until in-flight HTTP requests drain.
 fn build_http_service_component(
     config: HttpRuntimeConfig<'_>,
     state: Arc<crate::runtime::AppState>,

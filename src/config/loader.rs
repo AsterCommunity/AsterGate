@@ -150,6 +150,8 @@ fn ensure_deployment_key(path: &Path) -> Result<()> {
     Ok(())
 }
 
+/// Backfills missing signing configuration while preserving existing values and TOML comments.
+/// Environment-injected secrets are not persisted; invalid file keys are never silently replaced.
 fn ensure_session_key(path: &Path) -> Result<()> {
     let content = std::fs::read_to_string(path)?;
     let mut doc = content
