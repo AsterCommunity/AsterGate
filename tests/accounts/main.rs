@@ -26,6 +26,7 @@ use support::*;
 mod architecture;
 mod email;
 mod http_middleware;
+mod jwt_sessions;
 mod lifecycle;
 mod mail;
 mod password;

@@ -20,9 +20,10 @@ async fn fixture() -> (AppState, Principal, SqliteTestDatabase) {
         crate::services::system_setup::initialize(&state, input.command().unwrap(), "unit test")
             .await
             .unwrap();
-    let principal = crate::services::account::authenticate(&state, &result.session_token)
-        .await
-        .unwrap();
+    let principal =
+        crate::services::account::sessions::authenticate(&state, &result.tokens.access_token)
+            .await
+            .unwrap();
     (state, principal, database)
 }
 

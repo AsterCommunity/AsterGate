@@ -28,6 +28,7 @@ use utoipa::OpenApi;
         crate::api::routes::account::register,
         crate::api::routes::account::login,
         crate::api::routes::account::logout,
+        crate::api::routes::account::refresh,
         crate::api::routes::account::request_verification,
         crate::api::routes::account::verify_email,
         crate::api::routes::account::request_recovery,
@@ -71,11 +72,11 @@ impl utoipa::Modify for AccountApiContract {
         let components = doc.components.get_or_insert_with(Default::default);
         components.add_security_scheme(
             "SessionCookie",
-            SecurityScheme::ApiKey(ApiKey::Cookie(ApiKeyValue::new("__Host-ag_session"))),
+            SecurityScheme::ApiKey(ApiKey::Cookie(ApiKeyValue::new("__Host-ag_access"))),
         );
         components.add_security_scheme(
             "LocalSessionCookie",
-            SecurityScheme::ApiKey(ApiKey::Cookie(ApiKeyValue::new("ag_session"))),
+            SecurityScheme::ApiKey(ApiKey::Cookie(ApiKeyValue::new("ag_access"))),
         );
         components.add_security_scheme(
             "CsrfCookie",
@@ -84,6 +85,14 @@ impl utoipa::Modify for AccountApiContract {
         components.add_security_scheme(
             "LocalCsrfCookie",
             SecurityScheme::ApiKey(ApiKey::Cookie(ApiKeyValue::new("ag_csrf"))),
+        );
+        components.add_security_scheme(
+            "RefreshCookie",
+            SecurityScheme::ApiKey(ApiKey::Cookie(ApiKeyValue::new("__Secure-ag_refresh"))),
+        );
+        components.add_security_scheme(
+            "LocalRefreshCookie",
+            SecurityScheme::ApiKey(ApiKey::Cookie(ApiKeyValue::new("ag_refresh"))),
         );
         let error_schema: RefOr<Schema> = utoipa::schema!(ApiResponse<
             NoData,
@@ -110,13 +119,27 @@ impl utoipa::Modify for AccountApiContract {
             if !path.starts_with("/api/v1/") {
                 continue;
             }
+            let refresh_auth = matches!(
+                path.as_str(),
+                "/api/v1/auth/refresh" | "/api/v1/auth/logout"
+            );
+            let cookie_scheme = if refresh_auth {
+                "RefreshCookie"
+            } else {
+                "SessionCookie"
+            };
+            let local_cookie_scheme = if refresh_auth {
+                "LocalRefreshCookie"
+            } else {
+                "LocalSessionCookie"
+            };
             let requirements = if path.starts_with("/api/v1/management/")
                 || path.starts_with("/api/v1/account")
-                || path == "/api/v1/auth/logout"
+                || refresh_auth
             {
                 Some(vec![
-                    SecurityRequirement::new("SessionCookie", std::iter::empty::<String>()),
-                    SecurityRequirement::new("LocalSessionCookie", std::iter::empty::<String>()),
+                    SecurityRequirement::new(cookie_scheme, std::iter::empty::<String>()),
+                    SecurityRequirement::new(local_cookie_scheme, std::iter::empty::<String>()),
                 ])
             } else {
                 None
@@ -196,13 +219,10 @@ impl utoipa::Modify for AccountApiContract {
             {
                 operation.security = Some(if requirements.is_some() {
                     vec![
-                        SecurityRequirement::new("SessionCookie", std::iter::empty::<String>())
+                        SecurityRequirement::new(cookie_scheme, std::iter::empty::<String>())
                             .add("CsrfCookie", std::iter::empty::<String>()),
-                        SecurityRequirement::new(
-                            "LocalSessionCookie",
-                            std::iter::empty::<String>(),
-                        )
-                        .add("LocalCsrfCookie", std::iter::empty::<String>()),
+                        SecurityRequirement::new(local_cookie_scheme, std::iter::empty::<String>())
+                            .add("LocalCsrfCookie", std::iter::empty::<String>()),
                     ]
                 } else {
                     vec![
@@ -210,13 +230,24 @@ impl utoipa::Modify for AccountApiContract {
                         SecurityRequirement::new("LocalCsrfCookie", std::iter::empty::<String>()),
                     ]
                 });
+                if path == "/api/v1/auth/logout" {
+                    operation.security.get_or_insert_with(Vec::new).extend([
+                        SecurityRequirement::new("SessionCookie", std::iter::empty::<String>())
+                            .add("CsrfCookie", std::iter::empty::<String>()),
+                        SecurityRequirement::new(
+                            "LocalSessionCookie",
+                            std::iter::empty::<String>(),
+                        )
+                        .add("LocalCsrfCookie", std::iter::empty::<String>()),
+                    ]);
+                }
                 operation.parameters.get_or_insert_with(Vec::new).push(ParameterBuilder::new().name("X-AsterGate-Request")
                     .parameter_in(ParameterIn::Header).required(Required::True)
                     .description(Some("Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement."))
                     .schema(Some(ObjectBuilder::new().schema_type(Type::String).enum_values(Some(["1"])))).build().into());
                 operation.parameters.get_or_insert_with(Vec::new).push(ParameterBuilder::new()
                     .name("X-AsterGate-CSRF").parameter_in(ParameterIn::Header).required(Required::True)
-                    .description(Some("Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation."))
+                    .description(Some("Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request."))
                     .schema(Some(ObjectBuilder::new().schema_type(Type::String))).build().into());
             }
         }

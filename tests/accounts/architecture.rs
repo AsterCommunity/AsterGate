@@ -35,6 +35,7 @@ fn account_services_delegate_queries_and_conditional_writes_to_repositories() {
         include_str!("../../src/services/account/lifecycle.rs"),
         include_str!("../../src/services/account/challenges.rs"),
         include_str!("../../src/services/account/security.rs"),
+        include_str!("../../src/services/account/sessions.rs"),
     ] {
         for forbidden in [
             "::Entity::",

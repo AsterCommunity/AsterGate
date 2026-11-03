@@ -1,5 +1,9 @@
 # Account And System Authorization Design Review
 
+Historical review: first-party JWT adoption has since been implemented; see
+[session operations](first-party-sessions.md) and the [current matrix](rfcs/IMPLEMENTATION-MATRIX.md).
+Other unresolved findings below retain their separate scope.
+
 Reviewed against RFCs 0001, 0002, 0003, 0005, 0007 and 0008 after implementing granular system
 permissions. This is an evidence-backed follow-up list, not a claim that the full identity platform
 or the remaining findings are implemented. The review preserves the accepted direct Account setup,

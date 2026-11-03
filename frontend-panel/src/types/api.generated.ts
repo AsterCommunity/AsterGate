@@ -164,6 +164,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/register": {
         parameters: {
             query?: never;
@@ -380,7 +396,7 @@ export interface components {
         /** @enum {string} */
         AccountStatusDto: "pending_verification" | "active" | "suspended" | "deleted";
         /** @enum {string} */
-        ApiErrorCode: "success" | "validation.failed" | "auth.credentials_failed" | "auth.session_required" | "auth.forbidden" | "account.identifier_conflict" | "settings.revision_conflict" | "account.not_found" | "account.invalid_transition" | "auth.challenge_invalid" | "rate_limited" | "mail.not_configured" | "service.unavailable" | "setup.required" | "setup.already_initialized" | "account.last_operator" | "endpoint.not_found";
+        ApiErrorCode: "success" | "validation.failed" | "auth.credentials_failed" | "auth.access_expired" | "auth.refresh_stale" | "auth.refresh_reused" | "auth.session_required" | "auth.forbidden" | "account.identifier_conflict" | "settings.revision_conflict" | "account.not_found" | "account.invalid_transition" | "auth.challenge_invalid" | "rate_limited" | "mail.not_configured" | "service.unavailable" | "setup.required" | "setup.already_initialized" | "account.last_operator" | "endpoint.not_found";
         ApiErrorInfo_TupleUnit: {
             diagnostic?: null;
             retryable: boolean;
@@ -765,7 +781,7 @@ export interface operations {
             header: {
                 /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
-                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request. */
                 "X-AsterGate-CSRF": string;
             };
             path?: never;
@@ -890,7 +906,7 @@ export interface operations {
             header: {
                 /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
-                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request. */
                 "X-AsterGate-CSRF": string;
             };
             path?: never;
@@ -1015,7 +1031,7 @@ export interface operations {
             header: {
                 /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
-                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request. */
                 "X-AsterGate-CSRF": string;
             };
             path?: never;
@@ -1140,7 +1156,7 @@ export interface operations {
             header: {
                 /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
-                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request. */
                 "X-AsterGate-CSRF": string;
             };
             path?: never;
@@ -1381,7 +1397,7 @@ export interface operations {
             header: {
                 /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
-                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request. */
                 "X-AsterGate-CSRF": string;
             };
             path?: never;
@@ -1622,7 +1638,7 @@ export interface operations {
             header: {
                 /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
-                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request. */
                 "X-AsterGate-CSRF": string;
             };
             path?: never;
@@ -1743,7 +1759,7 @@ export interface operations {
             header: {
                 /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
-                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request. */
                 "X-AsterGate-CSRF": string;
             };
             path: {
@@ -1866,7 +1882,7 @@ export interface operations {
             header: {
                 /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
-                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request. */
                 "X-AsterGate-CSRF": string;
             };
             path?: never;
@@ -1990,7 +2006,7 @@ export interface operations {
             header: {
                 /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
-                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request. */
                 "X-AsterGate-CSRF": string;
             };
             path?: never;
@@ -2111,7 +2127,7 @@ export interface operations {
             header: {
                 /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
-                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request. */
                 "X-AsterGate-CSRF": string;
             };
             path?: never;
@@ -2230,13 +2246,134 @@ export interface operations {
             };
         };
     };
+    refresh: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
+                "X-AsterGate-Request": "1";
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request. */
+                "X-AsterGate-CSRF": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_bool_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Session required or credentials invalid */
+            401: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Forbidden, including CSRF or origin rejection */
+            403: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Business state conflict */
+            409: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Rate limited; Retry-After is advisory, never an automatic retry permit */
+            429: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    /** @description Advisory delay in seconds or an HTTP-date; does not permit automatic replay */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    /** @description no-referrer */
+                    "Referrer-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"];
+                };
+            };
+        };
+    };
     register: {
         parameters: {
             query?: never;
             header: {
                 /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
-                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request. */
                 "X-AsterGate-CSRF": string;
             };
             path?: never;
@@ -2360,7 +2497,7 @@ export interface operations {
             header: {
                 /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
-                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request. */
                 "X-AsterGate-CSRF": string;
             };
             path?: never;
@@ -2485,7 +2622,7 @@ export interface operations {
             header: {
                 /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
-                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request. */
                 "X-AsterGate-CSRF": string;
             };
             path?: never;
@@ -2610,7 +2747,7 @@ export interface operations {
             header: {
                 /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
-                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request. */
                 "X-AsterGate-CSRF": string;
             };
             path?: never;
@@ -2854,7 +2991,7 @@ export interface operations {
             header: {
                 /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
-                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request. */
                 "X-AsterGate-CSRF": string;
             };
             path?: never;
@@ -2979,7 +3116,7 @@ export interface operations {
             header: {
                 /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
-                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request. */
                 "X-AsterGate-CSRF": string;
             };
             path: {
@@ -3222,7 +3359,7 @@ export interface operations {
             header: {
                 /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
-                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request. */
                 "X-AsterGate-CSRF": string;
             };
             path?: never;
@@ -3463,7 +3600,7 @@ export interface operations {
             header: {
                 /** @description Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement. */
                 "X-AsterGate-Request": "1";
-                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation. */
+                /** @description Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request. */
                 "X-AsterGate-CSRF": string;
             };
             path?: never;

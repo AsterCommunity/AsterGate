@@ -93,6 +93,7 @@ panic = "abort"
 strip = true
 
 [dependencies]
+aster_forge_auth = { git = "https://github.com/AsterCommunity/AsterForge", rev = "2483171e4c7201e64e8f3a9dcecbd9b4cc86235b", package = "aster_forge_auth" }
 async-trait = "0.1"
 axum = "0.8"
 tower-http = { version = "0.7", features = ["compression-gzip"] }
@@ -139,6 +140,7 @@ utoipa = { version = "6.0.0", features = ["axum_extras"], optional = true }
 utoipa-swagger-ui = { version = "10.0.1", features = ["axum"], optional = true }
 
 [dev-dependencies]
+jsonwebtoken = { version = "11.1", default-features = false }
 aster_forge_test = { git = "https://github.com/AsterCommunity/AsterForge", rev = "2483171e4c7201e64e8f3a9dcecbd9b4cc86235b", package = "aster_forge_test" }
 sea-orm-migration = { version = "2.0.4", features = ["sqlx-mysql", "sqlx-postgres", "sqlx-sqlite", "runtime-tokio-rustls"] }
 testcontainers = { version = "0.28", features = ["reusable-containers"] }

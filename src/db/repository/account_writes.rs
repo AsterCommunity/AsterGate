@@ -26,6 +26,7 @@ pub async fn create_pending<C: ConnectionTrait>(
         display_name: Set(input.display_name),
         status: Set(AccountStatus::PendingVerification.into()),
         revision: Set(0),
+        session_version: Set(0),
         created_at: Set(now),
         updated_at: Set(now),
         suspended_from: Set(None),
@@ -54,28 +55,6 @@ pub async fn create_pending<C: ConnectionTrait>(
     .insert(db)
     .await?;
     Ok(row)
-}
-
-pub async fn create_session<C: ConnectionTrait>(
-    db: &C,
-    account: &AccountId,
-    token_hash: String,
-    user_agent: String,
-    now: i64,
-    expires_at: i64,
-) -> Result<(), DbErr> {
-    session::ActiveModel {
-        id: Set(uuid::Uuid::new_v4().to_string()),
-        account_id: Set(account.as_str().into()),
-        token_hash: Set(token_hash),
-        user_agent: Set(user_agent),
-        created_at: Set(now),
-        expires_at: Set(expires_at),
-        revoked_at: Set(None),
-    }
-    .insert(db)
-    .await?;
-    Ok(())
 }
 
 pub async fn update_profile<C: ConnectionTrait>(

@@ -19,6 +19,7 @@ pub fn load() -> Result<super::AppConfig> {
     let path = config_path();
     ensure_default_config_exists(&path, &super::AppConfig::default())?;
     ensure_deployment_key(&path)?;
+    ensure_session_key(&path)?;
 
     let mut builder = ::config::Config::builder()
         .add_source(::config::File::from(path.as_path()).required(false))
@@ -30,6 +31,9 @@ pub fn load() -> Result<super::AppConfig> {
     // Hex keys containing only digits must remain strings, never environment-inferred floats.
     if let Ok(value) = std::env::var("ASTER__SECURITY__MASTER_KEY") {
         builder = builder.set_override("security.master_key", value)?;
+    }
+    if let Ok(value) = std::env::var("ASTER__SESSION__SIGNING_KEY") {
+        builder = builder.set_override("session.signing_key", value)?;
     }
     let mut loaded = builder.build()?.try_deserialize::<super::AppConfig>()?;
     normalize_paths(&mut loaded, &path)?;
@@ -136,6 +140,56 @@ fn ensure_deployment_key(path: &Path) -> Result<()> {
             "master_key",
             toml_edit::value(super::SecurityConfig::default().master_key),
         );
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600))?;
+        }
+        std::fs::write(path, doc.to_string())?;
+    }
+    Ok(())
+}
+
+fn ensure_session_key(path: &Path) -> Result<()> {
+    let content = std::fs::read_to_string(path)?;
+    let mut doc = content
+        .parse::<toml_edit::DocumentMut>()
+        .map_err(|_| AppError::Config("invalid config file".into()))?;
+    let table = doc
+        .as_table_mut()
+        .entry("session")
+        .or_insert(toml_edit::Item::Table(toml_edit::Table::new()))
+        .as_table_mut()
+        .ok_or_else(|| AppError::Config("session must be a table".into()))?;
+    let mut changed = false;
+    if std::env::var_os("ASTER__SESSION__SIGNING_KEY").is_none() {
+        if let Some(key) = table.get("signing_key") {
+            super::security::decode_master_key(
+                key.as_str().ok_or_else(|| {
+                    AppError::Config("session.signing_key must be a string".into())
+                })?,
+            )
+            .map_err(|_| {
+                AppError::Config(
+                    "session.signing_key must be 64 hexadecimal characters (32 bytes)".into(),
+                )
+            })?;
+        } else {
+            table.insert(
+                "signing_key",
+                toml_edit::value(super::session::SessionConfig::default().signing_key),
+            );
+            changed = true;
+        }
+    }
+    if !table.contains_key("issuer") && std::env::var_os("ASTER__SESSION__ISSUER").is_none() {
+        table.insert(
+            "issuer",
+            toml_edit::value(super::session::SessionConfig::default().issuer),
+        );
+        changed = true;
+    }
+    if changed {
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;

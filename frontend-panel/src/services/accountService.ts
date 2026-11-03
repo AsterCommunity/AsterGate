@@ -5,7 +5,11 @@ import type {
 } from "@/types/api";
 import { isApiSuccessEnvelope } from "@/types/api-helpers";
 import { csrfHeaders } from "./csrf";
-import { requestJson } from "./httpClient";
+import {
+	requestWithSession,
+	sessionChanged,
+	transitionSession,
+} from "./sessionRefresh";
 
 type Schema = components["schemas"];
 export type Account = Schema["AccountDto"];
@@ -18,17 +22,27 @@ export async function accountRequest<T extends { data?: unknown }>(
 	method = "GET",
 	body?: unknown,
 ): Promise<ApiSuccessResponse<T>> {
-	const response = await requestJson<T>(`/api/v1${path}`, {
-		method,
-		credentials: "same-origin",
-		cache: "no-store",
-		headers: {
-			"X-AsterGate-Request": "1",
-			...(await csrfHeaders(method, `/api/v1${path}`)),
-			...(body === undefined ? {} : { "Content-Type": "application/json" }),
-		},
-		...(body === undefined ? {} : { body: JSON.stringify(body) }),
-	});
+	if (
+		["/account/password", "/account/email/confirm"].includes(path) ||
+		(method === "DELETE" &&
+			(path === "/account" || path === "/account/sessions"))
+	)
+		sessionChanged();
+	const send = () =>
+		requestWithSession<T>(path, async () => ({
+			method,
+			credentials: "same-origin",
+			cache: "no-store",
+			headers: {
+				"X-AsterGate-Request": "1",
+				...(await csrfHeaders(method, `/api/v1${path}`)),
+				...(body === undefined ? {} : { "Content-Type": "application/json" }),
+			},
+			...(body === undefined ? {} : { body: JSON.stringify(body) }),
+		}));
+	const response = ["/auth/login", "/auth/logout", "/setup"].includes(path)
+		? await transitionSession(send)
+		: await send();
 	if (!isApiSuccessEnvelope(response)) {
 		throw new Error("Invalid API response envelope");
 	}

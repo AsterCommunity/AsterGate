@@ -121,8 +121,8 @@ async fn csrf_bootstrap_setup_rotation_and_logout_clear_are_one_cookie_lifecycle
     assert_eq!(setup.status(), StatusCode::CREATED);
     let rotated = cookie(&setup, "ag_csrf");
     assert_ne!(token, rotated);
-    let session = cookie(&setup, "ag_session");
-    let pairs = format!("ag_session={session}; ag_csrf={rotated}");
+    let session = cookie(&setup, "ag_access");
+    let pairs = format!("ag_access={session}; ag_csrf={rotated}");
     let logout = send(
         &f,
         request(
@@ -141,7 +141,7 @@ async fn csrf_bootstrap_setup_rotation_and_logout_clear_are_one_cookie_lifecycle
     .await;
     assert_eq!(logout.status(), StatusCode::OK);
     assert!(cookie(&logout, "ag_csrf").is_empty());
-    assert!(cookie(&logout, "ag_session").is_empty());
+    assert!(cookie(&logout, "ag_access").is_empty());
     assert!(
         logout
             .headers()
@@ -168,9 +168,9 @@ async fn bootstrap_cookie_scheme_tracks_same_host_browser_source_before_and_afte
         let secure = origin.starts_with("https:");
         let csrf_name = if secure { "__Host-ag_csrf" } else { "ag_csrf" };
         let session_name = if secure {
-            "__Host-ag_session"
+            "__Host-ag_access"
         } else {
-            "ag_session"
+            "ag_access"
         };
         for path in ["/api/v1/setup/status", "/api/v1/public/frontend-config"] {
             let response = send(
@@ -532,7 +532,7 @@ async fn https_host_only_csrf_cookie_rotates_with_login_and_never_uses_forwarded
     .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_ne!(cookie(&response, "__Host-ag_csrf"), token);
-    assert!(!cookie(&response, "__Host-ag_session").is_empty());
+    assert!(!cookie(&response, "__Host-ag_access").is_empty());
 }
 
 #[tokio::test]
@@ -1259,9 +1259,9 @@ async fn session_cookie_pairs_follow_committed_revocation_and_audit_rollback() {
                     StatusCode::OK
                 );
             } else {
-                assert!(cookie(&response, "ag_session").is_empty());
+                assert!(cookie(&response, "ag_access").is_empty());
                 assert!(cookie(&response, "ag_csrf").is_empty());
-                assert_eq!(response.headers().get_all("set-cookie").iter().count(), 2);
+                assert_eq!(response.headers().get_all("set-cookie").iter().count(), 3);
                 assert!(
                     response
                         .headers()

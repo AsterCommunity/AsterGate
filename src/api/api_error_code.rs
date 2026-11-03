@@ -18,6 +18,9 @@ codes! {
     Success => "success", "";
     ValidationFailed => "validation.failed", "The request contains invalid values.";
     CredentialsFailed => "auth.credentials_failed", "Invalid credentials or inactive account.";
+    AccessExpired => "auth.access_expired", "The access credential has expired.";
+    RefreshStale => "auth.refresh_stale", "The refresh credential has already been rotated.";
+    RefreshReused => "auth.refresh_reused", "The session was invalidated after refresh reuse.";
     SessionRequired => "auth.session_required", "An active account session is required.";
     Forbidden => "auth.forbidden", "This action is not permitted.";
     IdentifierConflict => "account.identifier_conflict", "Account identifiers or revision conflict.";
@@ -40,6 +43,9 @@ impl From<&crate::services::account::AccountError> for ApiErrorCode {
         match value {
             AccountError::InvalidInput => Self::ValidationFailed,
             AccountError::InvalidCredentials => Self::CredentialsFailed,
+            AccountError::AccessExpired => Self::AccessExpired,
+            AccountError::RefreshStale => Self::RefreshStale,
+            AccountError::RefreshReused => Self::RefreshReused,
             AccountError::Unauthenticated => Self::SessionRequired,
             AccountError::Forbidden => Self::Forbidden,
             AccountError::Conflict => Self::IdentifierConflict,
@@ -63,7 +69,11 @@ impl ApiErrorCode {
         match self {
             Self::Success => StatusCode::OK,
             Self::ValidationFailed | Self::ChallengeInvalid => StatusCode::BAD_REQUEST,
-            Self::CredentialsFailed | Self::SessionRequired => StatusCode::UNAUTHORIZED,
+            Self::CredentialsFailed
+            | Self::SessionRequired
+            | Self::AccessExpired
+            | Self::RefreshStale
+            | Self::RefreshReused => StatusCode::UNAUTHORIZED,
             Self::Forbidden => StatusCode::FORBIDDEN,
             Self::IdentifierConflict
             | Self::SettingsConflict

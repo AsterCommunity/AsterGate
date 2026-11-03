@@ -49,7 +49,7 @@ RFC 0008 defines AsterGate as an independent general-purpose IdP and freezes the
 between Group-based Application admission and Role/Permission-based resource authorization.
 RFC 0009 selects access/refresh JWTs for first-party Account/management authentication and amends
 the session/security/delivery contracts. It preserves immediate revocation and separates first-party
-sessions from downstream OAuth grants. The architecture is accepted; JWT implementation is pending.
+sessions from downstream OAuth grants. The first-party JWT implementation is recorded in the matrix and [session operations](../first-party-sessions.md); downstream OAuth/OIDC remains proposed.
 
 ## Evidence and references
 

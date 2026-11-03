@@ -11,17 +11,16 @@ JWT adoption by [AG #5](https://github.com/AsterCommunity/AsterGate/issues/5), s
 by [AG #4](https://github.com/AsterCommunity/AsterGate/issues/4), and audit/delegation by
 [AG #12](https://github.com/AsterCommunity/AsterGate/issues/12).
 
-JWT adoption is pending. The current checkout and completed lifecycle tests still use a single
-opaque session Cookie. Sections describing existing routes, schema and tests record that implementation;
-the JWT sections below define its replacement. They do not advertise a refresh endpoint or JWT support
-before the code, schema, generated API and browser behavior have passed their acceptance gates.
+The current checkout implements Forge-backed first-party JWT sessions, Strict refresh rotation and
+immediate revocation. [Session operations](first-party-sessions.md) records the concrete signing,
+Cookie, refresh, deployment and failure contracts. OAuth/OIDC issuance remains unimplemented.
 
 ## Ownership
 
 Account is global to one instance. Account, identifiers, password credentials, browser sessions,
 and mail challenges have no Organization column. The current module creates no Membership, Group,
-Application admission, downstream OAuth grant/token, signing key, or external identity. Its accepted
-next session design adds first-party JWT credentials, not downstream protocol issuance. An Account operator
+Application admission, downstream OAuth grant/token, downstream signing key, or external identity. Its
+first-party JWT credentials do not implement downstream protocol issuance. An Account operator
 uses explicit [system permissions](system-authorization.md), not an `is_admin` bit or a separate management token.
 Organization administration and scoped role permissions remain unimplemented.
 
@@ -35,7 +34,7 @@ Repositories own queries and conditional writes. Architecture tests enforce thes
 | --- | --- | --- |
 | Register or operator provision | New identity, unique normalized identifiers | Active/unverified by default; pending if verification is required; mail queued when SMTP is configured |
 | Verify email | Active/unverified or pending, matching unexpired unused verification challenge | Active with verified email; link consumed |
-| Sign in | Active, correct password | Fresh random opaque browser session |
+| Sign in | Active, correct password | Fresh durable browser session with an access/refresh JWT pair |
 | Suspend | Active or pending | Suspended; original state retained; all sessions and challenges revoked |
 | Restore | Suspended | Original active/pending state restored; no revoked session or challenge resurrects |
 | Delete | Any non-deleted state, exact system permission and operator password or current password for self-service | Terminal deleted tombstone; profile, identifiers, credentials, sessions and challenges erased |
@@ -53,10 +52,10 @@ not delete messages already delivered to a recipient's external mailbox.
   a preflight lookup alone. Display names are nonempty, at most 128 bytes and contain no controls.
 - Passwords are 12–128 bytes, untrimmed, stored as salted Argon2id PHC hashes using Forge's bounded
   RFC 9106 policy. Blocking hash work is limited to four concurrent operations per process.
-- Sessions are random 256-bit opaque values; only SHA-256 digests are stored. No browser bearer
-  token is returned in JSON or stored in localStorage. Sessions have fixed configurable expiration
-  (default 24 hours) and at most 20 live sessions per Account. This is today's transport, replaced
-  by the accepted JWT design below without an old-format compatibility path.
+- Sessions use Forge HS256 access/refresh JWTs with independent audiences and signing material.
+  Access has no JTI; refresh requires a random JTI. Only refresh generation identifiers, not full tokens,
+  are persisted. Credentials never enter JSON or localStorage. Sessions have fixed configurable
+  expiration (default 24 hours), five-minute access and at most 20 live sessions per Account.
 - Every authentication check reads the writer database and requires active Account plus live,
   unrevoked session. Credential/status mutation and session creation claim the Account revision
   inside the transaction, so stale password checks cannot create a session after revocation.
@@ -66,21 +65,22 @@ not delete messages already delivered to a recipient's external mailbox.
 - An Account may inspect/revoke only its own sessions. Unknown and foreign session IDs return the
   same not-found result. Revoking all sessions includes the current session.
 
-## Accepted JWT Session Design
+## JWT Sessions
 
 ### Credentials And Durable Authority
 
 The hosted Account and human management interfaces use short-lived access JWTs and refresh JWTs,
-following AD's proven session architecture. Both require explicit `iss`, `aud`, `sub`, `sid`, `jti`,
-`iat`, `exp`, token type and session version. Access and refresh use distinct validation purposes;
+following AD's session architecture. Both require explicit `iss`, `aud`, `sub`, `sid`,
+`iat`, `exp`, `token_type`, `restriction` and `session_version`; only refresh requires `jti`, while
+access forbids it. Access and refresh use distinct validation purposes;
 a refresh JWT never authenticates an Account/management request. First-party `sub` identifies the
 Account UUID, while downstream OIDC retains its public/pairwise subject mapping.
 
 Issuer is explicit stable instance configuration. Editable site URLs and the primary email site do
 not change it. Signing policy pins trusted keys and allowed algorithms; session signing material is
 separate from the AEAD `master_key`. Secrets and complete token strings never enter logs, ordinary
-storage rows, exported profile data or audit detail. The internal signing policy is completed with
-AF #42; downstream signing/JWKS remains its own RFC capability.
+storage rows, exported profile data or audit detail. The internal policy pins HS256, distinct access/refresh audiences, zero leeway and a 16 KiB token
+limit through `aster_forge_auth`; downstream signing/JWKS remains its own RFC capability.
 
 Account `session_version` is a security epoch, not the ordinary Account mutation `revision`. Browser
 sessions retain Account ownership, absolute expiry, revocation state, current refresh JTI/generation,
@@ -95,8 +95,8 @@ claims and times. It then checks the active Account, current security version an
 against authoritative state. A revoked session denies an unexpired access JWT immediately. JWT
 validation cannot skip the session lookup or use a stale cache to relax the existing revocation promise.
 
-AD currently checks access JWTs primarily through Account status/version without a single-session
-`sid`; AG preserves its stronger per-session boundary by requiring that additional binding.
+AD JWTs include `sid`, but its access checks allow an expiry window after individual-session revocation.
+AG reads the live owned session on every authentication and preserves immediate revocation.
 `GET /api/v1/account` still returns current `system_permissions` for frontend controls. Service use
 cases check exact live grants; claims and button visibility do not authorize. Destructive lifecycle
 and settings operations retain current-password proof, transaction rechecks and last-holder protection.
@@ -109,7 +109,7 @@ then conditionally claims its current JTI/generation under the product transacti
 the multi-replica authority. A bounded per-JTI lock can identify a same-process race, but cannot replace
 the conditional write. Tokens are returned only after a successful commit.
 
-| Event | JWT target behavior |
+| Event | JWT behavior |
 | --- | --- |
 | Fresh login | Commit browser session and initial refresh generation; issue access/refresh pair |
 | Valid current refresh | One committed successor generation and token pair; previous refresh never succeeds again |
@@ -121,8 +121,9 @@ the conditional write. Tokens are returned only after a successful commit.
 | Restore Account | New login required; prior JWT versions and refresh generations remain invalid |
 | Storage/audit/commit failure | No success or usable uncommitted tokens; committed reuse revocation is not rolled back by the rejection response |
 
-Stale retry requires explicit evidence and always remains unsuccessful; there is no generic grace
-period accepting old refresh credentials. AD's previous-JTI/recent-client classification is a
+The configured policy is Strict: any non-current JTI on an otherwise valid owned session is reuse.
+UA/IP do not grant a retry window. Forge's stale outcome is mapped defensively but is not enabled by
+this product policy; no old refresh credential can succeed twice. AD's previous-JTI/recent-client classification is a
 reference with testable policy boundaries. UA/IP are spoofable retry signals, not identity proofs.
 Older generations, cross-session/Account inputs and replay after restart remain covered. Post-commit
 cache/notification failure is distinct from transaction rollback and cannot restore a revoked session.
@@ -139,7 +140,9 @@ Path `/`. Keep exact Host/Origin/custom-header and double-submit CSRF validation
 CSRF-cookie rotation/clearing and independent multi-site logins; see [HTTP middleware](http-middleware.md).
 Neither token enters localStorage or browser-readable persistent storage.
 
-The frontend coordinates refresh within each tab and retries an eligible request at most once.
+The frontend coordinates refresh with an in-tab single-flight promise and cross-tab Web Locks,
+then retries an eligible request at most once. Browsers without Web Locks require sign-in when access
+expires. Login/logout notifications fence retries across browser identity changes.
 Permission denial and password-proof failure do not trigger refresh. Cross-tab losers cannot overwrite
 new credentials or loop indefinitely; typed stale/reuse/expired outcomes drive bounded recovery or
 sign-in. Login/refresh token delivery is via Set-Cookie, not JSON token exposure. A future Bearer
@@ -188,15 +191,17 @@ persisting the token. If the page is reloaded after fragment removal, request a 
 
 ## HTTP Security
 
-Current production cookies are Secure, HttpOnly, SameSite=Lax, Path=/, host-only and use the `__Host-`
-prefix. Local non-Secure cookies require loopback HTTP. Duplicate session cookies are rejected.
+Production access/refresh cookies are Secure, HttpOnly, SameSite=Lax and host-only.
+`__Host-ag_access` uses Path `/`; `__Secure-ag_refresh` uses `/api/v1/auth`. HTTP loopback uses
+`ag_access`/`ag_refresh` with the same paths. Duplicate credentials are rejected.
 All Account/auth/management responses use `Cache-Control: no-store` and `Referrer-Policy:
 no-referrer`. Request bodies are bounded to 16 KiB; unknown DTO/query fields and malformed JSON
 are rejected rather than silently accepted.
 
 Every unsafe API write requires exactly one X-AsterGate-Request: 1 and matching
 X-AsterGate-CSRF / host-only CSRF Cookie values. GET setup/status and public/frontend-config
-bootstrap the readable CSRF Cookie; successful session issuance rotates it and logout clears it.
+bootstrap the readable CSRF Cookie; setup/login rotate it and logout clears all three cookies.
+Refresh preserves CSRF to avoid invalidating concurrent writes and replaces only the credential pair.
 HTTP loopback uses ag_csrf; HTTPS (including loopback) uses __Host-ag_csrf. Before setup,
 a same-Host browser Origin/Referer disambiguates the scheme; source-less HTTPS loopback CLI
 bootstrap must supply that Origin or Referer. After setup the registered site determines it. CSRF Cookies use SameSite=Strict,
@@ -232,7 +237,9 @@ initial product policy, not a substitute for deployment ingress capacity control
 | --- | --- | --- |
 | `GET /api/v1/public/frontend-config` | Public | Branding, setup state, registration/mail availability and password minimum |
 | `POST /api/v1/auth/register` | Public, registration enabled | Active/unverified or pending by policy; mail when configured |
-| `POST /api/v1/auth/login`, `/auth/logout` | Password / Account session | Create/revoke current browser session |
+| `POST /api/v1/auth/login` | Password | Commit browser session; issue HttpOnly access/refresh pair |
+| `POST /api/v1/auth/refresh` | Current refresh Cookie + CSRF | Commit one successor pair; Strict reuse revokes global first-party sessions |
+| `POST /api/v1/auth/logout` | Current refresh (or valid access alone) + CSRF | Revoke current session and clear all three cookies |
 | `POST /api/v1/auth/verification`, `/auth/verify-email` | Public challenge | Request/consume activation |
 | `POST /api/v1/auth/recovery`, `/auth/reset-password` | Public challenge | Request/consume password recovery |
 | `GET/PATCH/DELETE /api/v1/account` | Account session; password for delete | Read/edit profile, erase Account |
@@ -247,8 +254,8 @@ initial product policy, not a substitute for deployment ingress capacity control
 Management and Account REST responses use `{ code: "success", msg: "", data }`. Error responses have stable `code`,
 `msg`, and `error.retryable` fields. These are product REST APIs, not OAuth/OIDC protocol endpoints.
 The generated OpenAPI records session/operator schemes and the required write header.
-The proposed first-party refresh route and JWT-specific errors/responses are added with the
-implementation; this table and current generated SDK do not claim those endpoints already exist.
+The generated contract includes the refresh route, distinct Cookie schemes and typed access-expired,
+refresh-stale and refresh-reused errors. Tokens are never part of the REST response body.
 
 ## Acceptance
 
@@ -266,15 +273,16 @@ local SMTP server for registration/activation, profile/session failure recovery,
 password recovery, replacement email in a fresh browser, deletion and operator lifecycle. Desktop
 and mobile screenshots and horizontal-overflow assertions verify the actual account surface.
 
-### JWT Adoption Gates
+### JWT Integration Evidence
 
-RFC 0009 additionally requires strict token-type/key/algorithm/issuer/audience/claims/time/size checks,
-single/global immediate revocation, unchanged precise permissions, one-winner same-process/cross-tab/
-multi-replica refresh, replay after restart, stale/reuse classification, transaction/audit/commit/cache
-failure behavior, token redaction and bounded lock/worker lifetimes. Real-router and browser tests
-must prove Cookie issuance/clearing, CSRF and frontend refresh recovery. Generated contracts and
-necessary database matrices must pass before the matrix marks JWT sessions Implemented.
-Current opaque-session results prove none of the unimplemented JWT/refresh-specific behavior.
+`tests/accounts/jwt_sessions.rs` covers pinned claims/signature/purpose/time/size, independent
+revision/epoch, immediate revocation, Strict reuse commit and audit rollback, same-process and
+independent-instance contention, restart replay, writer waits across expiry, cancellation, resource
+budgets, coordinator shutdown and ORM redaction. SQLite triggers inject CAS and deferred commit
+failures; PostgreSQL/MySQL run the applicable router and transaction suite. Configuration tests cover
+stable persisted signing keys, environment overrides, key separation and invalid startup policy.
+Frontend tests cover one retry and lifecycle fences; Chromium covers two tabs sharing one refresh
+and immediate session revocation. [Session operations](first-party-sessions.md) documents limits.
 
 No test here proves Organization authorization, upstream federation, OAuth/OIDC conformance,
 production SMTP deliverability, hosted mail reputation, MFA, or remote deployment. Those retain

@@ -8,7 +8,7 @@
 - Shared mechanism: [AsterForge #42](https://github.com/AsterCommunity/AsterForge/issues/42)
 - Product integration: [AG #5](https://github.com/AsterCommunity/AsterGate/issues/5)
 - HTTP security integration: [AG #4](https://github.com/AsterCommunity/AsterGate/issues/4), dependent on AF #41
-- Implementation: Pending; the current Account implementation still uses opaque session cookies
+- Implementation: First-party slice implemented; see [operations and limits](../first-party-sessions.md)
 
 ## Decision
 
@@ -18,11 +18,11 @@ versions, conditional refresh rotation and explicit replay outcomes. JWT format,
 permission projection and revocation are separate contracts.
 
 The choice preserves AG's existing immediate single-session revocation. AD's current access checks
-use Account status/session_version and do not bind access JWTs to one session through `sid`. AG therefore
-adds mandatory `sid` binding and authoritative session validation; copying the architecture does not
+include `sid` but allow an access-expiry window after single-session revocation. AG therefore
+requires authoritative session validation on every authentication; copying the architecture does not
 silently replace immediate revocation with an access-token expiry window.
 
-This is an accepted target architecture, not evidence that JWT issuance or refresh routes exist today.
+This architecture is implemented for first-party Account sessions; the matrix records its evidence.
 OAuth/OIDC provider issuance, Organizations, delegated permissions and grant audit remain separate
 implementation slices. [The matrix](IMPLEMENTATION-MATRIX.md) records those boundaries.
 
@@ -30,7 +30,7 @@ implementation slices. [The matrix](IMPLEMENTATION-MATRIX.md) records those boun
 
 | Credential | Consumer | Required context | Durable authority |
 | --- | --- | --- | --- |
-| First-party access JWT | AG Account and human management APIs | `iss`, `aud`, `sub`, `sid`, `jti`, `iat`, `exp`, token type, session version | Active Account and live owned browser session |
+| First-party access JWT | AG Account and human management APIs | `iss`, `aud`, `sub`, `sid`, `iat`, `exp`, token type, restriction, session version; no JTI | Active Account and live owned browser session |
 | First-party refresh JWT | AG refresh endpoint only | Same identity/session/time binding, distinct token type and refresh audience, fresh JTI | Current refresh generation/JTI in that browser session |
 | Downstream OAuth access token | Registered resource audience | RFC 0003 claims, scopes and tenant grant | Registered client, Membership and resource authorization |
 | OIDC ID token | Registered relying party | OIDC identity assertions | OIDC authorization and subject contract |
@@ -48,15 +48,15 @@ claims and token size, expiry/issued-at checks and explicit clock skew. Unknown 
 future timestamps and access/refresh/ID-token substitution fail closed. Claims are verified before
 they are used to look up Account/session state.
 
-Session signing material is separate from the AEAD deployment `master_key`. AG owns its persistence,
-key IDs, rotation/retirement and backup contract; AF accepts explicit key and validation policy inputs.
+Session signing material is separate from the AEAD deployment `master_key`. AG owns its persistence and
+backup/replacement contract; AF accepts explicit key and validation policy inputs.
 No key or algorithm is selected solely from an untrusted JWT header. Internal session keys do not
 automatically become downstream JWKS keys. RFC 0003's asymmetric signing requirement for downstream
-tokens remains unchanged. The final internal algorithm/key representation is selected with AF #42's
-implementation and must have algorithm-confusion and rotation fixtures before adoption.
+tokens remains unchanged. The implementation pins HS256 with a separate random 32-byte key, zero leeway and the Forge
+16 KiB token limit. Key/issuer replacement invalidates existing tokens; there is no overlapping
+keyring, asymmetric signer, JWKS or downstream provider in this slice.
 
-Access lifetime is short; the initial implementation should use five minutes unless a reviewed policy
-selects another bounded duration. Refresh lifetime is the session's configured absolute expiry, not
+Access lifetime is five minutes, capped by the remaining absolute session lifetime. Refresh lifetime is the session's configured absolute expiry, not
 an unbounded sliding extension; the current 24-hour default is preserved until an explicit policy
 changes it. Rotation does not resurrect expired or revoked sessions.
 
@@ -98,7 +98,7 @@ password/status changes fence the login so no usable token escapes from a stale 
 
 Refresh validates the refresh-specific JWT policy and current Account/session version, then claims
 the presented current JTI/generation with a conditional write inside the product transaction. Success
-commits the next generation and its audit facts before returning the new pair. Any replica may finish
+commits the next generation before returning the new pair; confirmed reuse commits revocation and audit. Any replica may finish
 the rotation; the DB condition is the authority, while a per-JTI process lock only helps identify a
 same-process competitor. Lock ownership is bounded and reclaimable, not a global product singleton.
 
@@ -110,7 +110,8 @@ same-process competitor. Lock ownership is bounded and reclaimable, not a global
 | Expired/revoked session or version mismatch | Reject; no renewal or resurrection |
 | DB/CAS/audit/commit failure | No success response or token disclosure; distinguish rollback from committed security effects |
 
-AG initially follows AD's conservative confirmed-reuse response: advance the Account session version
+AG uses Strict classification (any non-current JTI on a valid owned session is reuse) and follows
+AD's conservative confirmed-reuse response: advance the Account session version
 and revoke its first-party sessions. This is global first-party compromise handling, not the separate
 tenant-grant replay policy in RFC 0003. Stale classification requires explicit evidence; there is no
 generic grace window in which an old refresh succeeds. AD's recent predecessor/client-fingerprint
@@ -132,25 +133,26 @@ route scope. A restricted refresh Path requires a `__Secure-` rather than `__Hos
 names are used; `__Host-` requires Path `/`. Clear operations exactly match the original names, paths
 and security attributes. Multi-site hosts keep independent Cookies and logins.
 
-Login, refresh and logout preserve Gate's same-origin/custom-header and double-submit CSRF policy,
-matching token-cookie rotation/clearing and no-store responses; see [HTTP middleware](../http-middleware.md).
+Login, refresh and logout preserve Gate's same-origin/custom-header and double-submit CSRF policy
+and no-store responses. Login/setup rotate CSRF; refresh replaces only credentials so concurrent
+writes keep their double-submit token; logout clears all three cookies; see [HTTP middleware](../http-middleware.md).
 JWTs and long-lived refresh credentials never enter localStorage or JavaScript-readable Cookies.
 Browser token delivery uses Set-Cookie rather than plaintext JSON. A future Bearer API profile must
 declare accepted credential types and reject ambiguous Cookie/Bearer identities; it is not added
 implicitly by selecting JWT. First-party refresh is not the OAuth `/token` endpoint.
 
-The frontend coordinates refresh within a browser tab, retries an eligible failed request at most
-once, and does not refresh on permission denial or invalid password proof. Cross-tab and cross-replica
+The frontend uses single-flight within a tab and Web Locks across tabs, retries an eligible failed
+request at most once, and does not refresh on permission denial or invalid password proof. Cross-tab and cross-replica
 refresh races have one committed winner. Losing callers cannot overwrite new Cookies with stale
 credentials or enter refresh loops; typed stale/reuse/session-expired outcomes drive bounded recovery
 or sign-in. Issuing a token pair is not a substitute for the existing settings/resource revision fences.
 
 ## AF And AG Responsibilities
 
-AF #42 should supply product-neutral typed token verification/issuance, refresh rotation outcomes and
-storage-port contracts using a mature JWT library, with injected clock/ID sources, cancellation,
-resource limits and independent tests. An auth crate is proposed there; its name/API is not available
-today. `crypto`, `utils` and upstream `external_auth` do not own a product session subsystem.
+AF #42 supplies `aster_forge_auth`: product-neutral typed token verification/issuance, refresh
+rotation outcomes and storage-port contracts, with injected clock/ID sources, cancellation, resource
+limits and independent tests. Gate uses the existing locked Forge revision `2483171`; it already
+contains the required crate and does not require upgrading the whole Forge workspace. `crypto`, `utils` and upstream `external_auth` do not own a product session subsystem.
 
 AG owns Account UUID/status, schema/repositories, session epochs, permissions, tenant rules, signing
 policy/keys, transactions, HTTP/Cookies/CSRF, API error mapping, UI and audit. AF returns typed security
@@ -185,11 +187,13 @@ integration, followed by real-router and browser tests:
 6. Account/system-permission regression suites pass on SQLite and necessary PostgreSQL/MySQL paths;
    OpenAPI and generated frontend types match the final routes, errors and responses.
 
-Current opaque-session tests establish today's lifecycle, not these JWT/refresh acceptance gates.
+The real integration evidence and operational limits are recorded in [session operations](../first-party-sessions.md).
+Strict policy does not enable a predecessor grace window; those optional Forge policy boundaries
+remain owned by Forge tests rather than a second Gate classifier.
 
 ## References
 
-- [AD issuance/validation](https://github.com/AsterCommunity/AsterDrive/blob/cb4c0874eeae6a2d37808a32883962d3499f986d/src/services/auth/local/tokens/mod.rs)
-- [AD rotation/reuse](https://github.com/AsterCommunity/AsterDrive/blob/cb4c0874eeae6a2d37808a32883962d3499f986d/src/services/auth/local/tokens/refresh.rs)
-- [AD Cookie transport](https://github.com/AsterCommunity/AsterDrive/blob/cb4c0874eeae6a2d37808a32883962d3499f986d/src/api/routes/auth/cookies.rs)
+- [AD issuance/validation](https://github.com/AsterCommunity/AsterDrive/blob/c5989c2e62012b7dc7bb9ef0cd628f87d15d1d69/src/services/auth/local/tokens/mod.rs)
+- [AD rotation/reuse](https://github.com/AsterCommunity/AsterDrive/blob/c5989c2e62012b7dc7bb9ef0cd628f87d15d1d69/src/services/auth/local/tokens/refresh.rs)
+- [AD Cookie transport](https://github.com/AsterCommunity/AsterDrive/blob/c5989c2e62012b7dc7bb9ef0cd628f87d15d1d69/src/api/routes/auth/cookies.rs)
 - [AF #42 mechanism and integration acceptance](https://github.com/AsterCommunity/AsterForge/issues/42)

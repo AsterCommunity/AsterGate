@@ -8,6 +8,7 @@ pub struct Model {
     pub display_name: String,
     pub status: super::types::StoredAccountStatus,
     pub revision: i64,
+    pub session_version: i64,
     pub created_at: i64,
     pub updated_at: i64,
     pub suspended_from: Option<super::types::StoredAccountStatus>,

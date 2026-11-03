@@ -14,7 +14,7 @@ GitHub main or a released deployment already contains that implementation.
 | --- | --- | --- |
 | Global Account lifecycle and local authentication | Product migration, typed domain/repositories, Account/system-permission REST routes, hosted bilingual UI, encrypted mail outbox, generation/configuration/architecture contracts; `tests/accounts/` covers the basic lifecycle | Implemented basic slice |
 | System authorization | Seven exact operation permissions; registry/ORM/DTO/OpenAPI parity, least-privilege Router matrix, deterministic commit rechecks, last-holder concurrency tests; `docs/system-authorization.md` | Implemented basic slice |
-| First-party JWT session architecture | Accepted [RFC 0009](0009-first-party-jwt-sessions.md); AD-style access/refresh JWTs, live `sid`/security epoch, exact permissions and [AF #42](https://github.com/AsterCommunity/AsterForge/issues/42) ownership; current code still uses opaque cookies | Accepted design; implementation pending |
+| First-party JWT sessions and refresh | Forge typed HS256 access/refresh, distinct audiences, writer-authoritative `sid`/epoch, Strict transactional rotation/reuse, independent signing configuration, Cookie/CSRF and browser single-flight/Web Locks; `tests/accounts/jwt_sessions.rs`, [operations and limits](../first-party-sessions.md) | Implemented first-party slice |
 | Organizations, memberships, groups and admission | RFC design only; no tenant entities or authorization implementation | Missing |
 | Applications, API resources, roles and permissions | RFC design only; no product schema or services | Missing |
 | Account/setup bootstrap | Atomic first Account, seven system permissions and typed system configuration; setup tests | Implemented basic slice |
@@ -27,7 +27,7 @@ GitHub main or a released deployment already contains that implementation.
 | Canonical issuer identity lifecycle | No persisted OIDC issuer or key lifecycle implementation | Missing |
 | OIDC Authorization Code + PKCE S256 | No authorization/token endpoints, grant/code storage, or protocol tests | Missing |
 | Discovery, JWKS, UserInfo and protocol logout | No provider routes or signing-key implementation | Missing |
-| Refresh rotation, reuse detection and revocation | No OAuth grant or refresh-token implementation | Missing |
+| Downstream OAuth refresh rotation, reuse detection and revocation | No OAuth grant or refresh-token implementation; first-party sessions are a separate implemented slice | Missing |
 | Permission projection | No membership/group/role/resource projection implementation | Missing |
 | Downstream plugin registration | No connector registry or downstream protocol adapter | Missing |
 | Signing-key rotation, overlap, retirement and compromise | No key schema, lifecycle service, or tests | Missing |
@@ -38,11 +38,11 @@ GitHub main or a released deployment already contains that implementation.
 | Runtime, health and infrastructure migration | Forge runtime; `tests/platform/health.rs`, `tests/platform/migrations.rs` | Foundation slice |
 | Shared HTTP middleware integration | Forge Axum CSRF/runtime CORS/trusted-peer/IP and keyed admission, Gate Cookie lifecycle/error policy, real Router/browser and instance-metrics tests; `tests/accounts/http_middleware.rs`, `tests/platform/integration_contracts.rs`, [HTTP middleware](../http-middleware.md); [AG #4](https://github.com/AsterCommunity/AsterGate/issues/4) | Implemented local integration slice |
 | Shared REST envelope integration | Forge controlled generic envelope, Gate codes/status/headers/diagnostic policy, regenerated Account/SDK contracts and runtime frontend checks; `tests/response_envelope.rs`, `tests/generate_openapi.rs`, [REST response contract](../rest-envelope.md); [AG #14](https://github.com/AsterCommunity/AsterGate/issues/14) | Implemented local REST slice |
-| SQLite Account/platform/configuration acceptance | 49 Account/site tests, 20 platform tests, 12 configuration tests; 10 library and 3 OpenAPI tests; Redis test additionally run with opt-in enabled | Passed basic slice |
-| PostgreSQL Account acceptance | 49 Account/authorization/setup/settings/site tests and 20 platform tests including migration up/down, opt-in `ASTER_TEST_DATABASE_BACKEND=postgres` | Passed basic slice |
-| MySQL Account acceptance | 49 Account/authorization/setup/settings/site tests and 20 platform tests including migration up/down, opt-in `ASTER_TEST_DATABASE_BACKEND=mysql` | Passed basic slice |
-| Hosted Account workflows and SMTP | 8 Playwright scenarios: direct setup with optional SMTP, CSRF enforcement and token rotation, full local Account lifecycle, account-bound email replacement, operator suspension/restoration/erasure, read-only controls, create-only controls, and live branding with hostname-isolated sessions and primary mail; desktop/mobile screenshots | Passed basic slice |
-| Frontend contracts and tooling | 53 tests from `bun run test` across 8 files, generated OpenAPI types, TypeScript/Biome check and production frontend build | Passed REST/UI slice |
+| SQLite Account/platform/configuration acceptance | 85 Account tests including 18 JWT cases, 24 platform, 13 configuration, 11 library, 4 OpenAPI and 5 response-contract tests; current session checks include CAS/commit failure, expiry waits, cancellation and schema protection. Redis opt-in evidence remains from the prior configuration slice | Passed session integration slice |
+| PostgreSQL Account acceptance | 80 Account regressions, latest 18-case JWT suite and 24 platform tests including migration up/down with `ASTER_TEST_DATABASE_BACKEND=postgres`. SQLite-only trigger/writer tests are conditional | Passed session integration slice |
+| MySQL Account acceptance | 80 Account regressions, followed by the latest 18-case JWT suite and 24 platform tests including migration up/down with `ASTER_TEST_DATABASE_BACKEND=mysql`. SQLite-only trigger/writer tests are conditional | Passed session integration slice |
+| Hosted Account workflows and SMTP | 9 Playwright scenarios: shared refresh across two tabs and immediate session revocation, direct setup with optional SMTP, CSRF enforcement and token rotation, full local Account lifecycle, account-bound email replacement, operator suspension/restoration/erasure, read-only controls, create-only controls, and live branding with hostname-isolated sessions and primary mail; desktop/mobile screenshots | Passed basic slice |
+| Frontend contracts and tooling | 67 tests from `bun run test` across 9 files, including refresh/lifecycle contention and retry bounds, generated OpenAPI types, TypeScript/Biome check and production frontend build | Passed REST/UI slice |
 | Official OAuth/OIDC conformance suite | No provider implementation or conformance artifact | Missing |
 
 Missing, proposed, partial, and unverified capabilities must not appear as supported in discovery

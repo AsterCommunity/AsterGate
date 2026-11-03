@@ -44,7 +44,7 @@ async fn operator(state: &AppState) -> aster_gate::services::account::models::Pr
         aster_gate::services::account::login(state, "operator", PASSWORD.into(), "config test")
             .await
             .unwrap();
-    aster_gate::services::account::authenticate(state, &login.session_token)
+    aster_gate::services::account::sessions::authenticate(state, &login.tokens.access_token)
         .await
         .unwrap()
 }

@@ -248,7 +248,7 @@
           {
             "name": "X-AsterGate-CSRF",
             "in": "header",
-            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request.",
             "required": true,
             "schema": {
               "type": "string"
@@ -496,7 +496,7 @@
           {
             "name": "X-AsterGate-CSRF",
             "in": "header",
-            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request.",
             "required": true,
             "schema": {
               "type": "string"
@@ -746,7 +746,7 @@
           {
             "name": "X-AsterGate-CSRF",
             "in": "header",
-            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request.",
             "required": true,
             "schema": {
               "type": "string"
@@ -996,7 +996,7 @@
           {
             "name": "X-AsterGate-CSRF",
             "in": "header",
-            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request.",
             "required": true,
             "schema": {
               "type": "string"
@@ -1461,7 +1461,7 @@
           {
             "name": "X-AsterGate-CSRF",
             "in": "header",
-            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request.",
             "required": true,
             "schema": {
               "type": "string"
@@ -1924,7 +1924,7 @@
           {
             "name": "X-AsterGate-CSRF",
             "in": "header",
-            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request.",
             "required": true,
             "schema": {
               "type": "string"
@@ -2172,7 +2172,7 @@
           {
             "name": "X-AsterGate-CSRF",
             "in": "header",
-            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request.",
             "required": true,
             "schema": {
               "type": "string"
@@ -2412,7 +2412,7 @@
           {
             "name": "X-AsterGate-CSRF",
             "in": "header",
-            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request.",
             "required": true,
             "schema": {
               "type": "string"
@@ -2659,7 +2659,7 @@
           {
             "name": "X-AsterGate-CSRF",
             "in": "header",
-            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request.",
             "required": true,
             "schema": {
               "type": "string"
@@ -2868,6 +2868,14 @@
         "security": [
           {
             "CsrfCookie": [],
+            "RefreshCookie": []
+          },
+          {
+            "LocalCsrfCookie": [],
+            "LocalRefreshCookie": []
+          },
+          {
+            "CsrfCookie": [],
             "SessionCookie": []
           },
           {
@@ -2899,7 +2907,7 @@
           {
             "name": "X-AsterGate-CSRF",
             "in": "header",
-            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request.",
             "required": true,
             "schema": {
               "type": "string"
@@ -3125,6 +3133,246 @@
         ]
       }
     },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "refresh",
+        "parameters": [
+          {
+            "name": "X-AsterGate-Request",
+            "in": "header",
+            "description": "Must be 1. Browser writes require a configured same-origin site; CORS allowlisting does not bypass this requirement.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          },
+          {
+            "name": "X-AsterGate-CSRF",
+            "in": "header",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_bool_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required or credentials invalid",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, including CSRF or origin rejection",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Business state conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; Retry-After is advisory, never an automatic retry permit",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Advisory delay in seconds or an HTTP-date; does not permit automatic replay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-referrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TupleUnit_ApiErrorCode_TupleUnit"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "CsrfCookie": [],
+            "RefreshCookie": []
+          },
+          {
+            "LocalCsrfCookie": [],
+            "LocalRefreshCookie": []
+          }
+        ]
+      }
+    },
     "/api/v1/auth/register": {
       "post": {
         "tags": [
@@ -3147,7 +3395,7 @@
           {
             "name": "X-AsterGate-CSRF",
             "in": "header",
-            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request.",
             "required": true,
             "schema": {
               "type": "string"
@@ -3394,7 +3642,7 @@
           {
             "name": "X-AsterGate-CSRF",
             "in": "header",
-            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request.",
             "required": true,
             "schema": {
               "type": "string"
@@ -3642,7 +3890,7 @@
           {
             "name": "X-AsterGate-CSRF",
             "in": "header",
-            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request.",
             "required": true,
             "schema": {
               "type": "string"
@@ -3890,7 +4138,7 @@
           {
             "name": "X-AsterGate-CSRF",
             "in": "header",
-            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request.",
             "required": true,
             "schema": {
               "type": "string"
@@ -4371,7 +4619,7 @@
           {
             "name": "X-AsterGate-CSRF",
             "in": "header",
-            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request.",
             "required": true,
             "schema": {
               "type": "string"
@@ -4629,7 +4877,7 @@
           {
             "name": "X-AsterGate-CSRF",
             "in": "header",
-            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request.",
             "required": true,
             "schema": {
               "type": "string"
@@ -5092,7 +5340,7 @@
           {
             "name": "X-AsterGate-CSRF",
             "in": "header",
-            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request.",
             "required": true,
             "schema": {
               "type": "string"
@@ -5549,7 +5797,7 @@
           {
             "name": "X-AsterGate-CSRF",
             "in": "header",
-            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Required for every unsafe REST request; refresh after session rotation.",
+            "description": "Echo the readable __Host-ag_csrf (HTTPS) or ag_csrf (local HTTP) cookie. Bootstrap it with GET /api/v1/setup/status or /api/v1/public/frontend-config. Setup/login rotate CSRF; refresh preserves it. Required for every unsafe REST request.",
             "required": true,
             "schema": {
               "type": "string"
@@ -6115,6 +6363,9 @@
           "success",
           "validation.failed",
           "auth.credentials_failed",
+          "auth.access_expired",
+          "auth.refresh_stale",
+          "auth.refresh_reused",
           "auth.session_required",
           "auth.forbidden",
           "account.identifier_conflict",
@@ -7081,15 +7332,25 @@
         "in": "cookie",
         "name": "ag_csrf"
       },
+      "LocalRefreshCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "ag_refresh"
+      },
       "LocalSessionCookie": {
         "type": "apiKey",
         "in": "cookie",
-        "name": "ag_session"
+        "name": "ag_access"
+      },
+      "RefreshCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Secure-ag_refresh"
       },
       "SessionCookie": {
         "type": "apiKey",
         "in": "cookie",
-        "name": "__Host-ag_session"
+        "name": "__Host-ag_access"
       }
     }
   }

@@ -51,6 +51,19 @@ async function signIn(page: Page, username: string, secret = password) {
 	).toBeVisible();
 }
 
+async function signOut(page: Page) {
+	await page.getByRole("button", { name: "Sign out", exact: true }).click();
+	// A full-page navigation can cancel a queued Web Lock before logout reaches the server.
+	await expect(
+		page.getByRole("heading", { name: "Sign in", exact: true }),
+	).toBeVisible();
+	expect(
+		(await page.context().cookies()).filter((cookie) =>
+			["ag_access", "ag_refresh"].includes(cookie.name),
+		),
+	).toHaveLength(0);
+}
+
 async function createAccount(page: Page) {
 	const username = `user${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 	const email = `${username}@example.test`;
@@ -138,7 +151,7 @@ test("initial setup skips SMTP and creates a working operator; settings can add 
 	await expect(
 		page.getByRole("heading", { name: "Profile", exact: true }),
 	).toBeVisible();
-	await page.getByRole("button", { name: "Sign out", exact: true }).click();
+	await signOut(page);
 	await page.getByRole("link", { name: "Create account" }).click();
 	await page.getByLabel("Display name").fill("No email user");
 	await page.getByLabel("Username", { exact: true }).fill("no-email-user");
@@ -150,7 +163,7 @@ test("initial setup skips SMTP and creates a working operator; settings can add 
 	).toBeVisible();
 	await signIn(page, "no-email-user");
 	await expect(page.getByText("Unverified", { exact: true })).toBeVisible();
-	await page.getByRole("button", { name: "Sign out", exact: true }).click();
+	await signOut(page);
 	await signIn(page, "instance-operator");
 	await page.goto("/instance-settings");
 	await page.getByLabel("Configure SMTP").check();
@@ -245,7 +258,7 @@ test("browser enforces CSRF and rotates readable host token beside HttpOnly sess
 	expect(results.credentials.code).toBe("auth.credentials_failed");
 	expect(results.signedIn.status).toBe(200);
 	expect(results.after).not.toBe(results.before);
-	expect(results.visibleCookies).not.toContain("ag_session=");
+	expect(results.visibleCookies).not.toContain("ag_access=");
 	const cookies = await page.context().cookies("http://127.0.0.1:4173");
 	expect(cookies.find((cookie) => cookie.name === "ag_csrf")).toMatchObject({
 		httpOnly: false,
@@ -253,7 +266,7 @@ test("browser enforces CSRF and rotates readable host token beside HttpOnly sess
 		sameSite: "Strict",
 		domain: "127.0.0.1",
 	});
-	expect(cookies.find((cookie) => cookie.name === "ag_session")).toMatchObject({
+	expect(cookies.find((cookie) => cookie.name === "ag_access")).toMatchObject({
 		httpOnly: true,
 		path: "/",
 		sameSite: "Lax",
@@ -277,9 +290,82 @@ test("browser enforces CSRF and rotates readable host token beside HttpOnly sess
 	expect(logout.visibleCookies).not.toContain("ag_csrf=");
 	expect(
 		(await page.context().cookies()).some((cookie) =>
-			["ag_csrf", "ag_session"].includes(cookie.name),
+			["ag_csrf", "ag_access", "ag_refresh"].includes(cookie.name),
 		),
 	).toBe(false);
+});
+
+test("JWT cookies refresh once across two tabs and a revoked session cannot refresh", async ({
+	page,
+}) => {
+	await signIn(page, "instance-operator");
+	const context = page.context();
+	const peer = await context.newPage();
+	await peer.goto("/");
+	await expect(
+		peer.getByRole("heading", { name: "Profile", exact: true }),
+	).toBeVisible();
+	const original = await context.cookies();
+	const refresh = original.find((cookie) => cookie.name === "ag_refresh");
+	expect(refresh).toMatchObject({
+		httpOnly: true,
+		path: "/api/v1/auth",
+		sameSite: "Lax",
+		domain: "127.0.0.1",
+	});
+	expect(await page.evaluate(() => document.cookie)).not.toContain(
+		"ag_refresh=",
+	);
+	let refreshRequests = 0;
+	context.on("request", (request) => {
+		if (
+			request.method() === "POST" &&
+			request.url().endsWith("/api/v1/auth/refresh")
+		)
+			refreshRequests++;
+	});
+	// Losing access through cookie expiry has the same browser transport behavior as removing it.
+	await context.clearCookies({ name: "ag_access" });
+	await Promise.all([page.reload(), peer.reload()]);
+	await expect(
+		page.getByRole("heading", { name: "Profile", exact: true }),
+	).toBeVisible();
+	await expect(
+		peer.getByRole("heading", { name: "Profile", exact: true }),
+	).toBeVisible();
+	expect(refreshRequests).toBe(1);
+	const next = (await context.cookies()).find(
+		(cookie) => cookie.name === "ag_refresh",
+	);
+	expect(next?.value).not.toBe(refresh?.value);
+	expect(next?.expires).toBeLessThanOrEqual((refresh?.expires ?? 0) + 1);
+	const sessions = await (
+		await page.request.get("/api/v1/account/sessions")
+	).json();
+	const current = (sessions.data as { id: string; current: boolean }[]).find(
+		(session) => session.current,
+	);
+	expect(current).toBeDefined();
+	const revoked = await page.request.delete(
+		`/api/v1/account/sessions/${current?.id}`,
+		{ headers: await mutationHeaders(page) },
+	);
+	expect(revoked.status()).toBe(200);
+	await Promise.all([page.reload(), peer.reload()]);
+	await expect(
+		page.getByRole("heading", { name: "Sign in", exact: true }),
+	).toBeVisible();
+	await expect(
+		peer.getByRole("heading", { name: "Sign in", exact: true }),
+	).toBeVisible();
+	const storage = await page.evaluate(() =>
+		[...Object.values(localStorage), ...Object.values(sessionStorage)].join(
+			" ",
+		),
+	);
+	expect(storage).not.toContain(refresh?.value);
+	expect(storage).not.toContain(next?.value);
+	await peer.close();
 });
 
 test("real registration, SMTP verification, profile, sessions, password change, recovery and deletion", async ({
@@ -341,7 +427,7 @@ test("real registration, SMTP verification, profile, sessions, password change, 
 		page.getByRole("heading", { name: "Sign in", exact: true }),
 	).toBeVisible();
 	await signIn(page, username, nextPassword);
-	await page.getByRole("button", { name: "Sign out", exact: true }).click();
+	await signOut(page);
 	await page.getByRole("link", { name: "Forgot password?" }).click();
 	await expect(page).toHaveURL(/\/recover$/);
 	await expect(
@@ -419,7 +505,7 @@ test("account operator suspension, restoration and erasure with confirmation", a
 	page,
 }) => {
 	const { username } = await createAccount(page);
-	await page.getByRole("button", { name: "Sign out", exact: true }).click();
+	await signOut(page);
 	await signIn(page, "instance-operator");
 	await page.goto("/admin");
 	const row = page.getByRole("row").filter({ hasText: username });
@@ -444,7 +530,7 @@ test("account operator suspension, restoration and erasure with confirmation", a
 		.getByRole("button", { name: "Confirm", exact: true })
 		.click();
 	await expect(row).toHaveCount(0);
-	await page.getByRole("button", { name: "Sign out", exact: true }).click();
+	await signOut(page);
 	await page.goto("/");
 	await expect(
 		page.getByRole("heading", { name: "Sign in", exact: true }),
@@ -594,10 +680,10 @@ test("site branding is editable and alternate hosts keep independent sessions an
 	).toBeVisible();
 	const cookies = await page.context().cookies();
 	const primaryCookie = cookies.find(
-		(cookie) => cookie.name === "ag_session" && cookie.domain === "127.0.0.1",
+		(cookie) => cookie.name === "ag_access" && cookie.domain === "127.0.0.1",
 	);
 	const secondaryCookie = cookies.find(
-		(cookie) => cookie.name === "ag_session" && cookie.domain === "localhost",
+		(cookie) => cookie.name === "ag_access" && cookie.domain === "localhost",
 	);
 	expect(primaryCookie).toBeDefined();
 	expect(secondaryCookie).toBeDefined();

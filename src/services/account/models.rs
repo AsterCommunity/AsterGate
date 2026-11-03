@@ -170,13 +170,14 @@ pub struct Account {
 pub struct Principal {
     pub(crate) account_id: AccountId,
     pub(crate) session_id: SessionId,
-    pub(crate) token_hash: String,
+    pub(crate) session_version: aster_forge_auth::SessionVersion,
+    pub(crate) restriction: aster_forge_auth::Restriction,
     pub(crate) revision: i64,
 }
 
 pub struct LoginResult {
     pub account: Account,
-    pub session_token: String,
+    pub tokens: aster_forge_auth::AuthTokenPair,
 }
 
 pub struct Session {
@@ -201,6 +202,7 @@ pub enum AuditAction {
     Registered,
     SignedIn,
     SignedOut,
+    RefreshReused,
     ProfileUpdated,
     PasswordChanged,
     PasswordReset,
@@ -263,6 +265,7 @@ impl AuditAction {
             Self::SettingsUpdated => "instance.settings_updated",
             Self::Registered => "account.registered",
             Self::SignedIn => "account.signed_in",
+            Self::RefreshReused => "account.refresh_reused",
             Self::SignedOut => "account.signed_out",
             Self::ProfileUpdated => "account.profile_updated",
             Self::PasswordChanged => "account.password_changed",

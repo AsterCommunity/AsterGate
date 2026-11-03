@@ -23,6 +23,7 @@ pub fn router() -> Router<Arc<AppState>> {
         .route("/auth/register", post(register))
         .route("/auth/login", post(login))
         .route("/auth/logout", post(logout))
+        .route("/auth/refresh", post(refresh))
         .route("/auth/verification", post(request_verification))
         .route("/auth/verify-email", post(verify_email))
         .route("/auth/recovery", post(request_recovery))
@@ -82,7 +83,7 @@ pub async fn login(
         result.account.into(),
     )?)
     .into_response();
-    cookies::issue_session(&mut response, &cookie_policy, &result.session_token)?;
+    cookies::issue_session(&mut response, &cookie_policy, &result.tokens)?;
     Ok(response)
 }
 
@@ -90,15 +91,39 @@ pub async fn login(
 pub async fn logout(
     State(state): State<Arc<AppState>>,
     Extension(cookie_policy): Extension<SessionCookiePolicy>,
-    Authenticated(principal): Authenticated,
+    headers: HeaderMap,
 ) -> Result<Response> {
-    account::revoke_session(
-        &state,
-        &principal,
-        &SessionId(principal.session_id.0.clone()),
-    )
-    .await?;
+    let access = cookies::credential(&headers, cookie_policy.access_name())?;
+    if let Some(token) = cookies::credential(&headers, cookie_policy.refresh_name())? {
+        account::sessions::logout(&state, &token).await?;
+    } else {
+        let principal =
+            account::sessions::authenticate(&state, &access.ok_or(AccountError::Unauthenticated)?)
+                .await?;
+        account::revoke_session(&state, &principal, &principal.session_id).await?;
+    }
     clear(&cookie_policy)
+}
+
+#[aster_forge_api_docs_macros::path(post, path = "/api/v1/auth/refresh", tag = "account", responses((status = 200, body = ApiResponse<bool, ApiErrorCode, NoData>)))]
+pub async fn refresh(
+    State(state): State<Arc<AppState>>,
+    Extension(policy): Extension<SessionCookiePolicy>,
+    headers: HeaderMap,
+) -> Result<Response> {
+    let token = cookies::credential(&headers, policy.refresh_name())?
+        .ok_or(AccountError::Unauthenticated)?;
+    let client = aster_forge_auth::ClientContext {
+        user_agent: headers
+            .get(header::USER_AGENT)
+            .and_then(|v| v.to_str().ok())
+            .map(|ua| ua.chars().take(128).collect()),
+        ip_address: None,
+    };
+    let pair = account::sessions::refresh(&state, &token, client).await?;
+    let mut response = success()?.into_response();
+    cookies::issue_refresh(&mut response, &policy, &pair)?;
+    Ok(response)
 }
 
 #[aster_forge_api_docs_macros::path(post, path = "/api/v1/auth/verification", tag = "account", request_body = IdentifierRequest, responses((status = 200, body = ApiResponse<bool, ApiErrorCode, NoData>)))]

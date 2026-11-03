@@ -108,7 +108,7 @@ impl Fixture {
             .unwrap();
             (
                 result.account.id.as_str().to_string(),
-                format!("ag_session={}", result.session_token),
+                format!("ag_access={}", result.tokens.access_token),
             )
         } else {
             (String::new(), String::new())

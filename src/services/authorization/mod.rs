@@ -18,18 +18,12 @@ pub async fn require<C: sea_orm::ConnectionTrait>(
     principal: &Principal,
     permission: SystemPermission,
 ) -> Result<()> {
-    let account = account_repo::find(db, &principal.account_id)
-        .await?
-        .ok_or(AccountError::Unauthenticated)?;
-    let session =
-        account_repo::session_by_token(db, &principal.token_hash, chrono::Utc::now().timestamp())
-            .await?
-            .ok_or(AccountError::Unauthenticated)?;
-    if AccountStatus::from(account.status) != AccountStatus::Active
-        || session.account_id != principal.account_id.as_str()
-    {
-        return Err(AccountError::Unauthenticated);
-    }
+    crate::services::account::sessions::validate_principal(
+        db,
+        principal,
+        chrono::Utc::now().timestamp(),
+    )
+    .await?;
     if !grants::list(db, &principal.account_id)
         .await?
         .contains(&permission)
@@ -67,7 +61,6 @@ pub(crate) struct SystemActionPermit<'a> {
 impl SystemActionPermit<'_> {
     /// Revalidate after locking the system mutation row; a previous password check is not a grant.
     pub(crate) async fn recheck(self, db: &sea_orm::DatabaseTransaction) -> Result<()> {
-        require(db, self.principal, self.permission).await?;
         if !account_repo::claim_revision(
             db,
             &self.principal.account_id,
@@ -78,6 +71,7 @@ impl SystemActionPermit<'_> {
         {
             return Err(AccountError::Conflict);
         }
+        require(db, self.principal, self.permission).await?;
         Ok(())
     }
 }

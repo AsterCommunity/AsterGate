@@ -18,6 +18,7 @@ pub struct AppConfig {
     /// Logging settings.
     pub logging: aster_forge_logging::LoggingConfig,
     pub security: super::SecurityConfig,
+    pub session: super::session::SessionConfig,
     /// Explicit proxy, CORS and process-local HTTP admission policy.
     pub http_security: super::transport::HttpSecurityConfig,
 }
@@ -26,6 +27,7 @@ impl Default for AppConfig {
     fn default() -> Self {
         Self {
             security: super::SecurityConfig::default(),
+            session: super::session::SessionConfig::default(),
             http_security: super::transport::HttpSecurityConfig::default(),
             server: ServerConfig::default(),
             database: DatabaseConfig::default(),

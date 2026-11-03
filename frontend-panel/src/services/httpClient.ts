@@ -31,7 +31,15 @@ export class HttpError extends Error {
 	}
 
 	get requiresSignIn() {
-		return this.status === 401 && this.code === ApiErrorCode.SessionRequired;
+		return (
+			this.status === 401 &&
+			[
+				ApiErrorCode.SessionRequired,
+				ApiErrorCode.AccessExpired,
+				ApiErrorCode.RefreshStale,
+				ApiErrorCode.RefreshReused,
+			].some((code) => code === this.code)
+		);
 	}
 }
 

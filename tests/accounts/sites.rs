@@ -99,7 +99,7 @@ async fn multiple_sites_use_request_cookies_primary_mail_and_immediate_removal()
         )
         .await;
     assert_eq!(response.0, StatusCode::CREATED);
-    assert!(response.2.unwrap().starts_with("ag_session="));
+    assert!(response.2.unwrap().starts_with("ag_access="));
 
     let login = json!({"identifier":"operator", "password":PASSWORD});
     let secure = f
@@ -115,7 +115,7 @@ async fn multiple_sites_use_request_cookies_primary_mail_and_immediate_removal()
         .await;
     assert_eq!(secure.0, StatusCode::OK);
     let secure = secure.2.unwrap();
-    assert!(secure.starts_with("__Host-ag_session=") && secure.contains("Secure"));
+    assert!(secure.starts_with("__Host-ag_access=") && secure.contains("Secure"));
     assert!(!secure.contains("Domain="));
     let secure_pair = secure.split(';').next().unwrap();
     assert_eq!(
@@ -162,7 +162,7 @@ async fn multiple_sites_use_request_cookies_primary_mail_and_immediate_removal()
         clear
             .2
             .unwrap()
-            .contains("__Host-ag_session=; HttpOnly; SameSite=Lax; Secure; Path=/; Max-Age=0")
+            .contains("__Host-ag_access=; HttpOnly; SameSite=Lax; Secure; Path=/; Max-Age=0")
     );
 
     for origin in [
@@ -333,7 +333,7 @@ async fn host_and_origin_spoofing_do_not_select_cookie_policy() {
         if expected == StatusCode::OK {
             let cookie = response.headers()["set-cookie"].to_str().unwrap();
             assert!(
-                cookie.starts_with("__Host-ag_session=")
+                cookie.starts_with("__Host-ag_access=")
                     && cookie.contains("Secure")
                     && !cookie.contains("Domain=")
             );
@@ -629,12 +629,14 @@ async fn concurrent_settings_writers_on_different_accounts_have_one_revision_win
     txn.commit().await.unwrap();
     let delegate_cookie = f.login("delegate", PASSWORD).await;
     let operator_cookie = f.management_cookie.lock().unwrap().clone();
-    let operator = service::authenticate(&f.state, operator_cookie.split('=').nth(1).unwrap())
-        .await
-        .unwrap();
-    let delegate = service::authenticate(&f.state, delegate_cookie.split('=').nth(1).unwrap())
-        .await
-        .unwrap();
+    let operator =
+        service::sessions::authenticate(&f.state, operator_cookie.split('=').nth(1).unwrap())
+            .await
+            .unwrap();
+    let delegate =
+        service::sessions::authenticate(&f.state, delegate_cookie.split('=').nth(1).unwrap())
+            .await
+            .unwrap();
     let mut left = f.state.management_settings().unwrap();
     let mut right = left.clone();
     left.branding.title = BrandingTitle::parse("Left wins").unwrap();

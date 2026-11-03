@@ -30,7 +30,7 @@ async fn assign(f: &Fixture, id: &str, permissions: &[SystemPermission]) {
 }
 
 async fn principal(f: &Fixture, cookie: &str) -> account_service::models::Principal {
-    account_service::authenticate(&f.state, cookie.split('=').nth(1).unwrap())
+    account_service::sessions::authenticate(&f.state, cookie.split('=').nth(1).unwrap())
         .await
         .unwrap()
 }

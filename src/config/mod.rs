@@ -10,6 +10,7 @@ mod normalizers;
 pub mod runtime_config;
 mod schema;
 pub mod security;
+pub mod session;
 pub mod system_config;
 pub mod transport;
 

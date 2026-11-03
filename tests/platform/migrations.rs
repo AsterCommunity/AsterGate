@@ -104,6 +104,7 @@ async fn permission_grants_schema_enforces_owner_unique_key_and_is_restart_idemp
         display_name: Set("Operator".into()),
         status: Set(StoredAccountStatus::Active),
         revision: Set(0),
+        session_version: Set(0),
         created_at: Set(123),
         updated_at: Set(123),
         suspended_from: Set(None),
